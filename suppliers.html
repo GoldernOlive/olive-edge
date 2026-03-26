@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Supplier Compare — Olive Edge</title>
+<link rel="stylesheet" href="css/style.css"/>
+</head>
+<body>
+<div id="nav-placeholder"></div>
+<div class="page">
+  <div class="fu">
+    <div class="page-title serif">💰 Supplier Compare</div>
+    <div class="page-sub">Printify vs Printful vs Gelato — real base costs, margins and best regions</div>
+  </div>
+  <div class="card fu" style="display:flex;gap:10px;flex-wrap:wrap">
+    <input id="sup-q" placeholder="Search product e.g. ceramic mug, unisex t-shirt, A4 art print, hoodie, tote bag..." style="flex:1" onkeydown="if(event.key==='Enter')doSupplier()"/>
+    <button class="btn-olive" onclick="doSupplier()">Compare →</button>
+  </div>
+  <div style="margin-bottom:14px">${['ceramic mug 11oz','unisex t-shirt','tote bag canvas','A4 art print','phone case','hoodie','canvas print','greeting card','throw pillow','sticker sheet','water bottle'].map(p=>`<button class="btn-chip" onclick="document.getElementById('sup-q').value='${p}';doSupplier()">${p}</button>`).join('')}</div>
+
+  <!-- Live profit calc -->
+  <div class="card-gold">
+    <div class="lbl" style="color:var(--gd)">⚡ Live Profit Calculator</div>
+    <div class="grid-auto" style="margin-bottom:14px">
+      <div><div class="lbl">Base Cost (£)</div><input type="number" id="c-base" step="0.01" value="0" oninput="calcProfit()"/></div>
+      <div><div class="lbl">UK Sell Price (£)</div><input type="number" id="c-uk" step="0.01" value="0" oninput="calcProfit()"/></div>
+      <div><div class="lbl">USA Price ($)</div><input type="number" id="c-us" step="0.01" value="0" oninput="calcProfit()"/></div>
+      <div><div class="lbl">EU Price (€)</div><input type="number" id="c-eu" step="0.01" value="0" oninput="calcProfit()"/></div>
+      <div><div class="lbl">Etsy Ads (£)</div><input type="number" id="c-ads" step="0.01" value="0" oninput="calcProfit()"/></div>
+    </div>
+    <div id="calc-out" class="grid-auto"></div>
+  </div>
+
+  <div id="sup-res"></div>
+</div>
+<script src="js/auth.js"></script>
+<script>
+requireAuth();
+document.getElementById('nav-placeholder').innerHTML = renderNav('suppliers.html');
+function getKeys(){return{groq:localStorage.getItem('oe_groq')||''};}
+async function callGroq(prompt){
+  const keys=getKeys();
+  const r=await fetch('https://api.groq.com/openai/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+keys.groq},body:JSON.stringify({model:'llama-3.3-70b-versatile',messages:[{role:'system',content:'Expert in print-on-demand suppliers Printify, Printful, Gelato. Give accurate base costs and margin analysis.'},{role:'user',content:prompt+'\n\nReturn ONLY valid raw JSON starting with { ending with }'}],temperature:0.2,max_tokens:2048})});
+  const d=await r.json();if(!r.ok)throw new Error(d.error?.message||'Error');
+  const t=d.choices?.[0]?.message?.content||'';const s=t.indexOf('{'),e=t.lastIndexOf('}');if(s<0||e<0)throw new Error('No JSON');return JSON.parse(t.slice(s,e+1));
+}
+function calcProfit(){
+  const base=parseFloat(document.getElementById('c-base').value)||0;
+  const uk=parseFloat(document.getElementById('c-uk').value)||0;
+  const ads=parseFloat(document.getElementById('c-ads').value)||0;
+  const fee=uk*0.065,listing=0.18,profit=uk-base-fee-listing-ads;
+  const mp=uk>0?((profit/uk)*100).toFixed(1):0;
+  const pc=profit>5?'var(--ol)':profit>0?'var(--gd)':'var(--rd)';
+  document.getElementById('calc-out').innerHTML=[
+    ['UK Sell Price','£'+uk.toFixed(2),'var(--tx)'],
+    ['Etsy Fee 6.5%','-£'+fee.toFixed(2),'var(--rd)'],
+    ['Listing Fee','-£0.18','var(--rd)'],
+    ['Base Cost','-£'+base.toFixed(2),'var(--rd)'],
+    ['Etsy Ads',ads>0?'-£'+ads.toFixed(2):'£0','var(--rd)'],
+    ['Your Profit','£'+profit.toFixed(2),pc],
+    ['Margin',mp+'%',pc]
+  ].map(r=>`<div class="sbox"><div class="lbl">${r[0]}</div><div class="mono" style="font-size:16px;color:${r[2]};font-weight:600">${r[1]}</div></div>`).join('');
+}
+calcProfit();
+
+async function doSupplier(){
+  const q=document.getElementById('sup-q').value.trim();if(!q)return;
+  const res=document.getElementById('sup-res');
+  res.innerHTML=`<div class="card"><div class="loading-row"><div class="spin"></div>Fetching real costs from Printify, Printful & Gelato...</div></div>`;
+  try{
+    const d=await callGroq(`What are the real base costs for "${q}" on Printify, Printful, and Gelato? What are real Etsy selling prices globally? Return JSON: {"product":"${q}","printify":[{"variant":"specific variant","baseCost":"£X","printArea":"size","supplier":"name","shipsTo":"Worldwide|UK+EU|USA","notes":"key info"}],"printful":[{"variant":"specific variant","baseCost":"£X","printArea":"size","shipsTo":"Worldwide|UK+EU","notes":"key info"}],"gelato":[{"variant":"specific variant","baseCost":"£X","printArea":"size","deliveryUK":"X-Y days","notes":"key info"}],"etsyPricing":{"UK":"£X avg","USA":"$X avg","Germany":"€X avg","Australia":"AU$X avg"},"bestSetup":{"platform":"Printify|Printful|Gelato","variant":"exact variant","baseCost":"£X","ukPrice":"£X","usaPrice":"$X","euPrice":"€X","netProfitUK":"£X","marginPct":"X%","breakEven":5,"whyBest":"reason"},"demandByMarket":{"UK":"High|Medium|Low","USA":"High|Medium|Low","Germany":"High|Medium|Low","Australia":"High|Medium|Low"},"comparison":{"printifyPro":"advantage","printifyMinus":"disadvantage","printfulPro":"advantage","printfulMinus":"disadvantage","gelatoPro":"advantage","gelatoMinus":"disadvantage"},"tips":["tip1","tip2","tip3"]}`);
+    const b=parseFloat((d.bestSetup?.baseCost||'').replace('£','')||0);
+    const uk=parseFloat((d.bestSetup?.ukPrice||'').replace('£','')||0);
+    const us=parseFloat((d.bestSetup?.usaPrice||'').replace('$','')||0);
+    const eu=parseFloat((d.bestSetup?.euPrice||'').replace('€','')||0);
+    document.getElementById('c-base').value=b;document.getElementById('c-uk').value=uk;document.getElementById('c-us').value=us;document.getElementById('c-eu').value=eu;calcProfit();
+
+    let html=`<div class="card-live fu"><div class="lbl" style="color:var(--ol)">⭐ Best Setup — ${d.bestSetup?.platform}</div>`;
+    html+=`<div style="font-weight:700;font-size:18px;margin-bottom:12px;font-family:Cormorant Garamond,serif">${d.product}</div>`;
+    html+=`<div class="grid-auto" style="margin-bottom:14px">${sbox('Platform',d.bestSetup?.platform,'var(--bl)')+sbox('Base Cost',d.bestSetup?.baseCost,'var(--mu)')+sbox('UK Price',d.bestSetup?.ukPrice,'var(--gd)')+sbox('USA Price',d.bestSetup?.usaPrice,'var(--gd)')+sbox('Net Profit UK',d.bestSetup?.netProfitUK,'var(--ol)')+sbox('Margin',d.bestSetup?.marginPct,'var(--ol)')+sbox('Break Even',d.bestSetup?.breakEven+' sales','var(--mu)')}</div>`;
+    html+=`<p style="font-size:13px;color:var(--mu)">${d.bestSetup?.whyBest}</p></div>`;
+    html+=`<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px" class="d1">`;
+    [['🖨️ Printify',d.printify,'var(--bl)',d.comparison?.printifyPro,d.comparison?.printifyMinus],['🖨️ Printful',d.printful,'var(--gd)',d.comparison?.printfulPro,d.comparison?.printfulMinus],['🖨️ Gelato',d.gelato,'var(--ol)',d.comparison?.gelatoPro,d.comparison?.gelatoMinus]].forEach(row=>{
+      html+=`<div class="card"><div class="lbl">${row[0]}</div>`;
+      (row[1]||[]).forEach(o=>{html+=`<div style="padding:10px 0;border-bottom:1px solid var(--b1)"><div style="font-weight:600;font-size:13px;margin-bottom:4px">${o.variant}</div><div class="mono" style="color:${row[2]};font-weight:700;font-size:15px">${o.baseCost}</div><div style="font-size:11px;color:var(--mu);margin-top:3px">${o.shipsTo||o.deliveryUK||''} · ${o.notes||''}</div></div>`;});
+      html+=`<div style="margin-top:10px"><div style="font-size:11px;color:var(--gn);margin-bottom:4px">✓ ${row[3]||''}</div><div style="font-size:11px;color:var(--rd)">✗ ${row[4]||''}</div></div></div>`;
+    });
+    html+=`</div>`;
+    html+=`<div class="card d2"><div class="lbl">🌍 Etsy Pricing + Demand by Market</div><div class="grid-auto">`;
+    [['UK','🇬🇧',d.etsyPricing?.UK],['USA','🇺🇸',d.etsyPricing?.USA],['Germany','🇩🇪',d.etsyPricing?.Germany],['Australia','🇦🇺',d.etsyPricing?.Australia]].forEach(m=>{html+=`<div class="sbox"><div class="lbl">${m[1]} ${m[0]}</div><div class="mono" style="color:var(--gd);font-weight:700;font-size:15px">${m[2]||'—'}</div><div style="font-size:11px;color:${demandColor(d.demandByMarket?.[m[0]]||'Medium')};margin-top:4px">${d.demandByMarket?.[m[0]]||'—'} demand</div></div>`;});
+    html+=`</div></div>`;
+    html+=`<div class="card-gold d3"><div class="lbl" style="color:var(--gd)">💡 Pro Tips</div>${(d.tips||[]).map(t=>`<div style="display:flex;gap:8px;margin-bottom:10px;font-size:13px;line-height:1.6"><span style="color:var(--gd);font-weight:700">→</span><span style="color:var(--mu)">${t}</span></div>`).join('')}</div>`;
+    res.innerHTML=html;
+  }catch(e){res.innerHTML=errBox(e.message);}
+}
+</script>
+</body>
+</html>

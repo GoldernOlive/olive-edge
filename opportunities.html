@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Opportunity Finder — Olive Edge</title>
+<link rel="stylesheet" href="css/style.css"/>
+</head>
+<body>
+<div id="nav-placeholder"></div>
+
+<div class="page">
+  <div class="fu">
+    <div class="page-title serif">🔥 Opportunity Finder</div>
+    <div class="page-sub">Real demand vs real competition — find gaps before anyone else does</div>
+  </div>
+
+  <div class="card fu" style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end">
+    <div style="flex:1;min-width:220px">
+      <div class="lbl">Keyword or Product Idea</div>
+      <input id="opp-kw" placeholder="e.g. custom mug, pet portrait, wall art, tote bag, candle..." onkeydown="if(event.key==='Enter')doOpportunity()"/>
+    </div>
+    <div style="min-width:160px">
+      <div class="lbl">Primary Market</div>
+      <select id="opp-market">
+        <option value="GB">🇬🇧 UK (Primary)</option>
+        <option value="US">🇺🇸 USA</option>
+        <option value="DE">🇩🇪 Germany</option>
+        <option value="AU">🇦🇺 Australia</option>
+        <option value="CA">🇨🇦 Canada</option>
+        <option value="FR">🇫🇷 France</option>
+      </select>
+    </div>
+    <button class="btn-olive" onclick="doOpportunity()">🔥 Find Opportunity →</button>
+  </div>
+
+  <div style="margin-bottom:14px">
+    <div class="lbl">Quick Ideas</div>
+    <div id="quick-chips">
+      ${['custom mug','pet portrait','wall art print','tote bag','wedding invitation','candle gift','baby nursery art','funny slogan shirt','digital planner','personalised keyring','die cut sticker','motivational poster'].map(k=>`<button class="btn-chip" onclick="document.getElementById('opp-kw').value='${k}';doOpportunity()">${k}</button>`).join('')}
+    </div>
+  </div>
+
+  <div id="opp-result"></div>
+</div>
+
+<script src="js/auth.js"></script>
+<script>
+const session = requireAuth();
+document.getElementById('nav-placeholder').innerHTML = renderNav('opportunities.html');
+
+// Check for keyword from URL
+const urlKw = new URLSearchParams(window.location.search).get('kw');
+if (urlKw) { document.getElementById('opp-kw').value = urlKw; }
+
+function getKeys() {
+  return { etsy: localStorage.getItem('oe_etsy')||'', groq: localStorage.getItem('oe_groq')||'' };
+}
+
+async function callGroq(prompt) {
+  const keys = getKeys();
+  const r = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    method:'POST',
+    headers:{'Content-Type':'application/json','Authorization':'Bearer '+keys.groq},
+    body: JSON.stringify({
+      model:'llama-3.3-70b-versatile',
+      messages:[
+        {role:'system',content:'You are an expert Etsy market analyst and print-on-demand strategist with deep knowledge of global Etsy markets. Give specific, accurate, actionable market intelligence.'},
+        {role:'user',content:prompt+'\n\nReturn ONLY valid raw JSON starting with { ending with }'}
+      ],
+      temperature:0.2, max_tokens:2048
+    })
+  });
+  const d = await r.json();
+  if (!r.ok) throw new Error(d.error?.message || 'Groq error');
+  const t = d.choices?.[0]?.message?.content || '';
+  const s = t.indexOf('{'), e = t.lastIndexOf('}');
+  if (s<0||e<0) throw new Error('No JSON in response');
+  return JSON.parse(t.slice(s,e+1));
+}
+
+async function callEtsy(path) {
+  const keys = getKeys();
+  if (!keys.etsy) throw new Error('No Etsy key');
+  const r = await fetch('https://openapi.etsy.com/v3/application/'+path, { headers:{'x-api-key':keys.etsy} });
+  if (!r.ok) throw new Error('Etsy '+r.status);
+  return r.json();
+}
+
+async function doOpportunity() {
+  const kw = document.getElementById('opp-kw').value.trim();
+  const market = document.getElementById('opp-market').value;
+  if (!kw) return;
+
+  const res = document.getElementById('opp-result');
+  res.innerHTML = `<div class="card"><div class="loading-row"><div class="spin"></div>Step 1/3 — Fetching live Etsy data for "${kw}"...</div></div>`;
+
+  // STEP 1: Live Etsy data
+  let etsyListings=[], tags=[], prices={}, topFavs=[];
+  const keys = getKeys();
+  if (keys.etsy) {
+    try {
+      const er = await callEtsy(`listings/active?keywords=${encodeURIComponent(kw)}&limit=50&sort_on=score&sort_order=desc`);
+      etsyListings = er.results || [];
+      const tm = {};
+      etsyListings.forEach(l => (l.tags||[]).forEach(t => tm[t]=(tm[t]||0)+1));
+      tags = Object.entries(tm).sort((a,b)=>b[1]-a[1]).map(e=>({tag:e[0],count:e[1]}));
+      const pp = etsyListings.map(l=>(l.price?.amount||0)/100).filter(p=>p>0).sort((a,b)=>a-b);
+      if (pp.length) prices = {min:pp[0].toFixed(2),max:pp[pp.length-1].toFixed(2),avg:(pp.reduce((s,p)=>s+p,0)/pp.length).toFixed(2),median:pp[Math.floor(pp.length/2)].toFixed(2)};
+      topFavs = [...etsyListings].sort((a,b)=>(b.num_favorers||0)-(a.num_favorers||0)).slice(0,5);
+    } catch(e){ res.innerHTML = `<div class="card"><div class="loading-row"><div class="spin"></div>Etsy data pending — proceeding with AI analysis...</div></div>`; }
+  }
+
+  res.innerHTML = `<div class="card"><div class="loading-row"><div class="spin"></div>Step 2/3 — Analysing opportunity across all global markets...</div></div>`;
+
+  const etsyCtx = etsyListings.length
+    ? `LIVE ETSY DATA (${etsyListings.length} real listings): Price range £${prices.min}-£${prices.max}, avg £${prices.avg}, median £${prices.median}. Top tags by usage: ${tags.slice(0,15).map(t=>t.tag+'('+t.count+'x)').join(', ')}. Most favourited listings: ${topFavs.slice(0,3).map(l=>'"'+l.title+'" £'+((l.price?.amount||0)/100).toFixed(2)+' '+fmt(l.num_favorers||0)+' favs').join(', ')}`
+    : 'No live Etsy data available — use your expertise.';
+
+  try {
+    res.innerHTML = `<div class="card"><div class="loading-row"><div class="spin"></div>Step 3/3 — Building full opportunity analysis...</div></div>`;
+
+    const d = await callGroq(`Full opportunity analysis for Etsy niche "${kw}". Primary market: ${market}. ${etsyCtx}
+
+Return JSON: {
+  "keyword":"${kw}",
+  "opportunityScore":7.5,
+  "demandScore":8,
+  "competitionScore":4,
+  "marginScore":7,
+  "saturationLevel":"Low|Medium|High|Very High",
+  "verdict":"BUY IN|WORTH TESTING|PROCEED WITH CAUTION|AVOID",
+  "verdictReason":"specific reason",
+  "marketInsight":{
+    "totalListings":"~X,XXX",
+    "reviewDensity":"what percentage have reviews",
+    "priceBand":"£X-£Y most common",
+    "weakCompetitors":"description of weak shops in this space",
+    "gapDetected":"specific gap in the market right now"
+  },
+  "sellThisNow":{
+    "product":"exact product type",
+    "format":"mug|tote|poster|phone case|etc",
+    "platform":"Printify|Printful|Gelato",
+    "baseCost":"£X",
+    "ukPrice":"£X",
+    "usaPrice":"$X",
+    "germanyPrice":"€X",
+    "australiaPrice":"AU$X",
+    "margin":"X%",
+    "bestColours":["colour1","colour2","colour3"],
+    "bestDesignAngle":"specific design direction",
+    "bestPhrase":"exact phrase or style",
+    "designBrief":"detailed design instructions"
+  },
+  "topTags":["tag1","tag2","tag3","tag4","tag5","tag6","tag7","tag8","tag9","tag10","tag11","tag12","tag13"],
+  "titleFormula":"[Adj] [Product] | [Keyword] | [Occasion/Audience] Gift",
+  "descriptionOpener":"first 2 sentences for description",
+  "globalDemand":{"UK":80,"USA":90,"Germany":60,"Australia":55,"Canada":50,"France":45},
+  "seasonality":[{"month":"Jan","score":40},{"month":"Feb","score":50},{"month":"Mar","score":55},{"month":"Apr","score":60},{"month":"May","score":65},{"month":"Jun","score":60},{"month":"Jul","score":55},{"month":"Aug","score":60},{"month":"Sep","score":65},{"month":"Oct","score":70},{"month":"Nov","score":85},{"month":"Dec","score":90}],
+  "relatedProducts":["related1","related2","related3","related4"],
+  "adjacentNiches":["niche1","niche2","niche3"],
+  "visualIntel":{
+    "topColours":["colour hex","colour hex","colour hex"],
+    "dominantStyles":["Minimalist","Script","Bold"],
+    "topPhrases":["phrase1","phrase2","phrase3"],
+    "imageTypes":["lifestyle","mockup","flat lay"]
+  },
+  "warnings":["warning1","warning2"],
+  "opportunities":["opportunity1","opportunity2","opportunity3"]
+}`);
+
+    // Build full UI
+    const sc = d.opportunityScore;
+    const scClass = sc>=7?'score-high':sc>=5?'score-mid':'score-low';
+    const vColor = d.verdict==='BUY IN'?'var(--gn)':d.verdict==='WORTH TESTING'?'var(--gd)':d.verdict==='PROCEED WITH CAUTION'?'var(--or)':'var(--rd)';
+
+    const seasonBars = (d.seasonality||[]).map(m=>{
+      const h = Math.max((m.score/100)*64,3);
+      const c = m.score>70?'var(--ol)':m.score>40?'var(--gd)':'var(--b2)';
+      return `<div style="flex:1;height:${h}px;background:${c};border-radius:2px 2px 0 0" title="${m.month}: ${m.score}"></div>`;
+    }).join('');
+    const seasonLbls = (d.seasonality||[]).map(m=>`<div style="flex:1;text-align:center;font-size:8px;color:var(--mu2)">${m.month[0]}</div>`).join('');
+
+    let html = `
+    <!-- HEADER CARD -->
+    <div class="card-live fu">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:14px;flex-wrap:wrap;margin-bottom:18px">
+        <div style="flex:1">
+          <div class="serif" style="font-size:32px;font-weight:600;margin-bottom:10px">${d.keyword}</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px">
+            <span style="background:${vColor}18;color:${vColor};border:1px solid ${vColor}44;border-radius:20px;padding:4px 14px;font-size:12px;font-weight:700">${d.verdict}</span>
+            ${etsyListings.length ? `<span class="badge b-live">● ${etsyListings.length} Live Etsy Listings</span>` : ''}
+          </div>
+          <p style="font-size:14px;color:var(--mu);line-height:1.7">${d.verdictReason}</p>
+        </div>
+        <div class="score-ring ${scClass}" style="width:80px;height:80px;font-size:22px">${sc}</div>
+      </div>
+      <div class="grid-auto" style="margin-bottom:14px">
+        ${sbox('Demand Score',d.demandScore+'/10',demandColor(d.demandScore>=7?'High':d.demandScore>=5?'Medium':'Low'))}
+        ${sbox('Competition',d.competitionScore+'/10',compColor(d.competitionScore<=4?'Low':d.competitionScore<=6?'Medium':d.competitionScore<=8?'High':'Very High'))}
+        ${sbox('Margin Score',d.marginScore+'/10','var(--gd)')}
+        ${sbox('Saturation',d.saturationLevel,compColor(d.saturationLevel))}
+      </div>
+      ${etsyListings.length ? `<div class="grid-auto" style="margin-bottom:14px">
+        ${sbox('Live Min Price','£'+prices.min,'var(--gn)')}
+        ${sbox('Live Avg Price','£'+prices.avg,'var(--gd)')}
+        ${sbox('Live Max Price','£'+prices.max,'var(--rd)')}
+        ${sbox('Live Median','£'+prices.median,'var(--ol)')}
+      </div>` : ''}
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn-olive btn-sm" onclick="saveOpportunity('${kw.replace(/'/g,"\\'")}',' ${d.verdict}')">+ Save to Workspace</button>
+        <button class="btn-ghost btn-sm" onclick="exportOpp()">↓ Export</button>
+      </div>
+    </div>
+
+    <!-- MARKET INSIGHT -->
+    <div class="card d1">
+      <div class="lbl">📊 Market Insight</div>
+      <div class="grid-2">
+        <div>
+          ${sbox('Total Listings',d.marketInsight?.totalListings,'var(--mu)')}
+          <div style="margin-top:10px">${sbox('Price Band',d.marketInsight?.priceBand,'var(--gd)')}</div>
+          <div style="margin-top:10px">${sbox('Review Density',d.marketInsight?.reviewDensity,'var(--bl)')}</div>
+        </div>
+        <div>
+          <div class="card2" style="margin-bottom:10px">
+            <div class="lbl" style="color:var(--gn)">💡 GAP DETECTED</div>
+            <p style="font-size:13px;line-height:1.6">${d.marketInsight?.gapDetected||'—'}</p>
+          </div>
+          <div class="card2">
+            <div class="lbl" style="color:var(--mu)">⚠️ Weak Competitors</div>
+            <p style="font-size:12px;color:var(--mu);line-height:1.6">${d.marketInsight?.weakCompetitors||'—'}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SELL THIS NOW -->
+    <div class="card-gold d2">
+      <div class="lbl" style="color:var(--gd)">💡 SELL THIS NOW — Complete Brief</div>
+      <div style="font-weight:700;font-size:18px;margin-bottom:14px;font-family:Cormorant Garamond,serif">${d.sellThisNow?.product||''}</div>
+      <div class="grid-auto" style="margin-bottom:14px">
+        ${sbox('Platform',d.sellThisNow?.platform||'','var(--bl)')}
+        ${sbox('Base Cost',d.sellThisNow?.baseCost||'','var(--mu)')}
+        ${sbox('UK Price',d.sellThisNow?.ukPrice||'','var(--gd)')}
+        ${sbox('USA Price',d.sellThisNow?.usaPrice||'','var(--gd)')}
+        ${sbox('Germany',d.sellThisNow?.germanyPrice||'','var(--gd)')}
+        ${sbox('Margin',d.sellThisNow?.margin||'','var(--ol)')}
+      </div>
+      <div style="background:var(--olbg);border:1px solid var(--olbr);border-radius:9px;padding:14px;margin-bottom:14px">
+        <div class="lbl" style="color:var(--ol)">🎨 DESIGN BRIEF</div>
+        <div class="grid-2">
+          <div>
+            <div style="font-size:10px;color:var(--mu);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px">Design Angle</div>
+            <div style="font-weight:600;color:var(--ol)">${d.sellThisNow?.bestDesignAngle||''}</div>
+            <div style="margin-top:10px;font-size:10px;color:var(--mu);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px">Key Phrase</div>
+            <div style="font-weight:600;color:var(--gd);font-style:italic">"${d.sellThisNow?.bestPhrase||''}"</div>
+          </div>
+          <div>
+            <div style="font-size:10px;color:var(--mu);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px">Best Colours</div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap">
+              ${(d.sellThisNow?.bestColours||[]).map(c=>`<span style="background:var(--p2);border:1px solid var(--b1);border-radius:20px;padding:3px 10px;font-size:11px;color:var(--tx)">${c}</span>`).join('')}
+            </div>
+          </div>
+        </div>
+        <div style="margin-top:12px;padding:10px;background:var(--w);border-radius:7px;border:1px solid var(--b1)">
+          <div style="font-size:10px;color:var(--mu);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px">Full Design Brief</div>
+          <p style="font-size:13px;line-height:1.6">${d.sellThisNow?.designBrief||''}</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAGS -->
+    <div class="card d3">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px">
+        <span class="lbl" style="margin-bottom:0">🏷️ Optimised 13 Etsy Tags</span>
+        <button class="btn-ghost btn-sm" id="copy-tags-btn" onclick="copyTags()">📋 Copy All 13</button>
+      </div>
+      ${etsyListings.length ? `<div style="margin-bottom:12px"><span class="badge b-live">● Real tags from ${etsyListings.length} live listings</span></div>
+      <div style="margin-bottom:12px">${tags.slice(0,15).map(t=>`<span class="pill">${t.tag} <span style="opacity:.5;font-size:9px">×${t.count}</span></span>`).join('')}</div>
+      <div class="lbl">AI Optimised — Best 13</div>` : ''}
+      <div id="tag-list" style="margin-bottom:10px">${(d.topTags||[]).map(t=>`<span class="pill">${t}</span>`).join('')}</div>
+      <div style="background:var(--p3);border-radius:8px;padding:12px">
+        <p class="mono" style="font-size:12px;line-height:2;word-break:break-word">${(d.topTags||[]).join(', ')}</p>
+      </div>
+      <div style="margin-top:12px">
+        <div class="lbl">✍️ Title Formula</div>
+        <div style="background:var(--gdbg);border:1px solid var(--gdbr);border-radius:7px;padding:10px;font-size:13px;font-style:italic">${d.titleFormula||''}</div>
+      </div>
+      <div style="margin-top:12px">
+        <div class="lbl">📝 Description Opener</div>
+        <div style="background:var(--p2);border-radius:7px;padding:10px;font-size:13px;color:var(--mu)">${d.descriptionOpener||''}</div>
+      </div>
+    </div>
+
+    <!-- VISUAL INTEL -->
+    <div class="card d3">
+      <div class="lbl">🎨 Visual Intelligence</div>
+      <div class="grid-2">
+        <div>
+          <div class="lbl">Dominant Design Styles</div>
+          ${(d.visualIntel?.dominantStyles||[]).map(s=>`<span class="pill-o" style="display:inline-block;background:var(--olbg);border:1px solid var(--olbr);border-radius:20px;padding:3px 11px;font-size:11px;color:var(--ol);font-family:DM Mono,monospace;margin:2px">${s}</span>`).join('')}
+          <div style="margin-top:12px" class="lbl">Top Selling Phrases</div>
+          ${(d.visualIntel?.topPhrases||[]).map(p=>`<div style="padding:5px 0;border-bottom:1px solid var(--b1);font-size:13px;font-style:italic;color:var(--gd)">"${p}"</div>`).join('')}
+        </div>
+        <div>
+          <div class="lbl">Image Types</div>
+          ${(d.visualIntel?.imageTypes||[]).map(t=>`<span class="pill">${t}</span>`).join('')}
+          <div style="margin-top:12px" class="lbl">Colour Palette Notes</div>
+          ${(d.visualIntel?.topColours||[]).map(c=>`<span class="pill-g" style="background:var(--gnbg);border:1px solid var(--gnbr);border-radius:20px;padding:3px 11px;font-size:11px;color:var(--gn);font-family:DM Mono,monospace;margin:2px;display:inline-block">${c}</span>`).join('')}
+        </div>
+      </div>
+    </div>
+
+    <!-- GLOBAL DEMAND + SEASONALITY -->
+    <div class="grid-2 d4">
+      <div class="card">
+        <div class="lbl">🌍 Global Demand</div>
+        ${Object.entries(d.globalDemand||{}).map(([k,v])=>{
+          const flag = {'UK':'🇬🇧','USA':'🇺🇸','Germany':'🇩🇪','Australia':'🇦🇺','Canada':'🇨🇦','France':'🇫🇷'}[k]||'🌍';
+          return `<div style="margin-bottom:10px">
+            <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px">
+              <span style="color:var(--mu)">${flag} ${k}</span>
+              <span class="mono">${v}%</span>
+            </div>
+            ${pbar(v, v>70?'var(--ol)':v>40?'var(--gd)':'var(--b2)')}
+          </div>`;
+        }).join('')}
+      </div>
+      <div class="card">
+        <div class="lbl">📅 Monthly Demand</div>
+        <div style="display:flex;align-items:flex-end;gap:3px;height:68px">${seasonBars}</div>
+        <div style="display:flex;gap:3px;margin-top:5px">${seasonLbls}</div>
+      </div>
+    </div>
+
+    <!-- RELATED + ADJACENT -->
+    <div class="grid-2 d4">
+      <div class="card">
+        <div class="lbl">🔗 Related Products</div>
+        ${(d.relatedProducts||[]).map(p=>`<div style="padding:8px 0;border-bottom:1px solid var(--b1);display:flex;justify-content:space-between;align-items:center">
+          <span style="font-size:13px">${p}</span>
+          <button class="btn-ghost btn-sm" onclick="document.getElementById('opp-kw').value='${p}';doOpportunity()">Scan →</button>
+        </div>`).join('')}
+      </div>
+      <div class="card">
+        <div class="lbl">🗺️ Adjacent Niches</div>
+        ${(d.adjacentNiches||[]).map(n=>`<div style="padding:8px 0;border-bottom:1px solid var(--b1);display:flex;justify-content:space-between;align-items:center">
+          <span style="font-size:13px">${n}</span>
+          <button class="btn-ghost btn-sm" onclick="document.getElementById('opp-kw').value='${n}';doOpportunity()">Scan →</button>
+        </div>`).join('')}
+      </div>
+    </div>
+
+    <!-- OPPS + WARNINGS -->
+    <div class="grid-2 d5">
+      <div class="card-olive">
+        <div class="lbl" style="color:var(--ol)">✅ Opportunities</div>
+        ${(d.opportunities||[]).map(o=>`<div style="display:flex;gap:8px;margin-bottom:10px;font-size:13px;line-height:1.6"><span style="color:var(--ol);font-weight:700">→</span>${o}</div>`).join('')}
+      </div>
+      <div class="card-red">
+        <div class="lbl" style="color:var(--rd)">⚠️ Watch Out</div>
+        ${(d.warnings||[]).map(w=>`<div style="display:flex;gap:8px;margin-bottom:10px;font-size:13px;line-height:1.6"><span style="color:var(--rd);font-weight:700">!</span><span style="color:var(--mu)">${w}</span></div>`).join('')}
+      </div>
+    </div>
+
+    <!-- LIVE PROOF -->
+    ${etsyListings.length ? `<div class="card d5">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+        <span class="lbl" style="margin-bottom:0">🛍️ Live Proof — Real Etsy Listings Right Now</span>
+        <span class="badge b-live">● ${etsyListings.length} live listings</span>
+      </div>
+      <div class="grid-auto">
+        ${etsyListings.slice(0,6).map(l=>`
+          <div class="proof-card">
+            ${l.images?.[0]?.url_570xN ? `<img src="${l.images[0].url_570xN}" class="proof-img" onerror="this.style.display='none'" loading="lazy"/>` : `<div class="proof-img" style="display:flex;align-items:center;justify-content:center;color:var(--mu2)">No image</div>`}
+            <div class="proof-body">
+              <div style="font-size:12px;font-weight:600;margin-bottom:6px;line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">${l.title}</div>
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+                <span class="mono" style="color:var(--gd);font-weight:700">£${((l.price?.amount||0)/100).toFixed(2)}</span>
+                <span style="font-size:11px;color:var(--mu)">${fmt(l.num_favorers||0)} ♡</span>
+              </div>
+              <div style="display:flex;gap:6px">
+                <a href="${l.url||'#'}" target="_blank" class="btn btn-olive btn-sm" style="flex:1;font-size:11px;padding:5px 8px">View →</a>
+              </div>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    </div>` : ''}
+    `;
+
+    res.innerHTML = html;
+
+    // Store data for export
+    window._oppData = d;
+    window._oppKw = kw;
+    window._oppTags = d.topTags || [];
+
+    // Auto-scan if came from URL
+    if (urlKw && res.innerHTML.length < 100) doOpportunity();
+
+  } catch(e) {
+    res.innerHTML = errBox(e.message + ' — Check your Groq API key is correct.');
+  }
+}
+
+function copyTags() {
+  const tags = (window._oppTags || []).join(', ');
+  const btn = document.getElementById('copy-tags-btn');
+  copyText(tags, btn);
+}
+
+async function saveOpportunity(niche, verdict) {
+  try {
+    const status = verdict.includes('BUY IN')?'launch':verdict.includes('TESTING')?'test':'watch';
+    await dbInsert('workspace', {
+      niche, status,
+      owner_id: session.userId,
+      created_at: new Date().toISOString()
+    });
+    alert('✓ Saved to workspace!');
+  } catch(e) { alert('Could not save: '+e.message+'\n\nNote: The workspace table needs to be created in Supabase first.'); }
+}
+
+function exportOpp() {
+  if (!window._oppData) return;
+  const d = window._oppData;
+  csvExport([{
+    Keyword: window._oppKw,
+    Score: d.opportunityScore,
+    Verdict: d.verdict,
+    Demand: d.demandScore,
+    Competition: d.competitionScore,
+    Platform: d.sellThisNow?.platform,
+    'UK Price': d.sellThisNow?.ukPrice,
+    'USA Price': d.sellThisNow?.usaPrice,
+    Margin: d.sellThisNow?.margin,
+    Tags: (d.topTags||[]).join(', ')
+  }], 'opportunity-'+window._oppKw+'.csv');
+}
+
+// Auto-run if keyword in URL
+if (urlKw) setTimeout(doOpportunity, 300);
+</script>
+</body>
+</html>

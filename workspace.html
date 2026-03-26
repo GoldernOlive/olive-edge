@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Workspace — Olive Edge</title>
+<link rel="stylesheet" href="css/style.css"/>
+</head>
+<body>
+<div id="nav-placeholder"></div>
+<div class="page">
+  <div class="fu" style="display:flex;justify-content:space-between;align-items:flex-start;gap:14px;flex-wrap:wrap;margin-bottom:20px">
+    <div>
+      <div class="page-title serif">📋 Workspace</div>
+      <div class="page-sub">Save ideas, track status, share with your partner</div>
+    </div>
+    <button class="btn-olive" onclick="showAddModal()">＋ Add Idea</button>
+  </div>
+
+  <!-- Filters -->
+  <div class="card fu" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+    <span style="font-size:13px;color:var(--mu)">Filter:</span>
+    <button class="btn-chip" onclick="filterStatus('all')" id="f-all" style="border-color:var(--ol);color:var(--ol)">All</button>
+    <button class="btn-chip" onclick="filterStatus('launch')" id="f-launch">🚀 Launch</button>
+    <button class="btn-chip" onclick="filterStatus('test')" id="f-test">🧪 Test</button>
+    <button class="btn-chip" onclick="filterStatus('watch')" id="f-watch">👁 Watch</button>
+    <button class="btn-chip" onclick="filterStatus('avoid')" id="f-avoid">🚫 Avoid</button>
+    <button class="btn-ghost btn-sm" onclick="exportWorkspace()" style="margin-left:auto">↓ Export CSV</button>
+  </div>
+
+  <div id="ws-list"></div>
+
+  <!-- Add Modal -->
+  <div id="add-modal" style="display:none;position:fixed;inset:0;background:rgba(40,34,24,.5);z-index:1000;display:none;align-items:center;justify-content:center;padding:20px">
+    <div style="background:var(--w);border-radius:14px;padding:28px;max-width:500px;width:100%;box-shadow:0 8px 32px rgba(40,34,24,.2)">
+      <div class="serif" style="font-size:22px;font-weight:600;margin-bottom:20px">Add to Workspace</div>
+      <div style="margin-bottom:12px"><div class="lbl">Niche / Keyword</div><input id="ws-niche" placeholder="e.g. custom pet mug"/></div>
+      <div style="margin-bottom:12px"><div class="lbl">Status</div>
+        <select id="ws-status">
+          <option value="launch">🚀 Launch</option>
+          <option value="test">🧪 Test</option>
+          <option value="watch" selected>👁 Watch</option>
+          <option value="avoid">🚫 Avoid</option>
+        </select>
+      </div>
+      <div style="margin-bottom:12px"><div class="lbl">Notes</div><textarea id="ws-notes" placeholder="Design ideas, pricing, observations..."></textarea></div>
+      <div style="margin-bottom:12px"><div class="lbl">Assigned To</div>
+        <select id="ws-assigned">
+          <option value="me">Me</option>
+          <option value="partner">Partner</option>
+          <option value="both">Both</option>
+        </select>
+      </div>
+      <div style="display:flex;gap:10px;justify-content:flex-end">
+        <button class="btn-ghost" onclick="hideModal()">Cancel</button>
+        <button class="btn-olive" onclick="saveIdea()">Save Idea</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="js/auth.js"></script>
+<script>
+const session = requireAuth();
+document.getElementById('nav-placeholder').innerHTML = renderNav('workspace.html');
+
+let allItems = [], currentFilter = 'all', editingId = null;
+
+async function loadWorkspace() {
+  document.getElementById('ws-list').innerHTML = loading('Loading workspace...');
+  try {
+    const items = await dbSelect('workspace', `owner_id=eq.${session.userId}&order=created_at.desc`);
+    allItems = items || [];
+    renderList();
+  } catch(e) {
+    // Table might not exist yet
+    document.getElementById('ws-list').innerHTML = `
+      <div class="card-gold">
+        <div class="lbl" style="color:var(--gd)">⚠️ Workspace Setup Required</div>
+        <p style="font-size:14px;color:var(--mu);line-height:1.7;margin-bottom:14px">The workspace table needs to be created in your Supabase database.</p>
+        <p style="font-size:13px;color:var(--mu);margin-bottom:12px">Run this SQL in your Supabase dashboard → SQL Editor:</p>
+        <pre style="background:var(--p3);border-radius:8px;padding:14px;font-size:12px;font-family:DM Mono,monospace;overflow-x:auto;color:var(--tx);line-height:1.6">CREATE TABLE workspace (
+  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  owner_id uuid REFERENCES auth.users(id) ON DELETE CASCADE,
+  niche text NOT NULL,
+  status text DEFAULT 'watch',
+  notes text,
+  assigned_to text DEFAULT 'me',
+  opportunity_score numeric,
+  created_at timestamptz DEFAULT now(),
+  updated_at timestamptz DEFAULT now()
+);
+
+ALTER TABLE workspace ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can manage own workspace"
+ON workspace FOR ALL
+USING (auth.uid() = owner_id)
+WITH CHECK (auth.uid() = owner_id);</pre>
+        <button class="btn-olive btn-sm" onclick="loadWorkspace()" style="margin-top:12px">↻ Retry after creating table</button>
+      </div>`;
+  }
+}
+
+function renderList() {
+  const filtered = currentFilter === 'all' ? allItems : allItems.filter(i => i.status === currentFilter);
+  if (!filtered.length) {
+    document.getElementById('ws-list').innerHTML = `<div class="card" style="text-align:center;padding:48px;color:var(--mu)"><div style="font-size:36px;margin-bottom:12px">💡</div><div>No ideas here yet. Start scanning to find opportunities.</div></div>`;
+    return;
+  }
+  const statusLabels = {launch:'🚀 Launch',test:'🧪 Test',watch:'👁 Watch',avoid:'🚫 Avoid'};
+  const statusColors = {launch:'status-launch',test:'status-test',watch:'status-watch',avoid:'status-avoid'};
+  document.getElementById('ws-list').innerHTML = filtered.map(item => `
+    <div class="card fu" id="item-${item.id}">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:14px;flex-wrap:wrap">
+        <div style="flex:1;min-width:180px">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;flex-wrap:wrap">
+            <div style="font-weight:700;font-size:17px;font-family:Cormorant Garamond,serif">${item.niche||'Untitled'}</div>
+            <span class="${statusColors[item.status]||'status-watch'}">${statusLabels[item.status]||item.status}</span>
+            ${item.assigned_to ? `<span class="badge b-grey">${item.assigned_to}</span>` : ''}
+          </div>
+          ${item.notes ? `<p style="font-size:13px;color:var(--mu);line-height:1.6;margin-bottom:8px">${item.notes}</p>` : ''}
+          <div style="font-size:11px;color:var(--mu2)">${new Date(item.created_at).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})}</div>
+        </div>
+        <div style="display:flex;gap:6px;flex-shrink:0;flex-wrap:wrap">
+          <button class="btn-ghost btn-sm" onclick="window.location.href='opportunities.html?kw=${encodeURIComponent(item.niche||'')}'">🔥 Analyse</button>
+          <select class="btn-ghost btn-sm" style="cursor:pointer" onchange="updateStatus('${item.id}',this.value)">
+            <option value="">Change status</option>
+            <option value="launch">🚀 Launch</option>
+            <option value="test">🧪 Test</option>
+            <option value="watch">👁 Watch</option>
+            <option value="avoid">🚫 Avoid</option>
+          </select>
+          <button class="btn-red btn-sm" onclick="deleteIdea('${item.id}')">✕</button>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function filterStatus(s) {
+  currentFilter = s;
+  ['all','launch','test','watch','avoid'].forEach(f => {
+    const el = document.getElementById('f-'+f);
+    if(el){ el.style.borderColor = f===s?'var(--ol)':''; el.style.color = f===s?'var(--ol)':''; }
+  });
+  renderList();
+}
+
+function showAddModal() {
+  document.getElementById('ws-niche').value='';
+  document.getElementById('ws-notes').value='';
+  document.getElementById('ws-status').value='watch';
+  document.getElementById('ws-assigned').value='me';
+  editingId = null;
+  document.getElementById('add-modal').style.display='flex';
+}
+function hideModal(){ document.getElementById('add-modal').style.display='none'; }
+
+async function saveIdea() {
+  const niche = document.getElementById('ws-niche').value.trim();
+  if (!niche) { alert('Please enter a niche/keyword.'); return; }
+  const row = {
+    niche,
+    status: document.getElementById('ws-status').value,
+    notes: document.getElementById('ws-notes').value,
+    assigned_to: document.getElementById('ws-assigned').value,
+    owner_id: session.userId,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  };
+  try {
+    await dbInsert('workspace', row);
+    hideModal();
+    loadWorkspace();
+  } catch(e) { alert('Save failed: '+e.message); }
+}
+
+async function updateStatus(id, status) {
+  if (!status) return;
+  try {
+    await dbUpdate('workspace', id, {status, updated_at: new Date().toISOString()});
+    loadWorkspace();
+  } catch(e) { alert('Update failed: '+e.message); }
+}
+
+async function deleteIdea(id) {
+  if (!confirm('Delete this idea?')) return;
+  try { await dbDelete('workspace', id); loadWorkspace(); }
+  catch(e) { alert('Delete failed: '+e.message); }
+}
+
+function exportWorkspace() {
+  if (!allItems.length) return;
+  csvExport(allItems.map(i=>({Niche:i.niche,Status:i.status,Notes:i.notes||'',AssignedTo:i.assigned_to||'',Date:new Date(i.created_at).toLocaleDateString()})), 'workspace.csv');
+}
+
+loadWorkspace();
+</script>
+</body>
+</html>
