@@ -15,7 +15,7 @@
   </div>
 
   <div class="card fu" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
-    <input id="dash-kw" placeholder="Quick scan — type any keyword e.g. custom mug, wall art, tote bag..." style="flex:1;min-width:200px"/>
+    <input id="dash-kw" placeholder="Quick scan — e.g. custom mug, wall art, tote bag..." style="flex:1;min-width:200px" onkeydown="if(event.key==='Enter')quickScan()"/>
     <button class="btn-olive" onclick="quickScan()">Scan Now</button>
     <button class="btn-ghost" onclick="window.location.href='opportunities.html'">Full Opportunity Finder</button>
   </div>
@@ -24,7 +24,7 @@
     <div>
       <div class="card-olive">
         <div class="lbl" style="color:var(--ol)">Sell Right Now</div>
-        <div id="sell-now"><div class="loading-row"><div class="spin"></div>Loading opportunities...</div></div>
+        <div id="sell-now"><div class="loading-row"><div class="spin"></div>Loading...</div></div>
       </div>
       <div class="card-gold" style="margin-top:16px">
         <div class="lbl" style="color:var(--gd)">Evergreen Winners</div>
@@ -46,7 +46,7 @@
   <div class="card d2">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px">
       <span class="lbl" style="margin-bottom:0">Recent Workspace Activity</span>
-      <a href="workspace.html" class="btn btn-ghost btn-sm" style="text-decoration:none">View All</a>
+      <a href="workspace.html" style="text-decoration:none;border:1.5px solid var(--b2);padding:5px 12px;border-radius:6px;font-size:12px;font-weight:600;color:var(--mu);font-family:Jost,sans-serif">View All</a>
     </div>
     <div id="recent-workspace"><div style="color:var(--mu);font-size:13px">No saved ideas yet. Start scanning to find opportunities.</div></div>
   </div>
@@ -59,8 +59,6 @@
 var session=requireAuth();
 document.getElementById('nav-placeholder').innerHTML=renderNav('dashboard.html');
 
-function getKeys(){return{etsy:localStorage.getItem('oe_etsy')||'',groq:localStorage.getItem('oe_groq')||''};}
-
 function sbox(l,v,c){return '<div class="sbox"><div class="lbl">'+l+'</div><div class="mono" style="font-size:16px;color:'+(c||'var(--tx)')+';font-weight:600">'+(v||'--')+'</div></div>';}
 function fmt(n){return n>=1000?(n/1000).toFixed(1)+'k':String(n||0);}
 function demandColor(d){return d==='High'?'var(--ol)':d==='Medium'?'var(--gd)':'var(--rd)';}
@@ -69,92 +67,73 @@ function compColor(c){return c==='Low'?'var(--gn)':c==='Medium'?'var(--gd)':c===
 function platformLinks(kw){
   var k=encodeURIComponent(kw);
   var links=[
-    {name:'Etsy UK',color:'#f1641e',url:'https://www.etsy.com/uk/search?q='+k,icon:'🛍'},
-    {name:'Etsy USA',color:'#f1641e',url:'https://www.etsy.com/search?q='+k,icon:'🛍'},
-    {name:'Etsy Germany',color:'#f1641e',url:'https://www.etsy.com/de/search?q='+k,icon:'🛍'},
-    {name:'Etsy Australia',color:'#f1641e',url:'https://www.etsy.com/au/search?q='+k,icon:'🛍'},
-    {name:'Printify',color:'#2a4a7a',url:'https://printify.com/app/products?search='+k,icon:'🖨'},
-    {name:'Printful',color:'#3d3d3d',url:'https://www.printful.com/uk/custom/search?q='+k,icon:'🖨'},
-    {name:'Gelato',color:'#e85d26',url:'https://www.gelato.com/gb/en/catalogue?q='+k,icon:'🖨'},
-    {name:'Pinterest',color:'#e60023',url:'https://www.pinterest.co.uk/search/pins/?q='+k,icon:'📌'},
-    {name:'Amazon UK',color:'#ff9900',url:'https://www.amazon.co.uk/s?k='+k,icon:'📦'},
-    {name:'NOTHS',color:'#4a4a4a',url:'https://www.notonthehighstreet.com/search?search_term='+k,icon:'🎁'}
+    {name:'Etsy UK',url:'https://www.etsy.com/uk/search?q='+k,icon:'🛍'},
+    {name:'Etsy USA',url:'https://www.etsy.com/search?q='+k,icon:'🛍'},
+    {name:'Etsy Germany',url:'https://www.etsy.com/de/search?q='+k,icon:'🛍'},
+    {name:'Etsy Australia',url:'https://www.etsy.com/au/search?q='+k,icon:'🛍'},
+    {name:'Printify',url:'https://printify.com/app/products?search='+k,icon:'🖨'},
+    {name:'Printful',url:'https://www.printful.com/uk/custom/search?q='+k,icon:'🖨'},
+    {name:'Gelato',url:'https://www.gelato.com/gb/en/catalogue?q='+k,icon:'🖨'},
+    {name:'Pinterest',url:'https://www.pinterest.co.uk/search/pins/?q='+k,icon:'📌'},
+    {name:'Amazon UK',url:'https://www.amazon.co.uk/s?k='+k,icon:'📦'},
+    {name:'NOTHS',url:'https://www.notonthehighstreet.com/search?search_term='+k,icon:'🎁'}
   ];
   var html='<div class="card" style="margin-bottom:16px;border:2px solid var(--olbr)">';
   html+='<div class="lbl" style="color:var(--ol)">See Real Products On Every Platform</div>';
   html+='<p style="font-size:12px;color:var(--mu);margin-bottom:12px">Click to see what is selling for <strong>'+kw+'</strong> right now</p>';
   html+='<div style="display:flex;flex-wrap:wrap;gap:8px">';
   for(var i=0;i<links.length;i++){
-    var l=links[i];
-    html+='<a href="'+l.url+'" target="_blank" style="display:inline-flex;align-items:center;gap:6px;background:var(--w);border:1.5px solid var(--b1);border-radius:8px;padding:8px 14px;font-size:13px;font-weight:600;color:var(--tx);text-decoration:none;font-family:Jost,sans-serif;">'+l.icon+' '+l.name+'</a>';
+    html+='<a href="'+links[i].url+'" target="_blank" style="display:inline-flex;align-items:center;gap:6px;background:var(--w);border:1.5px solid var(--b1);border-radius:8px;padding:8px 14px;font-size:13px;font-weight:600;color:var(--tx);text-decoration:none;font-family:Jost,sans-serif;">'+links[i].icon+' '+links[i].name+'</a>';
   }
   html+='</div></div>';
   return html;
 }
 
-async function callGroq(prompt){
-  var keys=getKeys();
-  if(!keys.groq){throw new Error('No Groq key');}
-  var r=await fetch('https://api.groq.com/openai/v1/chat/completions',{
+async function callAI(prompt){
+  var r=await fetch('/api/groq',{
     method:'POST',
-    headers:{'Content-Type':'application/json','Authorization':'Bearer '+keys.groq},
-    body:JSON.stringify({
-      model:'llama-3.3-70b-versatile',
-      messages:[
-        {role:'system',content:'You are an expert Etsy market analyst specialising in print-on-demand and global Etsy selling UK USA Germany Australia. Give specific actionable intelligence with real numbers.'},
-        {role:'user',content:prompt+'\n\nReturn ONLY valid raw JSON. No markdown. Start with { end with }'}
-      ],
-      temperature:0.2,
-      max_tokens:2048
-    })
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({prompt:prompt})
   });
   var d=await r.json();
-  if(!r.ok)throw new Error(d.error&&d.error.message||'Groq error');
-  var t=d.choices&&d.choices[0]&&d.choices[0].message&&d.choices[0].message.content||'';
-  var s=t.indexOf('{'),e=t.lastIndexOf('}');
-  if(s<0||e<0)throw new Error('No JSON in response');
-  return JSON.parse(t.slice(s,e+1));
+  if(!r.ok)throw new Error(d.error||'Server error '+r.status);
+  return d;
 }
 
 async function loadDashboard(){
   try{
-    var d=await callGroq('What are the best opportunities for a UK-based Etsy POD seller right now? Consider UK USA Germany Australia Canada. Return JSON: {"sellNow":[{"niche":"name","reason":"why now","score":8.5,"urgency":"Today","platform":"Printify","ukPrice":"£X","usaPrice":"$X"}],"evergreen":[{"niche":"name","reason":"why evergreen","avgPrice":"£X","competition":"Low"}],"seasonal":[{"event":"event","date":"month","products":["p1","p2"],"leadTime":"X weeks"}],"bestMargin":[{"product":"name","platform":"Printify","baseCost":"£X","sellPrice":"£X","margin":"X%"}]}');
+    var d=await callAI('What are the best POD Etsy opportunities for a UK seller right now 2025? Consider UK USA Germany Australia Canada. Return JSON: {"sellNow":[{"niche":"Personalised Pet Mug","reason":"Pet ownership up 25% since 2020","score":8.5,"urgency":"Today","platform":"Printful","ukPrice":"£16.99","usaPrice":"$21.99"},{"niche":"Funny Office Mug","reason":"Remote work trend strong","score":7.8,"urgency":"This Week","platform":"Printify","ukPrice":"£12.99","usaPrice":"$15.99"},{"niche":"Custom Tote Bag","reason":"Eco gift demand rising","score":7.5,"urgency":"This Week","platform":"Printify","ukPrice":"£14.99","usaPrice":"$18.99"}],"evergreen":[{"niche":"Wedding Print","reason":"Constant year round demand","avgPrice":"£28.99","competition":"Low"},{"niche":"Baby Milestone Art","reason":"Always new parents","avgPrice":"£19.99","competition":"Medium"},{"niche":"Custom Name Print","reason":"Personalisation never goes out","avgPrice":"£15.99","competition":"Medium"}],"seasonal":[{"event":"Mothers Day","date":"March","products":["Mug","Tote Bag","Print"],"leadTime":"6 weeks"},{"event":"Christmas","date":"December","products":["Ornament","Gift Mug","Card"],"leadTime":"8 weeks"},{"event":"Valentines Day","date":"January","products":["Couples Print","Heart Mug"],"leadTime":"4 weeks"}],"bestMargin":[{"product":"11oz Ceramic Mug","platform":"Printify","baseCost":"£3.50","sellPrice":"£14.99","margin":"77%"},{"product":"Tote Bag Canvas","platform":"Printify","baseCost":"£4.20","sellPrice":"£16.99","margin":"75%"},{"product":"A4 Art Print","platform":"Gelato","baseCost":"£2.80","sellPrice":"£12.99","margin":"78%"}]}');
 
     var html='';
     var sellNow=d.sellNow||[];
     for(var i=0;i<sellNow.length;i++){
       var p=sellNow[i];
-      var urgColor=p.urgency&&p.urgency.indexOf('Today')>=0?'var(--rd)':'var(--or)';
+      var uc=p.urgency&&p.urgency.indexOf('Today')>=0?'var(--rd)':'var(--or)';
       html+='<div style="padding:12px 0;border-bottom:1px solid var(--olbr)">';
-      html+='<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:5px">';
-      html+='<div><span style="font-weight:700;font-size:15px">'+p.niche+'</span>';
-      html+='<span style="margin-left:8px;color:'+urgColor+';font-size:12px;font-weight:700">'+p.urgency+'</span></div>';
-      html+='<div style="text-align:right;flex-shrink:0"><div class="mono" style="color:var(--gd);font-weight:700">'+p.ukPrice+'</div>';
-      html+='<div style="font-size:10px;color:var(--mu)">'+p.usaPrice+' USA</div></div></div>';
-      html+='<div style="font-size:12px;color:var(--mu)">'+p.reason+'</div>';
-      html+='<div style="margin-top:5px"><span class="badge b-live">'+p.platform+'</span></div></div>';
+      html+='<div style="display:flex;justify-content:space-between;gap:8px;margin-bottom:5px">';
+      html+='<div><span style="font-weight:700;font-size:15px">'+p.niche+'</span> <span style="color:'+uc+';font-size:12px;font-weight:700">'+p.urgency+'</span></div>';
+      html+='<div style="text-align:right;flex-shrink:0"><div class="mono" style="color:var(--gd);font-weight:700">'+p.ukPrice+'</div><div style="font-size:10px;color:var(--mu)">'+p.usaPrice+'</div></div></div>';
+      html+='<div style="font-size:12px;color:var(--mu);margin-bottom:5px">'+p.reason+'</div>';
+      html+='<span class="badge b-live">'+p.platform+'</span></div>';
     }
-    document.getElementById('sell-now').innerHTML=html||'<p style="color:var(--mu);font-size:13px">Run a scan to see opportunities.</p>';
+    document.getElementById('sell-now').innerHTML=html||'<p style="color:var(--mu);font-size:13px">No data.</p>';
 
     html='';
-    var evergreen=d.evergreen||[];
-    for(var i=0;i<evergreen.length;i++){
-      var p=evergreen[i];
+    var ev=d.evergreen||[];
+    for(var i=0;i<ev.length;i++){
+      var p=ev[i];
       html+='<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--gdbr)">';
-      html+='<div><div style="font-weight:600;font-size:14px">'+p.niche+'</div>';
-      html+='<div style="font-size:12px;color:var(--mu)">'+p.reason+'</div></div>';
-      html+='<div style="text-align:right;flex-shrink:0"><div class="mono" style="color:var(--gd)">'+p.avgPrice+'</div>';
-      html+='<div style="font-size:10px;color:'+compColor(p.competition)+'">'+p.competition+' comp</div></div></div>';
+      html+='<div><div style="font-weight:600;font-size:14px">'+p.niche+'</div><div style="font-size:12px;color:var(--mu)">'+p.reason+'</div></div>';
+      html+='<div style="text-align:right;flex-shrink:0"><div class="mono" style="color:var(--gd)">'+p.avgPrice+'</div><div style="font-size:10px;color:'+compColor(p.competition)+'">'+p.competition+'</div></div></div>';
     }
     document.getElementById('evergreen').innerHTML=html;
 
     html='';
-    var seasonal=d.seasonal||[];
-    for(var i=0;i<seasonal.length;i++){
-      var s=seasonal[i];
+    var sea=d.seasonal||[];
+    for(var i=0;i<sea.length;i++){
+      var s=sea[i];
       html+='<div style="padding:10px 0;border-bottom:1px solid var(--b1)">';
-      html+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">';
-      html+='<strong>'+s.event+'</strong><span class="badge b-gold">'+s.date+'</span></div>';
+      html+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px"><strong>'+s.event+'</strong><span class="badge b-gold">'+s.date+'</span></div>';
       html+='<div style="font-size:12px;color:var(--mu);margin-bottom:5px">List '+s.leadTime+' before</div><div>';
       var prods=s.products||[];
       for(var j=0;j<prods.length;j++){html+='<span class="pill">'+prods[j]+'</span>';}
@@ -163,19 +142,20 @@ async function loadDashboard(){
     document.getElementById('seasonal').innerHTML=html;
 
     html='';
-    var bestMargin=d.bestMargin||[];
-    for(var i=0;i<bestMargin.length;i++){
-      var p=bestMargin[i];
+    var bm=d.bestMargin||[];
+    for(var i=0;i<bm.length;i++){
+      var p=bm[i];
       html+='<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--b1)">';
-      html+='<div><div style="font-weight:600;font-size:14px">'+p.product+'</div>';
-      html+='<div style="font-size:11px;color:var(--mu)">'+p.platform+' · Base: '+p.baseCost+'</div></div>';
-      html+='<div style="text-align:right"><div class="mono" style="color:var(--gd);font-weight:700">'+p.sellPrice+'</div>';
-      html+='<div style="font-size:11px;color:var(--ol);font-weight:700">'+p.margin+'</div></div></div>';
+      html+='<div><div style="font-weight:600;font-size:14px">'+p.product+'</div><div style="font-size:11px;color:var(--mu)">'+p.platform+' · Base: '+p.baseCost+'</div></div>';
+      html+='<div style="text-align:right"><div class="mono" style="color:var(--gd);font-weight:700">'+p.sellPrice+'</div><div style="font-size:11px;color:var(--ol);font-weight:700">'+p.margin+'</div></div></div>';
     }
     document.getElementById('margin-opps').innerHTML=html;
 
   }catch(e){
-    document.getElementById('sell-now').innerHTML='<p style="color:var(--rd);font-size:13px">Error: '+e.message+'</p>';
+    document.getElementById('sell-now').innerHTML='<p style="color:var(--rd);font-size:13px">Error loading: '+e.message+'</p>';
+    document.getElementById('evergreen').innerHTML='';
+    document.getElementById('seasonal').innerHTML='';
+    document.getElementById('margin-opps').innerHTML='';
   }
 }
 
@@ -183,14 +163,13 @@ async function loadRecentWorkspace(){
   try{
     var rows=await dbSelect('workspace','owner_id=eq.'+session.userId+'&order=created_at.desc&limit=5');
     if(!rows||!rows.length)return;
-    var statusClass={'launch':'status-launch','test':'status-test','watch':'status-watch','avoid':'status-avoid'};
     var html='';
     for(var i=0;i<rows.length;i++){
       var r=rows[i];
+      var sc={'launch':'status-launch','test':'status-test','watch':'status-watch','avoid':'status-avoid'}[r.status]||'status-watch';
       html+='<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--b1)">';
-      html+='<div><span style="font-weight:600;font-size:14px">'+(r.niche||'Untitled')+'</span>';
-      if(r.notes)html+='<div style="font-size:12px;color:var(--mu);margin-top:2px">'+r.notes+'</div>';
-      html+='</div><span class="'+(statusClass[r.status]||'status-watch')+'">'+(r.status||'watch')+'</span></div>';
+      html+='<span style="font-weight:600;font-size:14px">'+(r.niche||'Untitled')+'</span>';
+      html+='<span class="'+sc+'">'+(r.status||'watch')+'</span></div>';
     }
     document.getElementById('recent-workspace').innerHTML=html;
   }catch(e){}
@@ -198,22 +177,21 @@ async function loadRecentWorkspace(){
 
 async function quickScan(){
   var kw=document.getElementById('dash-kw').value.trim();
-  if(!kw)return;
+  if(!kw){alert('Please type a keyword first');return;}
   var res=document.getElementById('scan-result');
-  res.innerHTML='<div class="card"><div class="loading-row"><div class="spin"></div>Scanning "'+kw+'" across global markets...</div></div>';
-
+  res.innerHTML='<div class="card"><div class="loading-row"><div class="spin"></div>Scanning "'+kw+'"...</div></div>';
   try{
-    var d=await callGroq('Analyse Etsy niche "'+kw+'" for UK USA Germany Australia POD selling. Return JSON: {"opportunityScore":7.5,"demandLevel":"High","competitionLevel":"Medium","verdict":"BUY IN","verdictReason":"one sentence","sweetSpot":"£X-£Y","bestMarket":"UK","topIdea":{"product":"exact product","platform":"Printify","design":"design description","phrase":"key phrase","ukPrice":"£X","usaPrice":"$X","margin":"X%"},"top3Tags":["tag1","tag2","tag3"],"insight":"key insight"}');
+    var d=await callAI('Analyse Etsy niche "'+kw+'" for UK POD selling. Return JSON: {"opportunityScore":7.5,"demandLevel":"High","competitionLevel":"Medium","verdict":"BUY IN","verdictReason":"specific reason","sweetSpot":"£12-£18","bestMarket":"UK","topIdea":{"product":"exact product","platform":"Printify","design":"design description","phrase":"key phrase","ukPrice":"£14.99","usaPrice":"$18.99","margin":"72%"},"top3Tags":["tag1","tag2","tag3"],"insight":"key actionable insight"}');
 
-    var verdictColor={'BUY IN':'var(--gn)','WORTH TESTING':'var(--gd)','PROCEED WITH CAUTION':'var(--or)','AVOID':'var(--rd)'}[d.verdict]||'var(--gd)';
+    var vc={'BUY IN':'var(--gn)','WORTH TESTING':'var(--gd)','PROCEED WITH CAUTION':'var(--or)','AVOID':'var(--rd)'}[d.verdict]||'var(--gd)';
     var sc=d.opportunityScore||7;
     var scClass=sc>=7?'score-high':sc>=5?'score-mid':'score-low';
 
     var html=platformLinks(kw);
     html+='<div class="card-live fu">';
     html+='<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:14px;flex-wrap:wrap;margin-bottom:16px">';
-    html+='<div><div class="serif" style="font-size:28px;font-weight:600;margin-bottom:8px">'+kw+'</div>';
-    html+='<span style="background:'+verdictColor+'18;color:'+verdictColor+';border:1px solid '+verdictColor+'44;border-radius:20px;padding:4px 14px;font-size:12px;font-weight:700">'+d.verdict+'</span>';
+    html+='<div style="flex:1"><div class="serif" style="font-size:28px;font-weight:600;margin-bottom:8px">'+kw+'</div>';
+    html+='<span style="background:'+vc+'18;color:'+vc+';border:1px solid '+vc+'44;border-radius:20px;padding:4px 14px;font-size:12px;font-weight:700">'+d.verdict+'</span>';
     html+='<p style="margin-top:8px;font-size:13px;color:var(--mu)">'+d.verdictReason+'</p></div>';
     html+='<div class="score-ring '+scClass+'">'+sc+'</div></div>';
     html+='<div class="grid-auto" style="margin-bottom:14px">';
@@ -242,8 +220,8 @@ async function quickScan(){
     html+='<p style="font-size:13px;color:var(--mu);font-style:italic">'+(d.insight||'')+'</p>';
     html+='<div style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap">';
     html+='<button class="btn-olive btn-sm" onclick="window.location.href=\'opportunities.html?kw='+encodeURIComponent(kw)+'\'">Full Analysis</button>';
-    html+='<button class="btn-ghost btn-sm" onclick="saveDash(\''+kw.replace(/'/g,"\\'")+'\',\''+d.verdict+'\')">+ Save to Workspace</button></div></div>';
-
+    html+='<button class="btn-ghost btn-sm" onclick="saveDash(\''+kw.replace(/'/g,"\\'")+'\',\''+d.verdict+'\')">+ Save to Workspace</button>';
+    html+='</div></div>';
     res.innerHTML=html;
   }catch(e){
     res.innerHTML='<div class="card-red"><strong>Error:</strong> '+e.message+'</div>';
@@ -251,10 +229,8 @@ async function quickScan(){
 }
 
 function saveDash(niche,verdict){
-  try{
-    var status=verdict.indexOf('BUY IN')>=0?'launch':verdict.indexOf('TESTING')>=0?'test':'watch';
-    dbInsert('workspace',{niche:niche,status:status,owner_id:session.userId,created_at:new Date().toISOString()}).then(function(){alert('Saved to workspace!');}).catch(function(e){alert('Could not save: '+e.message);});
-  }catch(e){alert('Error: '+e.message);}
+  var status=verdict.indexOf('BUY IN')>=0?'launch':verdict.indexOf('TESTING')>=0?'test':'watch';
+  dbInsert('workspace',{niche:niche,status:status,owner_id:session.userId,created_at:new Date().toISOString()}).then(function(){alert('Saved!');}).catch(function(e){alert('Error: '+e.message);});
 }
 
 loadDashboard();
