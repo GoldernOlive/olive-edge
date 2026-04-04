@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Global Arbitrage — Olive Edge</title>
+<link rel="stylesheet" href="css/style.css"/>
+</head>
+<body>
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="dashboard.html" class="nav-logo" style="text-decoration:none"><span class="sub">Golden Olive</span><span class="main">Olive <span>Edge</span></span></a>
+    <div class="nav-links">
+      <a href="dashboard.html" class="nav-link">Dashboard</a>
+      <a href="opportunities.html" class="nav-link">Opportunities</a>
+      <a href="trend-velocity.html" class="nav-link">Trend Velocity</a>
+      <a href="global-arbitrage.html" class="nav-link active">Global Arbitrage</a>
+      <a href="listing-generator.html" class="nav-link">Listing Writer</a>
+      <a href="listing-auditor.html" class="nav-link">Auditor</a>
+      <a href="workspace.html" class="nav-link">Workspace</a>
+    </div>
+    <div class="nav-user">
+      <span class="nav-email" id="nav-email"></span>
+      <button class="btn-ghost btn-sm" onclick="logout()">Log Out</button>
+    </div>
+  </div>
+</nav>
+
+<div class="page">
+  <div class="fu">
+    <div class="page-title serif">Global Arbitrage Finder</div>
+    <div class="page-sub">What is trending in USA right now but not yet in UK — be the first seller in your market</div>
+  </div>
+
+  <div class="card fu" style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+    <div style="flex:1">
+      <div class="lbl">Your niche or product category</div>
+      <input id="arb-kw" placeholder="e.g. mugs, wall art, tote bags, candles, jewellery..." onkeydown="if(event.key==='Enter')doArbitrage()"/>
+    </div>
+    <button class="btn-olive" onclick="doArbitrage()">Find Arbitrage Opportunities</button>
+    <button class="btn-ghost" onclick="doFullScan()">Scan All POD Niches</button>
+  </div>
+
+  <div id="arb-result"></div>
+</div>
+
+<script>
+function getSession(){return{token:localStorage.getItem('oe_token')||'',email:localStorage.getItem('oe_email')||'',userId:localStorage.getItem('oe_uid')||''};}
+function logout(){localStorage.removeItem('oe_token');localStorage.removeItem('oe_email');localStorage.removeItem('oe_uid');window.location.href='index.html';}
+var SESSION=getSession();
+if(!SESSION.token){window.location.href='index.html';}
+else{var em=document.getElementById('nav-email');if(em)em.textContent=SESSION.email;}
+
+async function callAI(prompt){
+  var r=await fetch('/api/groq',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompt:prompt})});
+  var d=await r.json();
+  if(!r.ok)throw new Error(d.error||'AI error');
+  return d;
+}
+
+async function getTrendsData(){
+  try{var r=await fetch('/api/trends');return r.json();}catch(e){return{};}
+}
+
+async function doArbitrage(){
+  var kw=document.getElementById('arb-kw').value.trim()||'print on demand';
+  var res=document.getElementById('arb-result');
+  res.innerHTML='<div class="card"><div class="loading-row"><div class="spin"></div>Fetching real Google Trends for UK, USA, Germany, Australia simultaneously...</div></div>';
+
+  var trendsData=await getTrendsData();
+  var gbTrends=(trendsData.trendingByMarket&&trendsData.trendingByMarket.GB||[]).map(function(t){return t.term;});
+  var usTrends=(trendsData.trendingByMarket&&trendsData.trendingByMarket.US||[]).map(function(t){return t.term;});
+  var deTrends=(trendsData.trendingByMarket&&trendsData.trendingByMarket.DE||[]).map(function(t){return t.term;});
+  var auTrends=(trendsData.trendingByMarket&&trendsData.trendingByMarket.AU||[]).map(function(t){return t.term;});
+
+  res.innerHTML='<div class="card"><div class="loading-row"><div class="spin"></div>AI cross-referencing trends across all 4 markets to find gaps...</div></div>';
+
+  try{
+    var d=await callAI(
+      'You are a global Etsy market specialist. Find REAL arbitrage opportunities — things selling well in one country but not yet discovered in another.\n\n'+
+      'NICHE FOCUS: "'+kw+'"\n'+
+      'REAL GOOGLE TRENDING UK: '+gbTrends.join(', ')+'\n'+
+      'REAL GOOGLE TRENDING USA: '+usTrends.join(', ')+'\n'+
+      'REAL GOOGLE TRENDING GERMANY: '+deTrends.join(', ')+'\n'+
+      'REAL GOOGLE TRENDING AUSTRALIA: '+auTrends.join(', ')+'\n\n'+
+      'Identify products/designs/phrases trending in USA (or DE or AU) that UK sellers have not yet caught on to. Also find UK-specific cultural opportunities that USA sellers miss.\n'+
+      'Return JSON only:\n'+
+      '{"summary":"key market arbitrage insight",'+
+      '"usaToUK":[{"product":"exact product","usaTrend":"why trending in USA","ukOpportunity":"why UK is wide open","marketSize":"est UK market","suggestedPrice":"£X","urgency":"List in X weeks","designAngle":"what to design","estimatedFirstMoverRevenue":"£X-£Y/month"},{"product":"product2","usaTrend":"trend","ukOpportunity":"opportunity","marketSize":"size","suggestedPrice":"£X","urgency":"X weeks","designAngle":"angle","estimatedFirstMoverRevenue":"£X-£Y/month"},{"product":"product3","usaTrend":"trend","ukOpportunity":"opportunity","marketSize":"size","suggestedPrice":"£X","urgency":"X weeks","designAngle":"angle","estimatedFirstMoverRevenue":"£X-£Y/month"}],'+
+      '"ukToGermany":[{"product":"exact product","ukStrength":"why UK does this well","germanyGap":"why Germany is open","designAdaptation":"how to adapt for German market","suggestedPrice":"€X"},{"product":"product2","ukStrength":"strength","germanyGap":"gap","designAdaptation":"adaptation","suggestedPrice":"€X"}],'+
+      '"australiaSurprises":[{"product":"what Australians buy that surprises UK sellers","reason":"why it works","ukAction":"how to sell it to Australians from UK","suggestedPrice":"AU$X"},{"product":"product2","reason":"reason","ukAction":"action","suggestedPrice":"AU$X"}],'+
+      '"culturalGaps":[{"gap":"specific cultural difference","opportunity":"exact opportunity","markets":"UK vs USA etc","designIdea":"specific idea"}]}'
+    );
+
+    var html='';
+
+    // SUMMARY
+    html+='<div class="card-live fu"><div class="lbl" style="color:var(--ol)">Global Arbitrage Intelligence</div>';
+    html+='<p style="font-size:14px;line-height:1.7">'+d.summary+'</p>';
+    if(gbTrends.length||usTrends.length){
+      html+='<div style="margin-top:12px;padding:10px;background:var(--p2);border-radius:8px"><div class="lbl">Real Trend Data Analysed</div>';
+      html+='<div class="grid-2"><div><div style="font-size:11px;font-weight:700;color:var(--mu);margin-bottom:4px">🇬🇧 UK TRENDING</div>';
+      gbTrends.slice(0,6).forEach(function(t){html+='<span class="pill" style="font-size:10px">'+t+'</span>';});
+      html+='</div><div><div style="font-size:11px;font-weight:700;color:var(--mu);margin-bottom:4px">🇺🇸 USA TRENDING</div>';
+      usTrends.slice(0,6).forEach(function(t){html+='<span class="pill" style="font-size:10px">'+t+'</span>';});
+      html+='</div></div></div>';
+    }
+    html+='</div>';
+
+    // USA TO UK OPPORTUNITIES
+    html+='<div class="card d1"><div class="lbl" style="color:var(--rd)">🇺🇸 → 🇬🇧 USA Trending, UK Wide Open</div>';
+    html+='<p style="font-size:12px;color:var(--mu);margin-bottom:14px">These are selling strongly in the USA right now. UK sellers have not caught up yet — you can be first.</p>';
+    var u2u=d.usaToUK||[];
+    for(var i=0;i<u2u.length;i++){
+      var p=u2u[i];
+      html+='<div class="card2" style="margin-bottom:12px">';
+      html+='<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:10px">';
+      html+='<div style="flex:1"><div style="font-weight:700;font-size:16px;margin-bottom:5px">'+p.product+'</div>';
+      html+='<div style="font-size:12px;color:var(--mu);margin-bottom:3px"><strong>USA trend:</strong> '+p.usaTrend+'</div>';
+      html+='<div style="font-size:12px;color:var(--ol);font-weight:600"><strong>UK opportunity:</strong> '+p.ukOpportunity+'</div></div>';
+      html+='<div style="text-align:right;flex-shrink:0">';
+      html+='<div style="font-weight:700;color:var(--gd);font-family:DM Mono,monospace;font-size:18px">'+p.suggestedPrice+'</div>';
+      html+='<div style="font-size:10px;color:var(--rd);font-weight:700">'+p.urgency+'</div></div></div>';
+      html+='<div class="grid-2" style="margin-top:8px">';
+      html+='<div style="padding:8px;background:var(--p2);border-radius:6px"><div style="font-size:10px;color:var(--mu);margin-bottom:3px">DESIGN ANGLE</div><div style="font-size:12px;font-weight:600">'+p.designAngle+'</div></div>';
+      html+='<div style="padding:8px;background:var(--gdbg);border-radius:6px"><div style="font-size:10px;color:var(--gd);margin-bottom:3px">EST FIRST MOVER REVENUE</div><div style="font-size:12px;font-weight:700;color:var(--gd)">'+p.estimatedFirstMoverRevenue+'</div></div></div>';
+      html+='<div style="margin-top:8px;display:flex;gap:6px">';
+      html+='<a href="https://www.etsy.com/uk/search?q='+encodeURIComponent(p.product)+'" target="_blank" class="btn-ghost btn-sm">Etsy UK</a>';
+      html+='<a href="https://www.etsy.com/search?q='+encodeURIComponent(p.product)+'" target="_blank" class="btn-ghost btn-sm">Etsy USA</a>';
+      html+='<button class="btn-olive btn-sm" onclick="window.location.href=\'opportunities.html?kw='+encodeURIComponent(p.product)+'\'">Full Analysis</button></div>';
+      html+='</div>';
+    }
+    html+='</div>';
+
+    // UK TO GERMANY
+    html+='<div class="card d2"><div class="lbl" style="color:var(--bl)">🇬🇧 → 🇩🇪 UK Strong, Germany Untapped</div>';
+    var u2g=d.ukToGermany||[];
+    for(var i=0;i<u2g.length;i++){
+      var p=u2g[i];
+      html+='<div style="padding:12px 0;border-bottom:1px solid var(--b1)">';
+      html+='<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px">';
+      html+='<div style="flex:1"><div style="font-weight:700;font-size:15px;margin-bottom:5px">'+p.product+'</div>';
+      html+='<div style="font-size:12px;color:var(--mu);margin-bottom:3px">'+p.germanyGap+'</div>';
+      html+='<div style="font-size:12px;color:var(--bl)">Adaptation: '+p.designAdaptation+'</div></div>';
+      html+='<div style="font-weight:700;color:var(--gd);font-family:DM Mono,monospace">'+p.suggestedPrice+'</div></div></div>';
+    }
+    html+='</div>';
+
+    // AUSTRALIA SURPRISES
+    html+='<div class="card d2"><div class="lbl" style="color:var(--gd)">🇦🇺 Australia — Surprises for UK Sellers</div>';
+    var aus=d.australiaSurprises||[];
+    for(var i=0;i<aus.length;i++){
+      var p=aus[i];
+      html+='<div style="padding:12px 0;border-bottom:1px solid var(--b1)">';
+      html+='<div style="font-weight:700;font-size:15px;margin-bottom:5px">'+p.product+'</div>';
+      html+='<div style="font-size:12px;color:var(--mu);margin-bottom:3px">'+p.reason+'</div>';
+      html+='<div style="font-size:12px;color:var(--gd);font-weight:600">Action: '+p.ukAction+'</div></div>';
+    }
+    html+='</div>';
+
+    // CULTURAL GAPS
+    var cg=d.culturalGaps||[];
+    if(cg.length){
+      html+='<div class="card-gold d3"><div class="lbl" style="color:var(--gd)">Cultural Gaps — Unique to Each Market</div>';
+      for(var i=0;i<cg.length;i++){
+        html+='<div style="padding:12px 0;border-bottom:1px solid var(--gdbr)">';
+        html+='<div style="font-weight:700;font-size:14px;margin-bottom:5px">'+cg[i].gap+'</div>';
+        html+='<div style="font-size:12px;color:var(--mu);margin-bottom:3px">'+cg[i].opportunity+'</div>';
+        html+='<div style="font-size:12px;color:var(--ol)">Design idea: '+cg[i].designIdea+'</div>';
+        html+='<span style="font-size:10px;color:var(--mu)">'+cg[i].markets+'</span></div>';
+      }
+      html+='</div>';
+    }
+
+    res.innerHTML=html;
+  }catch(e){
+    res.innerHTML='<div class="card-red"><strong>Error:</strong> '+e.message+'</div>';
+  }
+}
+
+async function doFullScan(){
+  document.getElementById('arb-kw').value='print on demand gifts home decor mugs tote bags wall art';
+  doArbitrage();
+}
+</script>
+</body>
+</html>
