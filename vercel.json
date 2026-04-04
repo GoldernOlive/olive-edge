@@ -10,7 +10,17 @@
     { "src": "/api/etsy", "dest": "/api/etsy.js" },
     { "src": "/api/groq", "dest": "/api/groq.js" },
     { "src": "/", "dest": "/index.html" },
-    { "src": "/(.*\\.html)", "dest": "/$1" },
+    { "src": "/dashboard", "dest": "/dashboard.html" },
+    { "src": "/dashboard.html", "dest": "/dashboard.html" },
+    { "src": "/opportunities", "dest": "/opportunities.html" },
+    { "src": "/opportunities.html", "dest": "/opportunities.html" },
+    { "src": "/scanner.html", "dest": "/scanner.html" },
+    { "src": "/trends.html", "dest": "/trends.html" },
+    { "src": "/suppliers.html", "dest": "/suppliers.html" },
+    { "src": "/workspace.html", "dest": "/workspace.html" },
+    { "src": "/listing-generator.html", "dest": "/listing-generator.html" },
+    { "src": "/listing-auditor.html", "dest": "/listing-auditor.html" },
+    { "src": "/index.html", "dest": "/index.html" },
     { "src": "/css/(.*)", "dest": "/css/$1" },
     { "src": "/js/(.*)", "dest": "/js/$1" }
   ]
