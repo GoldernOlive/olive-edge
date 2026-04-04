@@ -44,7 +44,7 @@
   </div>
   <div id="opp-result"></div>
 </div>
-<script src="js/auth.js?v=3"></script>
+<script src="js/auth.js?v=4"></script>
 <script>
 requireAuth();
 document.getElementById('nav-placeholder').innerHTML=renderNav('opportunities.html');
@@ -60,6 +60,10 @@ if(urlKw) document.getElementById('opp-kw').value=urlKw;
 
 function getKeys(){return{etsy:localStorage.getItem('oe_etsy')||'',groq:localStorage.getItem('oe_groq')||''};}
 
+function sbox(l,v,c){return '<div class="sbox"><div class="lbl">'+l+'</div><div class="mono" style="font-size:16px;color:'+(c||'var(--tx)')+';font-weight:600">'+(v||'--')+'</div></div>';}
+function pbar(p,c,h){h=h||5;return '<div class="pbar" style="height:'+h+'px"><div class="pbf" style="width:'+Math.min(100,p||0)+'%;background:'+(c||'var(--gd)')+';height:'+h+'px"></div></div>';}
+function fmt(n){return n>=1000?(n/1000).toFixed(1)+'k':String(n||0);}
+function compColor(c){return c==='Low'?'var(--gn)':c==='Medium'?'var(--gd)':c==='High'?'var(--or)':'var(--rd)';}
 function setBadge(id,ok,label){
   var el=document.getElementById(id);if(!el)return;
   el.textContent=label;
