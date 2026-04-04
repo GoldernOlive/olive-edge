@@ -61,10 +61,23 @@
   </div>
 
   <!-- Scan result -->
+
+  <!-- Trending Keywords - Build 3 -->
+  <div class="card d2" id="trending-section">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+      <div>
+        <span class="lbl" style="margin-bottom:0;color:var(--rd)">🔥 Trending Right Now on Etsy</span>
+        <div style="font-size:11px;color:var(--mu);margin-top:2px">Keywords rising fastest this week globally</div>
+      </div>
+      <button class="btn-ghost btn-sm" onclick="loadTrending()">↻ Refresh</button>
+    </div>
+    <div id="trending-keywords"><div class="loading-row"><div class="spin"></div>Loading trending keywords...</div></div>
+  </div>
+
   <div id="scan-result"></div>
 </div>
 
-<script src="js/auth.js?v=2"></script>
+<script src="js/auth.js?v=3"></script>
 <script>
 const session = requireAuth();
 document.getElementById('nav-placeholder').innerHTML = renderNav('dashboard.html');
@@ -303,8 +316,43 @@ async function saveToWorkspace(niche, verdict) {
   }
 })();
 
+
+async function loadTrending(){
+  document.getElementById('trending-keywords').innerHTML='<div class="loading-row"><div class="spin"></div>Analysing trending keywords...</div>';
+  try{
+    var d=await callAI('What are the 20 fastest rising keywords on Etsy RIGHT NOW globally in 2025? Focus on what is trending upward this week. Consider: seasonal events coming up, viral trends, gift occasions, Pinterest trends spilling onto Etsy. Return JSON: {"trending":[{"keyword":"exact keyword","growth":"+X%","reason":"why trending now","category":"seasonal|viral|evergreen","markets":["UK","USA"],"urgency":"list now|rising|watch","opportunity":"Low|Medium|High competition"},{"keyword":"keyword2","growth":"+X%","reason":"reason","category":"category","markets":["UK"],"urgency":"urgency","opportunity":"opportunity"}]}');
+    var items=d.trending||[];
+    var urgencyColor={"list now":"var(--rd)","rising":"var(--or)","watch":"var(--bl)"};
+    var oppColor={"Low":"var(--gn)","Medium":"var(--gd)","High":"var(--rd)"};
+    var html="<div style='display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px'>";
+    for(var i=0;i<items.length;i++){
+      var item=items[i];
+      var uc=urgencyColor[item.urgency]||"var(--mu)";
+      var oc=oppColor[item.opportunity]||"var(--mu)";
+      var catIcon=item.category==="seasonal"?"📅":item.category==="viral"?"🔥":"🌱";
+      html+="<div class='card2' style='cursor:pointer' onclick="document.getElementById('dash-kw').value='"+item.keyword.replace(/'/g,"\'")+"';quickScan()">";
+      html+="<div style='display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px'>";
+      html+="<span style='font-weight:700;font-size:14px'>"+catIcon+" "+item.keyword+"</span>";
+      html+="<span style='color:var(--gn);font-weight:700;font-size:13px;font-family:DM Mono,monospace'>"+item.growth+"</span></div>";
+      html+="<div style='font-size:11px;color:var(--mu);margin-bottom:6px;line-height:1.4'>"+item.reason+"</div>";
+      html+="<div style='display:flex;gap:6px;flex-wrap:wrap'>";
+      html+="<span style='font-size:10px;font-weight:700;color:"+uc+"'>"+item.urgency.toUpperCase()+"</span>";
+      html+="<span style='font-size:10px;color:"+oc+"'>"+item.opportunity+" comp</span>";
+      if(item.markets)html+="<span style='font-size:10px;color:var(--mu)'>"+(item.markets||[]).join(" · ")+"</span>";
+      html+="</div>";
+      html+="<div style='font-size:10px;color:var(--mu2);margin-top:4px'>Click to scan →</div>";
+      html+="</div>";
+    }
+    html+="</div>";
+    document.getElementById("trending-keywords").innerHTML=html;
+  }catch(e){
+    document.getElementById("trending-keywords").innerHTML="<p style='color:var(--mu);font-size:13px'>Could not load trends: "+e.message+"</p>";
+  }
+}
+
 loadDashboard();
 loadRecentWorkspace();
+loadTrending();
 </script>
 </body>
 </html>

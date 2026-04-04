@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Listing Auditor — Olive Edge</title>
+<link rel="stylesheet" href="css/style.css"/>
+</head>
+<body>
+<div id="nav-placeholder"></div>
+<div class="page">
+  <div class="fu">
+    <div class="page-title serif">🔎 Listing Auditor</div>
+    <div class="page-sub">Paste your listing — get a full score and exactly what to fix to rank higher</div>
+  </div>
+
+  <div class="card fu">
+    <div style="margin-bottom:14px">
+      <div class="lbl">Your Listing Title</div>
+      <input id="audit-title" placeholder="Paste your full Etsy listing title here..."/>
+    </div>
+    <div style="margin-bottom:14px">
+      <div class="lbl">Your Tags (paste all 13, comma separated)</div>
+      <input id="audit-tags" placeholder="funny cat mug, cat lover gift, coffee mug, cat mum gift..."/>
+    </div>
+    <div style="margin-bottom:14px">
+      <div class="lbl">Your Description</div>
+      <textarea id="audit-desc" placeholder="Paste your full listing description here..." style="min-height:120px"></textarea>
+    </div>
+    <div class="grid-2" style="margin-bottom:14px">
+      <div>
+        <div class="lbl">Main Keyword (what buyers search)</div>
+        <input id="audit-keyword" placeholder="e.g. funny cat mug"/>
+      </div>
+      <div>
+        <div class="lbl">Your Price</div>
+        <input id="audit-price" placeholder="e.g. £14.99"/>
+      </div>
+    </div>
+    <button class="btn-olive" onclick="doAudit()" id="audit-btn">🔎 Audit My Listing</button>
+  </div>
+
+  <div id="audit-result"></div>
+</div>
+
+<script src="js/auth.js?v=3"></script>
+<script>
+requireAuth();
+document.getElementById('nav-placeholder').innerHTML=renderNav('listing-auditor.html');
+
+async function callAI(prompt){
+  var r=await fetch('/api/groq',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompt:prompt})});
+  var d=await r.json();
+  if(!r.ok)throw new Error(d.error||'Server error '+r.status);
+  return d;
+}
+
+async function callEtsy(path){
+  var r=await fetch('/api/etsy?path='+encodeURIComponent(path));
+  if(!r.ok)throw new Error('Etsy '+r.status);
+  return r.json();
+}
+
+function scoreColor(s){return s>=8?'var(--ol)':s>=6?'var(--gd)':s>=4?'var(--or)':'var(--rd)';}
+function scoreLabel(s){return s>=8?'Excellent':s>=6?'Good':s>=4?'Needs Work':'Poor';}
+
+function scoreBar(score,max){
+  max=max||10;
+  var pct=(score/max)*100;
+  var c=score/max>=0.8?'var(--ol)':score/max>=0.6?'var(--gd)':score/max>=0.4?'var(--or)':'var(--rd)';
+  return '<div style="display:flex;align-items:center;gap:10px"><div style="flex:1;height:8px;background:var(--p3);border-radius:4px;overflow:hidden"><div style="height:100%;width:'+pct+'%;background:'+c+';border-radius:4px"></div></div><span class="mono" style="font-size:13px;color:'+c+';font-weight:700;min-width:32px;text-align:right">'+score+'/'+max+'</span></div>';
+}
+
+async function doAudit(){
+  var title=document.getElementById('audit-title').value.trim();
+  var tags=document.getElementById('audit-tags').value.trim();
+  var desc=document.getElementById('audit-desc').value.trim();
+  var keyword=document.getElementById('audit-keyword').value.trim();
+  var price=document.getElementById('audit-price').value.trim();
+
+  if(!title){alert('Please paste your listing title');return;}
+  if(!keyword){alert('Please enter your main keyword');return;}
+
+  var res=document.getElementById('audit-result');
+  document.getElementById('audit-btn').disabled=true;
+  res.innerHTML='<div class="card"><div class="loading-row"><div class="spin"></div>Step 1 — Scanning competitors for your keyword...</div></div>';
+
+  // Get competitor data
+  var compTags=[],compTitles=[],compPrices={};
+  try{
+    var er=await callEtsy('listings/active?keywords='+encodeURIComponent(keyword)+'&limit=50&sort_on=score');
+    var listings=er.results||[];
+    var tm={};listings.forEach(function(l){(l.tags||[]).forEach(function(t){tm[t]=(tm[t]||0)+1;});});
+    compTags=Object.entries(tm).sort(function(a,b){return b[1]-a[1];}).map(function(e){return e[0];});
+    compTitles=listings.slice(0,10).map(function(l){return l.title;});
+    var pp=listings.map(function(l){return(l.price&&l.price.amount||0)/100;}).filter(function(p){return p>0;}).sort(function(a,b){return a-b;});
+    if(pp.length)compPrices={min:pp[0].toFixed(2),max:pp[pp.length-1].toFixed(2),avg:(pp.reduce(function(s,p){return s+p;},0)/pp.length).toFixed(2)};
+  }catch(e){}
+
+  res.innerHTML='<div class="card"><div class="loading-row"><div class="spin"></div>Step 2 — Auditing your listing against best practices and competitors...</div></div>';
+
+  var compCtx=compTitles.length
+    ?'COMPETITOR DATA: Top competitor titles: '+compTitles.slice(0,5).join(' | ')+'. Most used tags: '+compTags.slice(0,15).join(', ')+'. Price range: £'+compPrices.min+'-£'+compPrices.max+' avg £'+compPrices.avg
+    :'No live competitor data available.';
+
+  var userTags=tags.split(',').map(function(t){return t.trim();}).filter(function(t){return t;});
+
+  try{
+    var d=await callAI(
+      'You are an Etsy SEO expert. Audit this listing:\n\n'+
+      'TITLE: '+title+'\n'+
+      'TAGS ('+userTags.length+'): '+tags+'\n'+
+      'DESCRIPTION: '+(desc||'Not provided')+'\n'+
+      'MAIN KEYWORD: '+keyword+'\n'+
+      'PRICE: '+(price||'Not provided')+'\n\n'+
+      compCtx+'\n\n'+
+      'Score each element and give specific fixes. Return JSON:\n'+
+      '{"overallScore":72,"overallGrade":"C+","verdict":"Needs significant work to compete","titleScore":7,"titleCharCount":'+title.length+',"titleMaxChars":140,"titleIssues":["specific issue 1","issue 2"],"titleFixes":["exact fix 1","fix 2"],"titleRewrite":"Complete rewritten title that would score higher","tagScore":6,"tagCount":'+userTags.length+',"missingTags":["tag competitors use that you dont","tag2","tag3"],"weakTags":["your tag that is too generic or competitive","tag2"],"strongTags":["your best performing tags","tag2"],"tagFixes":["specific tag fix 1","fix 2","fix 3"],"suggestedTags":["replacement tag1","replacement tag2","replacement tag3"],"descScore":'+( desc?7:2)+',"descIssues":["specific issue","issue 2"],"descFixes":["specific fix 1","fix 2"],"descRewrite":"First 2 improved sentences","keywordPlacement":{"inTitle":true,"inFirstTag":true,"inDescription":'+( desc&&desc.toLowerCase().includes(keyword.toLowerCase()))+'},"priceScore":7,"priceAdvice":"advice about their price vs competition","competitorGaps":["specific thing competitors do that you dont","gap 2","gap 3"],"quickWins":["easiest fix with biggest impact","quick win 2","quick win 3"],"estimatedRankImprovement":"if all fixes applied, estimated rank improvement"}'
+    );
+
+    var overall=d.overallScore||50;
+    var overallColor=overall>=80?'var(--ol)':overall>=60?'var(--gd)':overall>=40?'var(--or)':'var(--rd)';
+
+    var html='';
+
+    // OVERALL SCORE
+    html+='<div class="card-live fu">';
+    html+='<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:20px;flex-wrap:wrap;margin-bottom:20px">';
+    html+='<div style="flex:1">';
+    html+='<div class="serif" style="font-size:28px;font-weight:600;margin-bottom:6px">Your Listing Score</div>';
+    html+='<span style="background:'+overallColor+'18;color:'+overallColor+';border:1px solid '+overallColor+'44;border-radius:20px;padding:5px 16px;font-size:13px;font-weight:700">'+(d.verdict||'')+'</span>';
+    html+='<p style="margin-top:10px;font-size:13px;color:var(--mu)">vs keyword: <strong>'+keyword+'</strong>'+(compPrices.avg?' · Competitor avg: £'+compPrices.avg:'')+'</p>';
+    html+='</div>';
+    html+='<div style="text-align:center;flex-shrink:0">';
+    html+='<div style="font-size:72px;font-weight:800;color:'+overallColor+';font-family:DM Mono,monospace;line-height:1">'+overall+'</div>';
+    html+='<div style="font-size:18px;color:var(--mu);font-weight:600">'+(d.overallGrade||'')+'</div></div></div>';
+
+    // Score breakdown
+    html+='<div class="grid-auto">';
+    var scores=[
+      ['Title',d.titleScore||0],
+      ['Tags',d.tagScore||0],
+      ['Description',d.descScore||0],
+      ['Price',d.priceScore||0]
+    ];
+    for(var i=0;i<scores.length;i++){
+      html+='<div class="sbox"><div class="lbl">'+scores[i][0]+'</div>';
+      html+=scoreBar(scores[i][1],10);
+      html+='<div style="font-size:11px;color:'+scoreColor(scores[i][1])+';margin-top:4px;font-weight:600">'+scoreLabel(scores[i][1])+'</div></div>';
+    }
+    html+='</div>';
+
+    // Keyword placement
+    html+='<div style="margin-top:14px"><div class="lbl">Keyword Placement Check</div><div style="display:flex;gap:10px;flex-wrap:wrap">';
+    var kpChecks=[
+      ['In Title',d.keywordPlacement&&d.keywordPlacement.inTitle],
+      ['In First Tag',d.keywordPlacement&&d.keywordPlacement.inFirstTag],
+      ['In Description',d.keywordPlacement&&d.keywordPlacement.inDescription]
+    ];
+    for(var i=0;i<kpChecks.length;i++){
+      var ok=kpChecks[i][1];
+      html+='<span style="display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:20px;font-size:12px;font-weight:600;background:'+(ok?'var(--olbg)':'var(--rdbg)')+';color:'+(ok?'var(--ol)':'var(--rd)')+';border:1px solid '+(ok?'var(--olbr)':'var(--rdbr)')+'">'+( ok?'✓':'✗')+' '+kpChecks[i][0]+'</span>';
+    }
+    html+='</div></div></div>';
+
+    // QUICK WINS
+    html+='<div class="card-gold d1"><div class="lbl" style="color:var(--gd)">⚡ Quick Wins — Do These First</div>';
+    var qw=d.quickWins||[];
+    for(var i=0;i<qw.length;i++){
+      html+='<div style="display:flex;gap:10px;padding:10px 0;border-bottom:1px solid var(--gdbr);align-items:flex-start">';
+      html+='<div style="width:24px;height:24px;border-radius:50%;background:var(--gd);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0">'+(i+1)+'</div>';
+      html+='<p style="font-size:13px;line-height:1.6;margin-top:2px">'+qw[i]+'</p></div>';
+    }
+    if(d.estimatedRankImprovement)html+='<div style="margin-top:10px;padding:10px;background:var(--w);border-radius:8px;font-size:13px;color:var(--ol);font-weight:600">If all fixes applied: '+d.estimatedRankImprovement+'</div>';
+    html+='</div>';
+
+    // TITLE AUDIT
+    html+='<div class="card d1"><div class="lbl">Title Audit — '+d.titleCharCount+'/140 chars</div>';
+    html+=scoreBar(d.titleScore||0,10);
+    html+='<div style="margin-top:10px;padding:12px;background:var(--p2);border-radius:8px;font-size:13px;font-weight:600;line-height:1.5;margin-bottom:12px">'+title+'</div>';
+    var ti=d.titleIssues||[];
+    if(ti.length){html+='<div class="lbl" style="color:var(--rd)">Issues Found</div>';for(var i=0;i<ti.length;i++){html+='<div style="display:flex;gap:8px;margin-bottom:6px;font-size:13px"><span style="color:var(--rd)">✗</span>'+ti[i]+'</div>';}}
+    var tf=d.titleFixes||[];
+    if(tf.length){html+='<div class="lbl" style="color:var(--ol);margin-top:10px">How to Fix</div>';for(var i=0;i<tf.length;i++){html+='<div style="display:flex;gap:8px;margin-bottom:6px;font-size:13px"><span style="color:var(--ol)">→</span>'+tf[i]+'</div>';}}
+    if(d.titleRewrite){html+='<div class="lbl" style="color:var(--gd);margin-top:12px">Rewritten Title</div><div style="background:var(--olbg);border:1.5px solid var(--olbr);border-radius:8px;padding:12px;font-size:14px;font-weight:700;line-height:1.5;cursor:pointer" onclick="copyText(\''+d.titleRewrite.replace(/'/g,"\\'")+'\',this)" title="Click to copy">'+d.titleRewrite+'<div style="font-size:10px;color:var(--ol);margin-top:6px">Click to copy</div></div>';}
+    html+='</div>';
+
+    // TAG AUDIT
+    html+='<div class="card d2"><div class="lbl">Tag Audit — '+userTags.length+'/13 tags used</div>';
+    html+=scoreBar(d.tagScore||0,10);
+    html+='<div class="grid-2" style="margin-top:12px">';
+    var strongTags=d.strongTags||[];
+    var weakTags=d.weakTags||[];
+    html+='<div><div class="lbl" style="color:var(--ol)">Strong Tags — Keep These</div>';
+    for(var i=0;i<strongTags.length;i++){html+='<span style="display:inline-block;background:var(--olbg);border:1px solid var(--olbr);border-radius:20px;padding:3px 11px;font-size:11px;color:var(--ol);font-family:DM Mono,monospace;margin:2px">✓ '+strongTags[i]+'</span>';}
+    html+='</div><div><div class="lbl" style="color:var(--rd)">Weak Tags — Replace These</div>';
+    for(var i=0;i<weakTags.length;i++){html+='<span style="display:inline-block;background:var(--rdbg);border:1px solid var(--rdbr);border-radius:20px;padding:3px 11px;font-size:11px;color:var(--rd);font-family:DM Mono,monospace;margin:2px">✗ '+weakTags[i]+'</span>';}
+    html+='</div></div>';
+    var missTags=d.missingTags||[];
+    if(missTags.length){html+='<div style="margin-top:12px"><div class="lbl" style="color:var(--gd)">Missing Tags — Add These (competitors use them)</div>';for(var i=0;i<missTags.length;i++){html+='<span style="display:inline-block;background:var(--gdbg);border:1px solid var(--gdbr);border-radius:20px;padding:3px 11px;font-size:11px;color:var(--gd);font-family:DM Mono,monospace;margin:2px">+ '+missTags[i]+'</span>';}html+='</div>';}
+    var sugTags=d.suggestedTags||[];
+    if(sugTags.length){html+='<div style="margin-top:12px"><div class="lbl">Suggested Replacement Tags</div><p style="font-family:DM Mono,monospace;font-size:12px;padding:10px;background:var(--p3);border-radius:8px;cursor:pointer;line-height:2" onclick="copyText(\''+sugTags.join(', ').replace(/'/g,"\\'")+'\',this)" title="Click to copy">'+sugTags.join(', ')+'</p></div>';}
+    if(compTags.length){html+='<div style="margin-top:12px"><div class="lbl">Top Competitor Tags for "'+keyword+'"</div><div>';for(var i=0;i<Math.min(compTags.length,15);i++){html+='<span style="display:inline-block;background:var(--p2);border:1px solid var(--b1);border-radius:20px;padding:3px 10px;font-size:11px;color:var(--mu);font-family:DM Mono,monospace;margin:2px">'+compTags[i]+'</span>';}html+='</div></div>';}
+    html+='</div>';
+
+    // DESCRIPTION AUDIT
+    if(desc){
+      html+='<div class="card d2"><div class="lbl">Description Audit</div>';
+      html+=scoreBar(d.descScore||0,10);
+      var di=d.descIssues||[];
+      if(di.length){html+='<div class="lbl" style="color:var(--rd);margin-top:10px">Issues</div>';for(var i=0;i<di.length;i++){html+='<div style="display:flex;gap:8px;margin-bottom:6px;font-size:13px"><span style="color:var(--rd)">✗</span>'+di[i]+'</div>';}}
+      var df=d.descFixes||[];
+      if(df.length){html+='<div class="lbl" style="color:var(--ol);margin-top:10px">Fixes</div>';for(var i=0;i<df.length;i++){html+='<div style="display:flex;gap:8px;margin-bottom:6px;font-size:13px"><span style="color:var(--ol)">→</span>'+df[i]+'</div>';}}
+      if(d.descRewrite){html+='<div class="lbl" style="color:var(--gd);margin-top:12px">Improved Opening</div><div style="background:var(--olbg);border:1.5px solid var(--olbr);border-radius:8px;padding:12px;font-size:13px;font-style:italic;line-height:1.7">'+d.descRewrite+'</div>';}
+      html+='</div>';
+    }
+
+    // COMPETITOR GAPS
+    var cg=d.competitorGaps||[];
+    if(cg.length){
+      html+='<div class="card-olive d3"><div class="lbl" style="color:var(--ol)">What Competitors Do That You Don\'t Yet</div>';
+      for(var i=0;i<cg.length;i++){html+='<div style="display:flex;gap:8px;margin-bottom:10px;font-size:13px;line-height:1.6"><span style="color:var(--ol);font-weight:700">→</span>'+cg[i]+'</div>';}
+      html+='</div>';
+    }
+
+    // PRICE
+    html+='<div class="card d3"><div class="lbl">Price Analysis</div>';
+    html+=scoreBar(d.priceScore||0,10);
+    if(compPrices.avg)html+='<div class="grid-auto" style="margin-top:10px">'+sbox('Your Price',price||'—','var(--mu)')+sbox('Competitor Min','£'+compPrices.min,'var(--gn)')+sbox('Competitor Avg','£'+compPrices.avg,'var(--gd)')+sbox('Competitor Max','£'+compPrices.max,'var(--rd)')+'</div>';
+    if(d.priceAdvice)html+='<p style="margin-top:10px;font-size:13px;color:var(--mu);line-height:1.6">'+d.priceAdvice+'</p>';
+    html+='</div>';
+
+    function sbox(l,v,c){return '<div class="sbox"><div class="lbl">'+l+'</div><div class="mono" style="font-size:15px;color:'+(c||'var(--tx)')+';font-weight:600">'+(v||'—')+'</div></div>';}
+
+    res.innerHTML=html;
+  }catch(e){
+    res.innerHTML='<div class="card-red"><strong>Error:</strong> '+e.message+'</div>';
+  }
+  document.getElementById('audit-btn').disabled=false;
+}
+
+function sbox(l,v,c){return '<div class="sbox"><div class="lbl">'+l+'</div><div class="mono" style="font-size:15px;color:'+(c||'var(--tx)')+';font-weight:600">'+(v||'—')+'</div></div>';}
+</script>
+</body>
+</html>
