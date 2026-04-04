@@ -201,38 +201,6 @@ function errBox(msg) {
   return `<div class="card-red"><strong>Error:</strong> ${msg}</div>`;
 }
 
-// ── Platform Product Links ─────────────────────────
-function platformLinks(keyword) {
-  var k = encodeURIComponent(keyword);
-  var kRaw = keyword.replace(/ /g,'-');
-  return [
-    { name:'Etsy UK',      color:'#f1641e', url:'https://www.etsy.com/uk/search?q='+k,                          icon:'🛍' },
-    { name:'Etsy USA',     color:'#f1641e', url:'https://www.etsy.com/search?q='+k,                             icon:'🛍' },
-    { name:'Etsy Germany', color:'#f1641e', url:'https://www.etsy.com/de/search?q='+k,                          icon:'🛍' },
-    { name:'Etsy Australia',color:'#f1641e',url:'https://www.etsy.com/au/search?q='+k,                          icon:'🛍' },
-    { name:'Printify',     color:'#2a4a7a', url:'https://printify.com/app/products?search='+k,                  icon:'🖨' },
-    { name:'Printful',     color:'#3d3d3d', url:'https://www.printful.com/uk/custom/search?q='+k,               icon:'🖨' },
-    { name:'Gelato',       color:'#e85d26', url:'https://www.gelato.com/gb/en/catalogue?q='+k,                  icon:'🖨' },
-    { name:'Pinterest',    color:'#e60023', url:'https://www.pinterest.co.uk/search/pins/?q='+k,                icon:'📌' },
-    { name:'Amazon UK',    color:'#ff9900', url:'https://www.amazon.co.uk/s?k='+k,                              icon:'📦' },
-    { name:'Not on the High Street', color:'#4a4a4a', url:'https://www.notonthehighstreet.com/search?search_term='+k, icon:'🎁' },
-  ];
-}
-
-function platformLinksHTML(keyword) {
-  if(!keyword) return '';
-  var links = platformLinks(keyword);
-  var html = '<div class="card" style="margin-top:16px;border:2px solid var(--olbr)">';
-  html += '<div class="lbl" style="color:var(--ol)">🔗 See Real Products On Every Platform</div>';
-  html += '<p style="font-size:12px;color:var(--mu);margin-bottom:12px">Click any platform to see what's actually selling for <strong>'+keyword+'</strong> right now</p>';
-  html += '<div style="display:flex;flex-wrap:wrap;gap:8px">';
-  links.forEach(function(l) {
-    html += '<a href="'+l.url+'" target="_blank" style="display:inline-flex;align-items:center;gap:6px;background:var(--w);border:1.5px solid var(--b1);border-radius:8px;padding:8px 14px;font-size:13px;font-weight:600;color:var(--tx);text-decoration:none;font-family:Jost,sans-serif;transition:all .15s" onmouseover="this.style.borderColor=''+l.color+'';this.style.color=''+l.color+''" onmouseout="this.style.borderColor='var(--b1)';this.style.color='var(--tx)'">';
-    html += l.icon+' '+l.name+'</a>';
-  });
-  html += '</div></div>';
-  return html;
-}
 
 // ── Sales Estimator (Build 2) ──────────────────────
 function estimateMonthlySales(listing){
