@@ -19,7 +19,7 @@ export default async function handler(req, res) {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${GROQ_KEY}` },
       body: JSON.stringify({
-        model: 'llama-3.3-70b-versatile',
+        model: 'llama-3.1-8b-instant',
         messages: [
           {
             role: 'system',
@@ -31,7 +31,7 @@ export default async function handler(req, res) {
           }
         ],
         temperature: 0.2,
-        max_tokens: 2048
+        max_tokens: 1500
       })
     });
     const data = await r.json();
