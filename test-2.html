@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Olive Edge — System Diagnostics</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,sans-serif;background:#f5f3ef;padding:20px;color:#2c2c2a}
+h1{font-size:22px;margin-bottom:4px}
+.sub{font-size:13px;color:#888;margin-bottom:24px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px}
+.card{background:#fff;border-radius:12px;padding:16px;border:1.5px solid #e0ddd4}
+.card h3{font-size:13px;font-weight:700;margin-bottom:10px;color:#888;text-transform:uppercase;letter-spacing:.05em}
+.test-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #f0ede8;font-size:13px}
+.test-row:last-child{border-bottom:none}
+.status{font-size:11px;font-weight:700;padding:3px 8px;border-radius:10px;flex-shrink:0}
+.ok{background:#e8f4e8;color:#2d7a3a}
+.fail{background:#fde8e8;color:#c0392b}
+.warn{background:#fff3e0;color:#e67e22}
+.pending{background:#f0ede8;color:#888}
+.error-detail{font-size:11px;color:#c0392b;margin-top:4px;word-break:break-word;max-width:220px;text-align:right}
+.btn{background:#4a7c59;color:#fff;border:none;padding:8px 16px;border-radius:6px;cursor:pointer;font-size:13px;font-weight:600;margin-right:8px}
+.btn-ghost{background:transparent;color:#4a7c59;border:1.5px solid #4a7c59;padding:7px 14px;border-radius:6px;cursor:pointer;font-size:13px;font-weight:600}
+.progress{height:4px;background:#f0ede8;border-radius:2px;margin-bottom:20px;overflow:hidden}
+.progress-bar{height:4px;background:#4a7c59;border-radius:2px;transition:width .3s}
+.summary{background:#fff;border-radius:12px;padding:16px;border:1.5px solid #e0ddd4;margin-bottom:20px;display:flex;gap:20px;flex-wrap:wrap;align-items:center}
+.stat{text-align:center}
+.stat-num{font-size:28px;font-weight:800;font-family:monospace}
+.stat-lbl{font-size:11px;color:#888;margin-top:2px}
+.green{color:#2d7a3a}.red{color:#c0392b}.orange{color:#e67e22}
+a.page-link{font-size:12px;color:#4a7c59;text-decoration:none;border:1px solid #c5d9cc;padding:2px 8px;border-radius:4px}
+</style>
+</head>
+<body>
+
+<h1>🔧 Olive Edge — System Diagnostics</h1>
+<div class="sub">Tests every API, every page and every feature in one go</div>
+
+<div class="progress"><div class="progress-bar" id="progress-bar" style="width:0%"></div></div>
+
+<div class="summary" id="summary">
+  <div class="stat"><div class="stat-num" id="total-count">—</div><div class="stat-lbl">Total Tests</div></div>
+  <div class="stat"><div class="stat-num green" id="pass-count">—</div><div class="stat-lbl">Passing</div></div>
+  <div class="stat"><div class="stat-num red" id="fail-count">—</div><div class="stat-lbl">Failing</div></div>
+  <div class="stat"><div class="stat-num orange" id="warn-count">—</div><div class="stat-lbl">Warnings</div></div>
+  <div style="margin-left:auto;display:flex;gap:8px">
+    <button class="btn" onclick="runAllTests()">▶ Run All Tests</button>
+    <button class="btn-ghost" onclick="location.reload()">↺ Reset</button>
+  </div>
+</div>
+
+<div class="grid" id="test-grid"></div>
+
+<script>
+var results={pass:0,fail:0,warn:0,total:0};
+var totalTests=0;
+var completedTests=0;
+
+var TESTS=[
+  {section:'🔑 Authentication & Config',tests:[
+    {id:'auth-session',name:'User Session Active',fn:testSession},
+    {id:'auth-supabase',name:'Supabase Connection',fn:testSupabase},
+    {id:'config-css',name:'CSS Stylesheet Loads',fn:testCSS},
+  ]},
+  {section:'🤖 AI & APIs',tests:[
+    {id:'api-groq',name:'Groq AI API (/api/groq)',fn:testGroq},
+    {id:'api-market',name:'Market Data (/api/market)',fn:testMarket},
+    {id:'api-trends',name:'Google Trends (/api/trends)',fn:testTrends},
+    {id:'api-autocomplete',name:'Autocomplete (/api/autocomplete)',fn:testAutocomplete},
+    {id:'api-etsy',name:'Etsy API (/api/etsy)',fn:testEtsy},
+  ]},
+  {section:'📄 Pages Load',tests:[
+    {id:'page-dashboard',name:'Dashboard',url:'dashboard.html',fn:testPage},
+    {id:'page-intelligence',name:'Intelligence Feed',url:'intelligence.html',fn:testPage},
+    {id:'page-opportunities',name:'Opportunities',url:'opportunities.html',fn:testPage},
+    {id:'page-scanner',name:'Scanner',url:'scanner.html',fn:testPage},
+    {id:'page-trend-velocity',name:'Trend Velocity',url:'trend-velocity.html',fn:testPage},
+    {id:'page-global-arbitrage',name:'Global Arbitrage',url:'global-arbitrage.html',fn:testPage},
+    {id:'page-first-mover',name:'First Mover Alerts',url:'first-mover.html',fn:testPage},
+    {id:'page-buyer-language',name:'Buyer Language',url:'buyer-language.html',fn:testPage},
+    {id:'page-listing-generator',name:'Listing Writer',url:'listing-generator.html',fn:testPage},
+    {id:'page-listing-auditor',name:'Listing Auditor',url:'listing-auditor.html',fn:testPage},
+    {id:'page-trends',name:'Visual Trends',url:'trends.html',fn:testPage},
+    {id:'page-suppliers',name:'Suppliers',url:'suppliers.html',fn:testPage},
+    {id:'page-workspace',name:'Workspace',url:'workspace.html',fn:testPage},
+  ]},
+  {section:'🧠 AI Response Quality',tests:[
+    {id:'ai-dashboard',name:'Dashboard AI (Sell Right Now)',fn:testDashboardAI},
+    {id:'ai-opportunity',name:'Opportunity AI (custom mug)',fn:testOpportunityAI},
+    {id:'ai-trending',name:'Trending Keywords AI',fn:testTrendingAI},
+  ]},
+  {section:'🌐 External Data Sources',tests:[
+    {id:'ext-reddit',name:'Reddit r/EtsySellers',fn:testReddit},
+    {id:'ext-printify',name:'Printify Catalogue',fn:testPrintify},
+    {id:'ext-ebay',name:'eBay UK Sold Prices',fn:testEbay},
+    {id:'ext-google-trends',name:'Google Trends RSS (UK)',fn:testGoogleTrends},
+  ]},
+];
+
+// Build grid
+window.onload=function(){
+  var grid=document.getElementById('test-grid');
+  totalTests=0;
+  TESTS.forEach(function(section){
+    var card=document.createElement('div');
+    card.className='card';
+    var html='<h3>'+section.section+'</h3>';
+    section.tests.forEach(function(t){
+      totalTests++;
+      html+='<div class="test-row" id="row-'+t.id+'">';
+      html+='<div>';
+      html+='<div>'+t.name+'</div>';
+      if(t.url)html+='<a href="'+t.url+'" target="_blank" class="page-link" style="margin-top:3px;display:inline-block">Open page ↗</a>';
+      html+='</div>';
+      html+='<div style="text-align:right"><span class="status pending" id="status-'+t.id+'">PENDING</span><div id="detail-'+t.id+'" class="error-detail"></div></div>';
+      html+='</div>';
+    });
+    card.innerHTML=html;
+    grid.appendChild(card);
+  });
+  document.getElementById('total-count').textContent=totalTests;
+};
+
+async function runAllTests(){
+  results={pass:0,fail:0,warn:0,total:0};
+  completedTests=0;
+  document.getElementById('pass-count').textContent='0';
+  document.getElementById('fail-count').textContent='0';
+  document.getElementById('warn-count').textContent='0';
+
+  for(var i=0;i<TESTS.length;i++){
+    var section=TESTS[i];
+    for(var j=0;j<section.tests.length;j++){
+      var t=section.tests[j];
+      setStatus(t.id,'pending','TESTING...');
+      try{
+        var result=await t.fn(t);
+        setStatus(t.id,result.status,result.label,result.detail);
+      }catch(e){
+        setStatus(t.id,'fail','ERROR',e.message);
+      }
+      completedTests++;
+      document.getElementById('progress-bar').style.width=Math.round((completedTests/totalTests)*100)+'%';
+    }
+  }
+}
+
+function setStatus(id,status,label,detail){
+  var el=document.getElementById('status-'+id);
+  var det=document.getElementById('detail-'+id);
+  if(el){el.className='status '+status;el.textContent=label;}
+  if(det)det.textContent=detail||'';
+  results.total++;
+  if(status==='ok')results.pass++;
+  else if(status==='fail')results.fail++;
+  else if(status==='warn')results.warn++;
+  document.getElementById('pass-count').textContent=results.pass;
+  document.getElementById('fail-count').textContent=results.fail;
+  document.getElementById('warn-count').textContent=results.warn;
+}
+
+// TEST FUNCTIONS
+function testSession(){
+  var token=localStorage.getItem('oe_token');
+  var email=localStorage.getItem('oe_email');
+  if(!token)return{status:'fail',label:'NO SESSION',detail:'Not logged in'};
+  if(!email)return{status:'warn',label:'NO EMAIL',detail:'Token exists but no email'};
+  return{status:'ok',label:'ACTIVE',detail:email};
+}
+
+async function testSupabase(){
+  var SB_URL='https://oktpizrevqehfrkcqphq.supabase.co';
+  var SB_KEY='sb_publishable_r4lLwwInTT76wXjP-Cha4Q_T1yALqyt';
+  var token=localStorage.getItem('oe_token')||'';
+  var r=await fetch(SB_URL+'/rest/v1/workspace?select=id&limit=1',{headers:{'apikey':SB_KEY,'Authorization':'Bearer '+token}});
+  if(r.status===200)return{status:'ok',label:'CONNECTED',detail:'DB responding'};
+  if(r.status===401)return{status:'warn',label:'AUTH NEEDED',detail:'Session expired'};
+  var d=await r.json();
+  if(d&&d.code==='42P01')return{status:'warn',label:'TABLE MISSING',detail:'Run SQL setup in Supabase'};
+  return{status:'fail',label:'ERROR '+r.status,detail:JSON.stringify(d).slice(0,60)};
+}
+
+async function testCSS(){
+  var r=await fetch('css/style.css');
+  if(!r.ok)return{status:'fail',label:'NOT FOUND',detail:'css/style.css missing'};
+  var text=await r.text();
+  if(text.length<1000)return{status:'warn',label:'TOO SMALL',detail:'Only '+text.length+' chars'};
+  return{status:'ok',label:'LOADED',detail:Math.round(text.length/1000)+'KB'};
+}
+
+async function testGroq(){
+  var r=await fetch('/api/groq',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompt:'Return JSON: {"test":true}'})});
+  if(!r.ok){var d=await r.json();return{status:'fail',label:'HTTP '+r.status,detail:d.error||'Unknown error'};}
+  var text=await r.text();
+  try{JSON.parse(text);return{status:'ok',label:'WORKING',detail:'Model responding'};}
+  catch(e){return{status:'warn',label:'BAD JSON',detail:text.slice(0,60)};}
+}
+
+async function testMarket(){
+  var r=await fetch('/api/market?keyword=mug');
+  if(!r.ok)return{status:'fail',label:'HTTP '+r.status,detail:'market API error'};
+  var d=await r.json();
+  var sources=Object.keys(d.sources||{});
+  if(!sources.length)return{status:'warn',label:'NO DATA',detail:'API returned but no sources'};
+  return{status:'ok',label:'WORKING',detail:sources.join(', ')};
+}
+
+async function testTrends(){
+  var r=await fetch('/api/trends');
+  if(!r.ok)return{status:'fail',label:'HTTP '+r.status,detail:'trends API error'};
+  var d=await r.json();
+  var gb=(d.trendingByMarket&&d.trendingByMarket.GB||[]).length;
+  if(!gb)return{status:'warn',label:'NO UK DATA',detail:'Trends returned but no GB data'};
+  return{status:'ok',label:'WORKING',detail:'UK: '+gb+' trends'};
+}
+
+async function testAutocomplete(){
+  var r=await fetch('/api/autocomplete?keyword=mug');
+  if(!r.ok)return{status:'fail',label:'HTTP '+r.status,detail:'autocomplete API error'};
+  var d=await r.json();
+  var count=(d.googleBuyerSearches||[]).length;
+  if(!count)return{status:'warn',label:'NO RESULTS',detail:'API worked but no suggestions'};
+  return{status:'ok',label:'WORKING',detail:count+' searches found'};
+}
+
+async function testEtsy(){
+  var r=await fetch('/api/etsy?path='+encodeURIComponent('listings/active?keywords=mug&limit=1'));
+  if(r.status===403||r.status===401)return{status:'warn',label:'PENDING APPROVAL',detail:'Etsy API not approved yet'};
+  if(!r.ok)return{status:'fail',label:'HTTP '+r.status,detail:'Etsy API error'};
+  var d=await r.json();
+  if(d.results&&d.results.length)return{status:'ok',label:'WORKING',detail:d.results.length+' results'};
+  return{status:'warn',label:'NO RESULTS',detail:'Approved but no data'};
+}
+
+async function testPage(t){
+  var r=await fetch(t.url);
+  if(!r.ok)return{status:'fail',label:'HTTP '+r.status,detail:'Page not found'};
+  var text=await r.text();
+  if(text.length<500)return{status:'fail',label:'EMPTY PAGE',detail:'Only '+text.length+' chars'};
+  var hasScript=text.indexOf('<script>')>=0||text.indexOf('async function')>=0||text.indexOf('callAI')>=0;
+  var hasNav=text.indexOf('nav-inner')>=0;
+  if(!hasScript)return{status:'warn',label:'NO JS',detail:'Page loads but missing JavaScript'};
+  if(!hasNav)return{status:'warn',label:'NO NAV',detail:'Page loads but missing nav'};
+  return{status:'ok',label:'LOADED',detail:Math.round(text.length/1000)+'KB'};
+}
+
+async function testDashboardAI(){
+  var r=await fetch('/api/groq',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompt:'Return JSON for UK Etsy POD: {"sellNow":[{"niche":"Custom Mug","reason":"test","urgency":"Today","platform":"Printify","ukPrice":"14.99","usaPrice":"18.99"}]}'})});
+  if(!r.ok)return{status:'fail',label:'API FAIL',detail:'Groq returned '+r.status};
+  var text=await r.text();
+  try{
+    var d=JSON.parse(text);
+    if(d.sellNow&&d.sellNow.length)return{status:'ok',label:'WORKING',detail:'Got '+d.sellNow.length+' sell now items'};
+    return{status:'warn',label:'BAD FORMAT',detail:'No sellNow array: '+text.slice(0,60)};
+  }catch(e){return{status:'warn',label:'PARSE ERROR',detail:text.slice(0,80)};}
+}
+
+async function testOpportunityAI(){
+  var r=await fetch('/api/groq',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompt:'Quick Etsy analysis for "custom mug". Return JSON: {"opportunityScore":7,"verdict":"BUY IN","demandLevel":"High","competitionLevel":"Medium"}'})});
+  if(!r.ok)return{status:'fail',label:'API FAIL',detail:'Groq returned '+r.status};
+  var text=await r.text();
+  try{
+    var d=JSON.parse(text);
+    if(d.opportunityScore&&d.verdict)return{status:'ok',label:'WORKING',detail:'Score: '+d.opportunityScore+' — '+d.verdict};
+    return{status:'warn',label:'BAD FORMAT',detail:text.slice(0,60)};
+  }catch(e){return{status:'warn',label:'PARSE ERROR',detail:text.slice(0,80)};}
+}
+
+async function testTrendingAI(){
+  var r=await fetch('/api/groq',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompt:'5 trending Etsy keywords UK. Return JSON: {"trending":[{"keyword":"test mug","growth":"+200%","reason":"test","category":"viral","urgency":"rising","opportunity":"Low"}]}'})});
+  if(!r.ok)return{status:'fail',label:'API FAIL',detail:'Groq returned '+r.status};
+  var text=await r.text();
+  try{
+    var d=JSON.parse(text);
+    if(d.trending&&d.trending.length)return{status:'ok',label:'WORKING',detail:'Got '+d.trending.length+' trends'};
+    return{status:'warn',label:'BAD FORMAT',detail:text.slice(0,60)};
+  }catch(e){return{status:'warn',label:'PARSE ERROR',detail:text.slice(0,80)};}
+}
+
+async function testReddit(){
+  var r=await fetch('/api/market?keyword=etsy');
+  if(!r.ok)return{status:'fail',label:'HTTP '+r.status,detail:'market API failed'};
+  var d=await r.json();
+  var posts=(d.sources&&d.sources.reddit)||[];
+  if(!posts.length)return{status:'warn',label:'NO POSTS',detail:'Reddit returned 0 posts'};
+  return{status:'ok',label:'WORKING',detail:posts.length+' posts fetched'};
+}
+
+async function testPrintify(){
+  var r=await fetch('https://api.printify.com/v1/catalog/blueprints.json');
+  if(!r.ok)return{status:'warn',label:'BLOCKED',detail:'Printify blocked from browser (normal)'};
+  var d=await r.json();
+  return{status:'ok',label:'WORKING',detail:(d||[]).length+' products'};
+}
+
+async function testEbay(){
+  var r=await fetch('/api/market?keyword=personalised+mug');
+  if(!r.ok)return{status:'fail',label:'HTTP '+r.status,detail:'market API failed'};
+  var d=await r.json();
+  var ebay=d.sources&&d.sources.ebayUK||{};
+  if(!ebay.avgPrice)return{status:'warn',label:'NO PRICES',detail:'eBay returned no price data'};
+  return{status:'ok',label:'WORKING',detail:'Avg: £'+ebay.avgPrice+' (£'+ebay.minPrice+'-£'+ebay.maxPrice+')'};
+}
+
+async function testGoogleTrends(){
+  var r=await fetch('/api/trends');
+  if(!r.ok)return{status:'fail',label:'HTTP '+r.status,detail:'trends API failed'};
+  var d=await r.json();
+  var gb=d.trendingByMarket&&d.trendingByMarket.GB||[];
+  if(!gb.length)return{status:'warn',label:'NO DATA',detail:'Google Trends returned nothing'};
+  return{status:'ok',label:'WORKING',detail:'UK: '+gb.slice(0,3).map(function(t){return t.term;}).join(', ')};
+}
+
+// Auto-run on load
+window.addEventListener('load',function(){
+  setTimeout(runAllTests,500);
+});
+</script>
+</body>
+</html>
