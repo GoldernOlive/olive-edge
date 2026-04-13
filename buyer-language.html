@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Buyer Language Miner — Olive Edge</title>
+<link rel="stylesheet" href="css/style.css"/>
+</head>
+<body>
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="dashboard.html" class="nav-logo" style="text-decoration:none"><span class="sub">Golden Olive</span><span class="main">Olive <span>Edge</span></span></a>
+    <div class="nav-links">
+      <a href="dashboard.html" class="nav-link">Dashboard</a>
+      <div class="nav-drop" id="drop-research">
+        <button class="nav-drop-btn" id="drop-research-btn" onclick="toggleDrop('drop-research')">Research <svg viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5" style="width:10px;height:10px"><path d="M2 3.5L5 6.5L8 3.5"/></svg></button>
+        <div class="nav-drop-menu"><div class="nav-drop-menu-inner">
+          <a href="opportunities.html">🔥 Opportunities</a>
+          <a href="scanner.html">🔍 Scanner</a>
+          <a href="trend-velocity.html">⚡ Trend Velocity</a>
+          <a href="global-arbitrage.html">🌍 Global Arbitrage</a>
+          <a href="buyer-language.html" class="active">💬 Buyer Language</a>
+        </div></div>
+      </div>
+      <div class="nav-drop" id="drop-create">
+        <button class="nav-drop-btn" id="drop-create-btn" onclick="toggleDrop('drop-create')">Create <svg viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5" style="width:10px;height:10px"><path d="M2 3.5L5 6.5L8 3.5"/></svg></button>
+        <div class="nav-drop-menu"><div class="nav-drop-menu-inner">
+          <a href="listing-generator.html">✍️ Listing Writer</a>
+          <a href="listing-auditor.html">🔎 Listing Auditor</a>
+        </div></div>
+      </div>
+      <a href="trends.html" class="nav-link">Trends</a>
+      <a href="suppliers.html" class="nav-link">Suppliers</a>
+      <a href="workspace.html" class="nav-link">Workspace</a>
+    </div>
+    <div class="nav-user">
+      <span class="nav-email" id="nav-email"></span>
+      <button class="btn-ghost btn-sm" onclick="logout()">Log Out</button>
+    </div>
+  </div>
+</nav>
+
+<div class="page">
+  <div class="fu">
+    <div class="page-title serif">💬 Buyer Language Miner</div>
+    <div class="page-sub">Extracts the exact words buyers use — from reviews, Reddit and search data. Use these in your titles, tags and descriptions to speak directly to buyers.</div>
+  </div>
+
+  <div class="card fu">
+    <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end">
+      <div style="flex:1">
+        <div class="lbl">Product or Niche</div>
+        <input id="bl-kw" placeholder="e.g. custom mug, pet portrait, tote bag, wall art print..." onkeydown="if(event.key==='Enter')mineLanguage()"/>
+      </div>
+      <div style="min-width:160px">
+        <div class="lbl">Market</div>
+        <select id="bl-market">
+          <option value="UK">🇬🇧 UK</option>
+          <option value="USA">🇺🇸 USA</option>
+          <option value="Both">Both</option>
+        </select>
+      </div>
+      <button class="btn-olive" onclick="mineLanguage()">Mine Buyer Language</button>
+    </div>
+  </div>
+
+  <div style="margin-bottom:14px">
+    <div class="lbl">Quick Start</div>
+    <div id="bl-chips"></div>
+  </div>
+
+  <div id="bl-result"></div>
+</div>
+
+<script>
+function getSession(){return{token:localStorage.getItem('oe_token')||'',email:localStorage.getItem('oe_email')||'',userId:localStorage.getItem('oe_uid')||''};}
+function logout(){localStorage.removeItem('oe_token');localStorage.removeItem('oe_email');localStorage.removeItem('oe_uid');window.location.href='index.html';}
+var SESSION=getSession();
+if(!SESSION.token){window.location.href='index.html';}
+else{var em=document.getElementById('nav-email');if(em)em.textContent=SESSION.email;}
+
+function toggleDrop(id){
+  var el=document.getElementById(id);var btn=document.getElementById(id+'-btn');
+  var isOpen=el.classList.contains('open');
+  document.querySelectorAll('.nav-drop').forEach(function(d){d.classList.remove('open');});
+  document.querySelectorAll('.nav-drop-btn').forEach(function(b){b.classList.remove('open');});
+  if(!isOpen){el.classList.add('open');btn.classList.add('open');}
+}
+document.addEventListener('click',function(e){
+  if(!e.target.closest('.nav-drop')){
+    document.querySelectorAll('.nav-drop').forEach(function(d){d.classList.remove('open');});
+    document.querySelectorAll('.nav-drop-btn').forEach(function(b){b.classList.remove('open');});
+  }
+});
+
+window.onload=function(){
+  var chips=['custom mug','pet portrait','tote bag','wall art print','wedding gift','baby name print','funny slogan shirt','personalised keyring','candle gift','motivational poster'];
+  var el=document.getElementById('bl-chips');
+  if(el){var h='';chips.forEach(function(c){h+='<button class="btn-chip" onclick="document.getElementById(\'bl-kw\').value=\''+c+'\';mineLanguage()">'+c+'</button>';});el.innerHTML=h;}
+};
+
+async function callAI(prompt){
+  var controller=new AbortController();
+  var timeout=setTimeout(function(){controller.abort();},25000);
+  try{
+    var r=await fetch('/api/groq',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompt:prompt}),signal:controller.signal});
+    clearTimeout(timeout);
+    var text=await r.text();
+    try{return JSON.parse(text);}
+    catch(e){var s=text.indexOf('{'),en=text.lastIndexOf('}');if(s>=0&&en>s)return JSON.parse(text.slice(s,en+1));throw new Error('No JSON');}
+  }catch(e){clearTimeout(timeout);if(e.name==='AbortError')throw new Error('Timed out');throw e;}
+}
+
+async function mineLanguage(){
+  var kw=document.getElementById('bl-kw').value.trim();
+  var market=document.getElementById('bl-market').value;
+  if(!kw){alert('Please enter a product or niche');return;}
+
+  var res=document.getElementById('bl-result');
+  res.innerHTML='<div class="card"><div class="loading-row"><div class="spin"></div>Step 1 — Fetching real Reddit discussions and buyer search patterns...</div></div>';
+
+  // Get real Reddit + autocomplete data in parallel
+  var redditData=[],acData={};
+  try{
+    var[mr,ar]=await Promise.all([
+      fetch('/api/market?keyword='+encodeURIComponent(kw)),
+      fetch('/api/autocomplete?keyword='+encodeURIComponent(kw))
+    ]);
+    var md=await mr.json();
+    acData=await ar.json();
+    redditData=(md.sources&&md.sources.reddit)||[];
+  }catch(e){}
+
+  res.innerHTML='<div class="card"><div class="loading-row"><div class="spin"></div>Step 2 — Mining '+redditData.length+' real buyer discussions for exact language patterns...</div></div>';
+
+  var redditCtx=redditData.length
+    ?'REAL REDDIT BUYER DISCUSSIONS: '+redditData.slice(0,10).map(function(p){return'"'+p.title+'" ('+p.score+' upvotes, r/'+p.subreddit+')';}).join(' | ')
+    :'';
+  var googleCtx=(acData.googleBuyerSearches||[]).length
+    ?'REAL GOOGLE SEARCHES by buyers: '+(acData.googleBuyerSearches||[]).slice(0,20).join(', ')
+    :'';
+  var buyerQs=(acData.buyerQuestions||[]).length
+    ?'BUYER QUESTIONS: '+(acData.buyerQuestions||[]).slice(0,10).join(', ')
+    :'';
+
+  try{
+    var d=await callAI(
+      'You are an expert at mining buyer psychology and language for Etsy sellers.\n'+
+      'Niche: "'+kw+'" | Market: '+market+'\n\n'+
+      (redditCtx?redditCtx+'\n':'')+
+      (googleCtx?googleCtx+'\n':'')+
+      (buyerQs?buyerQs+'\n':'')+
+      '\nAnalyse this real data and extract the EXACT language buyers use. Return JSON only:\n'+
+      '{"niche":"'+kw+'",'+
+      '"summary":"2 sentence insight about how buyers think and talk about this",'+
+      '"emotionalDrivers":[{"driver":"exact emotion e.g. Pride in gift giving","strength":85,"description":"why this drives purchases","examplePhrases":["exact phrase buyers use","phrase 2"]},{"driver":"driver2","strength":72,"description":"why","examplePhrases":["phrase1","phrase2"]}],'+
+      '"powerWords":{"titles":["word1","word2","word3","word4","word5","word6","word7","word8"],"tags":["tag phrase 1","tag phrase 2","tag phrase 3","tag phrase 4","tag phrase 5","tag phrase 6"],"descriptions":["opening hook phrase","phrase2","phrase3"]},'+
+      '"buyerPersonas":[{"persona":"e.g. Gift buyer for mum","percentage":45,"whatTheySearch":"exact search terms","whatTheyNeed":"emotional need","pricePoint":"£X-£Y","bestAngle":"how to reach them"},{"persona":"persona2","percentage":30,"whatTheySearch":"terms","whatTheyNeed":"need","pricePoint":"£X","bestAngle":"angle"}],'+
+      '"titleFormulas":["[Word] [Product] — [Emotional benefit] | [Occasion] Gift","formula2","formula3"],'+
+      '"descriptionHooks":["opening sentence that converts","hook2","hook3"],'+
+      '"tagsToAvoid":["generic tag that is too competitive","tag2","tag3"],'+
+      '"goldTags":["high intent low competition tag","tag2","tag3","tag4","tag5","tag6","tag7","tag8","tag9","tag10","tag11","tag12","tag13"],'+
+      '"realSearchPhrases":["exact phrase from real data","phrase2","phrase3","phrase4","phrase5"],'+
+      '"occasionTriggers":["Birthday","Christmas","Mothers Day","Just Because"],'+
+      '"copySnippets":{"productTitle":"Full example title using buyer language","descriptionOpener":"Full example opening 2 sentences","instagramCaption":"Ready to post caption"}}'
+    );
+
+    var html='';
+
+    // SUMMARY
+    html+='<div class="card-live fu">';
+    html+='<div class="lbl" style="color:var(--ol)">💬 Buyer Language Intelligence — "'+kw+'"</div>';
+    html+='<p style="font-size:14px;line-height:1.7;margin-bottom:14px">'+d.summary+'</p>';
+    if(redditData.length)html+='<span class="badge b-live">'+redditData.length+' real Reddit discussions analysed</span> ';
+    if((acData.googleBuyerSearches||[]).length)html+='<span class="badge b-gold">'+(acData.googleBuyerSearches||[]).length+' real Google searches mined</span>';
+    html+='</div>';
+
+    // EMOTIONAL DRIVERS
+    html+='<div class="card d1"><div class="lbl" style="color:var(--ol)">What Actually Drives Buyers to Purchase</div>';
+    html+='<p style="font-size:12px;color:var(--mu);margin-bottom:14px">Use these insights to write descriptions and titles that connect emotionally</p>';
+    var drivers=d.emotionalDrivers||[];
+    for(var i=0;i<drivers.length;i++){
+      var dr=drivers[i];
+      html+='<div style="padding:14px;background:var(--p2);border-radius:10px;margin-bottom:10px">';
+      html+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">';
+      html+='<span style="font-weight:700;font-size:15px">'+dr.driver+'</span>';
+      html+='<span style="font-family:DM Mono,monospace;font-weight:700;font-size:16px;color:var(--ol)">'+dr.strength+'%</span></div>';
+      html+='<div style="height:6px;background:var(--b1);border-radius:3px;margin-bottom:10px"><div style="height:6px;width:'+dr.strength+'%;background:var(--ol);border-radius:3px"></div></div>';
+      html+='<p style="font-size:13px;color:var(--mu);margin-bottom:8px">'+dr.description+'</p>';
+      html+='<div class="lbl" style="font-size:10px">EXACT PHRASES BUYERS USE</div>';
+      (dr.examplePhrases||[]).forEach(function(p){html+='<span style="display:inline-block;background:var(--olbg);border:1px solid var(--olbr);border-radius:20px;padding:3px 12px;font-size:12px;color:var(--ol);margin:2px;font-style:italic">"'+p+'"</span>';});
+      html+='</div>';
+    }
+    html+='</div>';
+
+    // BUYER PERSONAS
+    html+='<div class="card d1"><div class="lbl">Who Is Actually Buying This</div>';
+    var personas=d.buyerPersonas||[];
+    html+='<div class="grid-2">';
+    for(var i=0;i<personas.length;i++){
+      var p=personas[i];
+      html+='<div style="padding:14px;background:var(--p2);border-radius:10px">';
+      html+='<div style="display:flex;justify-content:space-between;margin-bottom:8px">';
+      html+='<span style="font-weight:700;font-size:14px">'+p.persona+'</span>';
+      html+='<span style="font-size:13px;font-weight:700;color:var(--gd);font-family:DM Mono,monospace">'+p.percentage+'%</span></div>';
+      html+='<div style="font-size:12px;color:var(--mu);margin-bottom:5px"><strong>They search:</strong> '+p.whatTheySearch+'</div>';
+      html+='<div style="font-size:12px;color:var(--mu);margin-bottom:5px"><strong>They need:</strong> '+p.whatTheyNeed+'</div>';
+      html+='<div style="font-size:12px;color:var(--mu);margin-bottom:5px"><strong>Price point:</strong> '+p.pricePoint+'</div>';
+      html+='<div style="padding:8px;background:var(--olbg);border-radius:6px;font-size:12px;color:var(--ol);font-weight:600">Best angle: '+p.bestAngle+'</div></div>';
+    }
+    html+='</div></div>';
+
+    // POWER WORDS
+    html+='<div class="card d2"><div class="lbl" style="color:var(--gd)">Power Words — Use These Everywhere</div>';
+    html+='<div class="grid-2" style="margin-bottom:14px">';
+    if(d.powerWords&&d.powerWords.titles){
+      html+='<div><div class="lbl" style="font-size:10px">IN YOUR TITLE</div>';
+      d.powerWords.titles.forEach(function(w){html+='<span style="display:inline-block;background:var(--gdbg);border:1px solid var(--gdbr);border-radius:20px;padding:4px 12px;font-size:13px;font-weight:700;color:var(--gd);margin:2px;cursor:pointer" onclick="navigator.clipboard&&navigator.clipboard.writeText(\''+w+'\')">'+w+'</span>';});
+      html+='</div>';
+    }
+    if(d.powerWords&&d.powerWords.tags){
+      html+='<div><div class="lbl" style="font-size:10px">IN YOUR TAGS</div>';
+      d.powerWords.tags.forEach(function(w){html+='<span style="display:inline-block;background:var(--olbg);border:1px solid var(--olbr);border-radius:20px;padding:4px 12px;font-size:12px;font-weight:600;color:var(--ol);margin:2px;font-family:DM Mono,monospace;cursor:pointer" onclick="navigator.clipboard&&navigator.clipboard.writeText(\''+w+'\')">'+w+'</span>';});
+      html+='</div>';
+    }
+    html+='</div>';
+    if(d.powerWords&&d.powerWords.descriptions){
+      html+='<div><div class="lbl" style="font-size:10px">IN YOUR DESCRIPTION OPENING</div>';
+      d.powerWords.descriptions.forEach(function(w){html+='<span style="display:inline-block;background:var(--p2);border:1px solid var(--b1);border-radius:20px;padding:4px 12px;font-size:12px;color:var(--mu);margin:2px;font-style:italic;cursor:pointer" onclick="navigator.clipboard&&navigator.clipboard.writeText(\''+w+'\')">"'+w+'"</span>';});
+      html+='</div>';
+    }
+    html+='</div>';
+
+    // REAL SEARCH PHRASES
+    if(d.realSearchPhrases&&d.realSearchPhrases.length){
+      html+='<div class="card d2"><div class="lbl" style="color:var(--rd)">Real Search Phrases — What Buyers Actually Type</div>';
+      html+='<p style="font-size:12px;color:var(--mu);margin-bottom:12px">From real Google autocomplete data — include these in your tags and descriptions</p>';
+      d.realSearchPhrases.forEach(function(p,i){
+        html+='<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--b1)">';
+        html+='<div style="width:22px;height:22px;border-radius:50%;background:var(--rdbg);border:1px solid var(--rdbr);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--rd);flex-shrink:0">'+(i+1)+'</div>';
+        html+='<span style="font-family:DM Mono,monospace;font-size:13px;flex:1">'+p+'</span>';
+        html+='<button class="btn-ghost btn-sm" onclick="navigator.clipboard&&navigator.clipboard.writeText(\''+p.replace(/'/g,"\\'")+'\')">Copy</button></div>';
+      });
+      html+='</div>';
+    }
+
+    // 13 GOLD TAGS
+    if(d.goldTags&&d.goldTags.length){
+      html+='<div class="card d2"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px">';
+      html+='<span class="lbl" style="margin-bottom:0;color:var(--gd)">Your 13 Buyer-Language Tags</span>';
+      html+='<button class="btn-ghost btn-sm" id="copy-tags-btn" onclick="copyGoldTags()">Copy All 13</button></div>';
+      d.goldTags.forEach(function(t){
+        html+='<span class="pill" style="font-family:DM Mono,monospace;cursor:pointer" onclick="navigator.clipboard&&navigator.clipboard.writeText(\''+t+'\')">'+t+'</span>';
+      });
+      html+='<div style="margin-top:10px;background:var(--p3);border-radius:8px;padding:10px;cursor:pointer" id="gold-tags-box" onclick="copyGoldTags()">';
+      html+='<p style="font-family:DM Mono,monospace;font-size:11px;line-height:2;word-break:break-word">'+d.goldTags.join(', ')+'</p></div>';
+      window._goldTags=d.goldTags;
+    }
+
+    // TITLE FORMULAS
+    if(d.titleFormulas&&d.titleFormulas.length){
+      html+='<div class="card d3"><div class="lbl">Title Formulas Using Buyer Language</div>';
+      d.titleFormulas.forEach(function(f,i){
+        html+='<div style="padding:10px;background:var(--p2);border-radius:8px;margin-bottom:8px;cursor:pointer;border:1px solid var(--b1)" onclick="navigator.clipboard&&navigator.clipboard.writeText(\''+f.replace(/'/g,"\\'")+'\');">';
+        html+='<div style="font-size:10px;color:var(--mu);margin-bottom:4px">FORMULA '+(i+1)+' — click to copy</div>';
+        html+='<div style="font-size:13px;font-weight:600">'+f+'</div></div>';
+      });
+      html+='</div>';
+    }
+
+    // COPY SNIPPETS
+    if(d.copySnippets){
+      html+='<div class="card-gold d3"><div class="lbl" style="color:var(--gd)">Ready-to-Use Copy</div>';
+      if(d.copySnippets.productTitle){
+        html+='<div style="margin-bottom:12px"><div class="lbl" style="font-size:10px">EXAMPLE TITLE</div>';
+        html+='<div style="padding:12px;background:var(--olbg);border:1.5px solid var(--olbr);border-radius:8px;font-size:14px;font-weight:700;cursor:pointer" onclick="navigator.clipboard&&navigator.clipboard.writeText(\''+d.copySnippets.productTitle.replace(/'/g,"\\'")+'\')">'+d.copySnippets.productTitle+'<div style="font-size:10px;color:var(--ol);margin-top:4px">Click to copy</div></div></div>';
+      }
+      if(d.copySnippets.descriptionOpener){
+        html+='<div style="margin-bottom:12px"><div class="lbl" style="font-size:10px">DESCRIPTION OPENER</div>';
+        html+='<div style="padding:12px;background:var(--w);border:1px solid var(--b1);border-radius:8px;font-size:13px;font-style:italic;line-height:1.7;cursor:pointer" onclick="navigator.clipboard&&navigator.clipboard.writeText(\''+d.copySnippets.descriptionOpener.replace(/'/g,"\\'")+'\')">'+d.copySnippets.descriptionOpener+'<div style="font-size:10px;color:var(--mu);margin-top:4px">Click to copy</div></div></div>';
+      }
+      if(d.copySnippets.instagramCaption){
+        html+='<div><div class="lbl" style="font-size:10px">INSTAGRAM CAPTION</div>';
+        html+='<div style="padding:12px;background:var(--w);border:1px solid var(--b1);border-radius:8px;font-size:13px;line-height:1.7;cursor:pointer" onclick="navigator.clipboard&&navigator.clipboard.writeText(\''+d.copySnippets.instagramCaption.replace(/'/g,"\\'")+'\')">'+d.copySnippets.instagramCaption+'<div style="font-size:10px;color:var(--mu);margin-top:4px">Click to copy</div></div></div>';
+      }
+      html+='</div>';
+    }
+
+    // TAGS TO AVOID
+    if(d.tagsToAvoid&&d.tagsToAvoid.length){
+      html+='<div class="card d3"><div class="lbl" style="color:var(--rd)">Tags to Avoid — Too Generic / Competitive</div>';
+      d.tagsToAvoid.forEach(function(t){
+        html+='<span style="display:inline-block;background:var(--rdbg);border:1px solid var(--rdbr);border-radius:20px;padding:3px 11px;font-size:11px;color:var(--rd);font-family:DM Mono,monospace;margin:2px;text-decoration:line-through">'+t+'</span>';
+      });
+      html+='</div>';
+    }
+
+    // ACTION BUTTONS
+    html+='<div class="card d4" style="display:flex;gap:10px;flex-wrap:wrap">';
+    html+='<button class="btn-olive" onclick="window.location.href=\'listing-generator.html\'">Use This to Write a Listing</button>';
+    html+='<button class="btn-ghost" onclick="window.location.href=\'opportunities.html?kw='+encodeURIComponent(kw)+'\'">Full Opportunity Analysis</button>';
+    html+='</div>';
+
+    res.innerHTML=html;
+    window._blData=d;
+
+  }catch(e){
+    res.innerHTML='<div class="card-red"><strong>Error:</strong> '+(e.message||'Please try again')+'</div>';
+  }
+}
+
+function copyGoldTags(){
+  var tags=window._goldTags||[];
+  var btn=document.getElementById('copy-tags-btn');
+  if(navigator.clipboard){
+    navigator.clipboard.writeText(tags.join(', ')).then(function(){
+      if(btn){btn.textContent='Copied!';setTimeout(function(){btn.textContent='Copy All 13';},2000);}
+    });
+  }
+}
+</script>
+</body>
+</html>
