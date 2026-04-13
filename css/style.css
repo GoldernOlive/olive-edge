@@ -140,10 +140,12 @@ button,a.btn{border:none;cursor:pointer;font-family:'Jost',sans-serif;font-weigh
 .nav-drop-btn:hover,.nav-drop-btn.open{background:var(--olbg);color:var(--ol)}
 .nav-drop-btn svg{width:10px;height:10px;transition:transform .2s;flex-shrink:0}
 .nav-drop-btn.open svg{transform:rotate(180deg)}
-.nav-drop-menu{display:none;position:absolute;top:calc(100% + 8px);left:0;background:var(--w);border:1.5px solid var(--b1);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.12);min-width:200px;z-index:300;padding:6px}
+.nav-drop-menu{display:none;position:absolute;top:100%;left:0;padding-top:8px;background:transparent;min-width:200px;z-index:300;}
+.nav-drop-menu-inner{background:var(--w);border:1.5px solid var(--b1);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.12);padding:6px;}
+.nav-drop:hover .nav-drop-menu,.nav-drop.open .nav-drop-menu{display:block;}
 .nav-drop.open .nav-drop-menu{display:block}
 .nav-drop:hover .nav-drop-menu{display:block}
-.nav-drop-menu a{display:block;padding:8px 12px;font-size:13px;font-weight:500;color:var(--tx);text-decoration:none;border-radius:6px;transition:background .1s}
+.nav-drop-menu a{display:block;padding:8px 12px;font-size:13px;font-weight:500;color:var(--tx);text-decoration:none;border-radius:6px;transition:background .1s;white-space:nowrap}
 .nav-drop-menu a:hover{background:var(--p2);color:var(--ol)}
 .nav-drop-menu a.active{color:var(--ol);font-weight:700;background:var(--olbg)}
 .nav-drop-divider{height:1px;background:var(--b1);margin:4px 0}
