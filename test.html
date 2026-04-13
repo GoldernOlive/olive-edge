@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"/><title>API Test</title></head>
+<body style="font-family:sans-serif;padding:20px;max-width:600px">
+<h2>Olive Edge — API Diagnostic</h2>
+<button onclick="testGroq()" style="background:#4a7c59;color:#fff;border:none;padding:10px 20px;border-radius:6px;cursor:pointer;font-size:14px">Test Groq API</button>
+<div id="result" style="margin-top:16px;padding:14px;background:#f5f3ef;border-radius:8px;font-size:13px;white-space:pre-wrap;min-height:40px"></div>
+
+<script>
+async function testGroq(){
+  var el=document.getElementById('result');
+  el.textContent='Testing...';
+  try{
+    var r=await fetch('/api/groq',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({prompt:'Return JSON only: {"status":"working","model":"ok","test":true}'})
+    });
+    var text=await r.text();
+    el.style.background=r.ok?'#e8f4e8':'#fde8e8';
+    el.textContent='HTTP '+r.status+':\n'+text;
+  }catch(e){
+    el.style.background='#fde8e8';
+    el.textContent='Error: '+e.message;
+  }
+}
+</script>
+</body>
+</html>
