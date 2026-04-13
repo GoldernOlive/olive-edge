@@ -12,13 +12,16 @@
     <a href="dashboard.html" class="nav-logo" style="text-decoration:none"><span class="sub">Golden Olive</span><span class="main">Olive <span>Edge</span></span></a>
     <div class="nav-links">
       <a href="dashboard.html" class="nav-link">Dashboard</a>
+      <a href="intelligence.html" class="nav-link" style="">🧠 Intelligence</a>
       <div class="nav-drop" id="drop-research">
-        <button class="nav-drop-btn" id="drop-research-btn" onclick="toggleDrop('drop-research')">Research <svg viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5" style="width:10px;height:10px"><path d="M2 3.5L5 6.5L8 3.5"/></svg></button>
+        <button class="nav-drop-btn active" id="drop-research-btn" onclick="toggleDrop('drop-research')">Research <svg viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5" style="width:10px;height:10px"><path d="M2 3.5L5 6.5L8 3.5"/></svg></button>
         <div class="nav-drop-menu"><div class="nav-drop-menu-inner">
           <a href="opportunities.html">🔥 Opportunities</a>
           <a href="scanner.html" class="active">🔍 Scanner</a>
           <a href="trend-velocity.html">⚡ Trend Velocity</a>
           <a href="global-arbitrage.html">🌍 Global Arbitrage</a>
+          <a href="first-mover.html">🚨 First Mover Alerts</a>
+          <a href="buyer-language.html">💬 Buyer Language</a>
         </div></div>
       </div>
       <div class="nav-drop" id="drop-create">
@@ -28,7 +31,6 @@
           <a href="listing-auditor.html">🔎 Listing Auditor</a>
         </div></div>
       </div>
-      <a href="trends.html" class="nav-link">Trends</a>
       <a href="suppliers.html" class="nav-link">Suppliers</a>
       <a href="workspace.html" class="nav-link">Workspace</a>
     </div>
@@ -38,8 +40,21 @@
     </div>
   </div>
 </nav>
-
-<div class="page">
+<script>
+function toggleDrop(id){
+  var el=document.getElementById(id);var btn=document.getElementById(id+'-btn');
+  var isOpen=el.classList.contains('open');
+  document.querySelectorAll('.nav-drop').forEach(function(d){d.classList.remove('open');});
+  document.querySelectorAll('.nav-drop-btn').forEach(function(b){b.classList.remove('open');});
+  if(!isOpen){el.classList.add('open');btn.classList.add('open');}
+}
+document.addEventListener('click',function(e){
+  if(!e.target.closest('.nav-drop')){
+    document.querySelectorAll('.nav-drop').forEach(function(d){d.classList.remove('open');});
+    document.querySelectorAll('.nav-drop-btn').forEach(function(b){b.classList.remove('open');});
+  }
+});
+</script><div class="page">
   <div class="fu">
     <div class="page-title serif">🔍 Product &amp; Shop Scanner</div>
     <div class="page-sub">Scan any keyword, product or shop — get full performance, design and competitive intelligence</div>
@@ -72,200 +87,6 @@
   <div id="scan-res"></div>
 </div>
 
-<script>
-function getSession(){return{token:localStorage.getItem('oe_token')||'',email:localStorage.getItem('oe_email')||'',userId:localStorage.getItem('oe_uid')||''};}
-function logout(){localStorage.removeItem('oe_token');localStorage.removeItem('oe_email');localStorage.removeItem('oe_uid');window.location.href='index.html';}
-var SESSION=getSession();
-if(!SESSION.token){window.location.href='index.html';}
-else{var em=document.getElementById('nav-email');if(em)em.textContent=SESSION.email;}
 
-function toggleDrop(id){
-  var el=document.getElementById(id);
-  var btn=document.getElementById(id+'-btn');
-  var isOpen=el.classList.contains('open');
-  document.querySelectorAll('.nav-drop').forEach(function(d){d.classList.remove('open');});
-  document.querySelectorAll('.nav-drop-btn').forEach(function(b){b.classList.remove('open');});
-  if(!isOpen){el.classList.add('open');btn.classList.add('open');}
-}
-document.addEventListener('click',function(e){
-  if(!e.target.closest('.nav-drop')){
-    document.querySelectorAll('.nav-drop').forEach(function(d){d.classList.remove('open');});
-    document.querySelectorAll('.nav-drop-btn').forEach(function(b){b.classList.remove('open');});
-  }
-});
-
-function switchMode(mode){
-  document.getElementById('kw-mode').style.display=mode==='kw'?'block':'none';
-  document.getElementById('shop-mode').style.display=mode==='shop'?'block':'none';
-  document.getElementById('tb-kw').style.background=mode==='kw'?'var(--ol)':'transparent';
-  document.getElementById('tb-kw').style.color=mode==='kw'?'#fff':'var(--mu)';
-  document.getElementById('tb-shop').style.background=mode==='shop'?'var(--ol)':'transparent';
-  document.getElementById('tb-shop').style.color=mode==='shop'?'#fff':'var(--mu)';
-}
-
-async function callAI(prompt){
-  var controller=new AbortController();
-  var timeout=setTimeout(function(){controller.abort();},25000);
-  try{
-    var r=await fetch('/api/groq',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompt:prompt}),signal:controller.signal});
-    clearTimeout(timeout);
-    var text=await r.text();
-    try{return JSON.parse(text);}
-    catch(e){var s=text.indexOf('{'),en=text.lastIndexOf('}');if(s>=0&&en>s)return JSON.parse(text.slice(s,en+1));throw new Error('No JSON in response');}
-  }catch(e){clearTimeout(timeout);if(e.name==='AbortError')throw new Error('Timed out — try again');throw e;}
-}
-
-function platformLinks(kw){
-  var k=encodeURIComponent(kw);
-  var links=[['Etsy UK','https://www.etsy.com/uk/search?q='+k],['Etsy USA','https://www.etsy.com/search?q='+k],['eBay Sold','https://www.ebay.co.uk/sch/i.html?_nkw='+k+'&LH_Sold=1'],['Printify','https://printify.com/app/products?search='+k],['Pinterest','https://www.pinterest.co.uk/search/pins/?q='+k],['NOTHS','https://www.notonthehighstreet.com/search?search_term='+k]];
-  var html='<div class="card" style="margin-bottom:14px;border:2px solid var(--olbr)"><div class="lbl" style="color:var(--ol)">See Real Products</div><div style="display:flex;flex-wrap:wrap;gap:6px">';
-  for(var i=0;i<links.length;i++){html+='<a href="'+links[i][1]+'" target="_blank" style="font-size:11px;padding:5px 10px;border:1.5px solid var(--b1);border-radius:7px;color:var(--tx);text-decoration:none;font-weight:600">'+links[i][0]+'</a>';}
-  return html+'</div></div>';
-}
-
-function sbox(l,v,c){return '<div class="sbox"><div class="lbl">'+l+'</div><div style="font-size:15px;color:'+(c||'var(--tx)')+';font-weight:700;font-family:DM Mono,monospace">'+(v||'--')+'</div></div>';}
-
-async function doKeywordScan(){
-  var kw=document.getElementById('kw-input').value.trim();
-  if(!kw)return;
-  var res=document.getElementById('scan-res');
-  res.innerHTML='<div class="card"><div class="loading-row"><div class="spin"></div>Scanning "'+kw+'" — pulling real market intelligence...</div></div>';
-
-  // Get real market data
-  var ebayData={};var redditData=[];
-  try{
-    var mr=await fetch('/api/market?keyword='+encodeURIComponent(kw));
-    var md=await mr.json();
-    ebayData=md.sources&&md.sources.ebayUK||{};
-    redditData=md.sources&&md.sources.reddit||[];
-  }catch(e){}
-
-  var ebayCtx=ebayData.avgPrice?'REAL EBAY UK SOLD PRICES: avg £'+ebayData.avgPrice+', min £'+ebayData.minPrice+', max £'+ebayData.maxPrice:'';
-  var redditCtx=redditData.length?'REAL REDDIT DISCUSSIONS: '+redditData.slice(0,5).map(function(p){return'"'+p.title+'"('+p.score+' upvotes)';}).join(' | '):'';
-
-  try{
-    var d=await callAI('Deep competitive analysis for Etsy keyword "'+kw+'" UK POD market. '+ebayCtx+' '+redditCtx+' Return JSON: {"summary":"2 sentence niche overview with real insights","opportunityScore":7.5,"verdict":"BUY IN","competitionLevel":"Medium","priceRange":{"min":"£8","max":"£35","sweet":"£14-18"},"listingIntel":{"avgPhotos":6,"freeShipping":"65%","personalisation":"40%","topImageType":"Lifestyle mockup"},"visualIntel":{"topColours":["Sage Green","Blush Pink","Black"],"topStyles":["Minimalist","Script text","Watercolour"],"topPhrases":["But First Coffee","You Got This","Plant Lady"]},"seoIntel":{"titleFormula":"[Adj] [Product] | [Keyword] Gift for [Audience]","topKeywords":["personalised","custom","funny","gift for her"],"emotionalTriggers":["sentimental","humorous","empowering"]},"competitive":{"weakListings":"Poor quality mockups, generic designs, missing personalisation","strongListings":"Lifestyle photos, niche-specific humour, strong branding","gap":"Specific niche not well served","recommendation":"Exact action to take"},"topTags":["tag1","tag2","tag3","tag4","tag5","tag6","tag7","tag8","tag9","tag10","tag11","tag12","tag13"]}');
-
-    var html=platformLinks(kw);
-
-    // Score + verdict
-    var sc=d.opportunityScore||7;
-    var scClass=sc>=7?'score-high':sc>=5?'score-mid':'score-low';
-    var vc={'BUY IN':'var(--gn)','WORTH TESTING':'var(--gd)','PROCEED WITH CAUTION':'var(--or)','AVOID':'var(--rd)'}[d.verdict]||'var(--gd)';
-
-    html+='<div class="card-live fu">';
-    html+='<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:14px;flex-wrap:wrap;margin-bottom:14px">';
-    html+='<div style="flex:1"><div class="serif" style="font-size:26px;font-weight:600;margin-bottom:8px">"'+kw+'"</div>';
-    html+='<span style="background:'+vc+'18;color:'+vc+';border:1px solid '+vc+'44;border-radius:20px;padding:4px 14px;font-size:12px;font-weight:700">'+d.verdict+'</span>';
-    html+='<p style="margin-top:8px;font-size:13px;color:var(--mu);line-height:1.7">'+d.summary+'</p></div>';
-    html+='<div class="score-ring '+scClass+'">'+sc+'</div></div>';
-
-    // Real eBay prices
-    if(ebayData.avgPrice){
-      html+='<div style="padding:10px;background:var(--gdbg);border-radius:8px;margin-bottom:12px"><div class="lbl" style="color:var(--gd)">Real eBay UK Sold Prices</div>';
-      html+='<div class="grid-auto">'+sbox('Avg','£'+ebayData.avgPrice,'var(--gd)')+sbox('Min','£'+ebayData.minPrice,'var(--gn)')+sbox('Max','£'+ebayData.maxPrice,'var(--rd)')+'</div></div>';
-    }
-
-    // Price range + intelligence
-    html+='<div class="grid-auto" style="margin-bottom:12px">';
-    html+=sbox('Competition',d.competitionLevel,d.competitionLevel==='Low'?'var(--gn)':d.competitionLevel==='Medium'?'var(--gd)':'var(--rd)');
-    if(d.priceRange){html+=sbox('Sweet Spot',d.priceRange.sweet,'var(--gd)');}
-    if(d.listingIntel){
-      html+=sbox('Avg Photos',d.listingIntel.avgPhotos,'var(--mu)');
-      html+=sbox('Free Shipping',d.listingIntel.freeShipping,'var(--ol)');
-    }
-    html+='</div></div>';
-
-    // Visual Intel + SEO
-    html+='<div class="grid-2 d1">';
-    if(d.visualIntel){
-      html+='<div class="card"><div class="lbl">What Sells Visually</div>';
-      html+='<div class="lbl" style="font-size:10px;margin-top:8px">TOP COLOURS</div>';
-      (d.visualIntel.topColours||[]).forEach(function(c){html+='<span class="pill">'+c+'</span>';});
-      html+='<div class="lbl" style="font-size:10px;margin-top:8px">DESIGN STYLES</div>';
-      (d.visualIntel.topStyles||[]).forEach(function(s){html+='<span class="pill">'+s+'</span>';});
-      html+='<div class="lbl" style="font-size:10px;margin-top:8px">TOP PHRASES</div>';
-      (d.visualIntel.topPhrases||[]).forEach(function(p){html+='<span style="display:inline-block;font-style:italic;font-size:12px;color:var(--gd);margin:2px 6px">"'+p+'"</span>';});
-      html+='</div>';
-    }
-    if(d.seoIntel){
-      html+='<div class="card"><div class="lbl">SEO Intelligence</div>';
-      html+='<div style="padding:10px;background:var(--gdbg);border-radius:8px;margin-bottom:10px"><div class="lbl" style="font-size:10px;color:var(--gd)">TITLE FORMULA</div><p style="font-size:12px;font-style:italic">'+d.seoIntel.titleFormula+'</p></div>';
-      html+='<div class="lbl" style="font-size:10px">EMOTIONAL TRIGGERS</div>';
-      (d.seoIntel.emotionalTriggers||[]).forEach(function(t){html+='<span class="pill">'+t+'</span>';});
-      html+='</div>';
-    }
-    html+='</div>';
-
-    // Competitive gap
-    if(d.competitive){
-      html+='<div class="card d2"><div class="lbl">Competitive Analysis</div>';
-      html+='<div style="padding:10px;background:var(--rdbg);border-radius:7px;margin-bottom:8px"><div style="font-size:10px;color:var(--rd);font-weight:700;margin-bottom:4px">WEAK LISTINGS DO THIS</div><p style="font-size:12px;color:var(--mu)">'+d.competitive.weakListings+'</p></div>';
-      html+='<div style="padding:10px;background:var(--olbg);border-radius:7px;margin-bottom:8px"><div style="font-size:10px;color:var(--ol);font-weight:700;margin-bottom:4px">STRONG LISTINGS DO THIS</div><p style="font-size:12px;color:var(--mu)">'+d.competitive.strongListings+'</p></div>';
-      html+='<div style="padding:10px;background:var(--gdbg);border-radius:7px"><div style="font-size:10px;color:var(--gd);font-weight:700;margin-bottom:4px">THE GAP YOU CAN EXPLOIT</div><p style="font-size:13px;font-weight:600">'+d.competitive.gap+'</p><p style="font-size:12px;color:var(--ol);font-weight:600">→ '+d.competitive.recommendation+'</p></div></div>';
-    }
-
-    // Reddit real discussions
-    if(redditData.length){
-      html+='<div class="card d2" style="border-left:4px solid #ff4500"><div class="lbl" style="color:#cc4400">Real Reddit Discussions</div>';
-      redditData.slice(0,5).forEach(function(p){
-        html+='<div style="padding:8px 0;border-bottom:1px solid var(--b1)"><div style="font-size:13px;font-weight:600;margin-bottom:3px">'+p.title+'</div>';
-        html+='<div style="display:flex;gap:10px"><span style="font-size:11px;color:var(--mu)">'+p.score+' upvotes</span><span style="font-size:10px;background:var(--p3);padding:1px 6px;border-radius:10px;color:var(--mu)">r/'+p.subreddit+'</span><a href="'+p.url+'" target="_blank" style="font-size:11px;color:var(--bl)">Read →</a></div></div>';
-      });
-      html+='</div>';
-    }
-
-    // Tags
-    if(d.topTags&&d.topTags.length){
-      html+='<div class="card d2"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><span class="lbl" style="margin-bottom:0">13 Tags to Use</span><button class="btn-ghost btn-sm" onclick="copyTags()">Copy All</button></div>';
-      html+='<div>';
-      d.topTags.forEach(function(t){html+='<span class="pill" style="cursor:pointer;font-family:DM Mono,monospace;font-size:11px" onclick="navigator.clipboard&&navigator.clipboard.writeText(\''+t+'\')">'+t+'</span>';});
-      html+='</div>';
-      html+='<div style="margin-top:10px;background:var(--p3);border-radius:8px;padding:10px;cursor:pointer" onclick="copyTags()"><p id="tags-text" style="font-family:DM Mono,monospace;font-size:11px;line-height:2">'+d.topTags.join(', ')+'</p></div></div>';
-      window._scanTags=d.topTags;
-    }
-
-    // Actions
-    html+='<div class="card-gold d3"><div class="lbl" style="color:var(--gd)">Next Steps</div>';
-    html+='<div style="display:flex;gap:10px;flex-wrap:wrap">';
-    html+='<button class="btn-olive" onclick="window.location.href=\'opportunities.html?kw='+encodeURIComponent(kw)+'\'">Full Opportunity Analysis</button>';
-    html+='<button class="btn-ghost" onclick="window.location.href=\'listing-generator.html\'">Generate Listing</button>';
-    html+='</div></div>';
-
-    res.innerHTML=html;
-  }catch(e){
-    res.innerHTML='<div class="card-red"><strong>Scan failed:</strong> '+(e.message||'Please try again')+'</div>';
-  }
-}
-
-async function doShopScan(){
-  var shopName=document.getElementById('shop-input').value.trim();
-  if(!shopName)return;
-  var res=document.getElementById('scan-res');
-  res.innerHTML='<div class="card"><div class="loading-row"><div class="spin"></div>Analysing shop "'+shopName+'"...</div></div>';
-  try{
-    var d=await callAI('Analyse Etsy shop "'+shopName+'". What niche do they focus on? What makes them successful? What are their weaknesses? Return JSON: {"shopName":"'+shopName+'","estimatedSales":"X,XXX","nichesFocus":["niche1","niche2"],"designStyle":"their style","pricingStrategy":"their pricing","seoStrength":"SEO analysis","strongPoints":["s1","s2","s3"],"weakPoints":["w1","w2","w3"],"stealThese":["tactic1","tactic2","tactic3"],"globalGaps":[{"market":"UK","gap":"gap","action":"action"},{"market":"USA","gap":"gap","action":"action"}]}');
-    var html='<div class="card-live fu"><div class="serif" style="font-size:24px;font-weight:600;margin-bottom:12px">'+d.shopName+'</div>';
-    html+='<div class="grid-auto" style="margin-bottom:14px">'+sbox('Est Sales',d.estimatedSales,'var(--gd)')+sbox('Style',d.designStyle,'var(--ol)')+'</div>';
-    html+='<div class="grid-2">';
-    html+='<div class="card"><div class="lbl" style="color:var(--ol)">Steal These Tactics</div>';
-    (d.stealThese||[]).forEach(function(t){html+='<div style="display:flex;gap:8px;padding:6px 0;border-bottom:1px solid var(--b1);font-size:13px"><span style="color:var(--ol)">→</span>'+t+'</div>';});
-    html+='</div><div class="card"><div class="lbl" style="color:var(--rd)">Their Weaknesses</div>';
-    (d.weakPoints||[]).forEach(function(w){html+='<div style="display:flex;gap:8px;padding:6px 0;border-bottom:1px solid var(--b1);font-size:13px"><span style="color:var(--rd)">!</span><span style="color:var(--mu)">'+w+'</span></div>';});
-    html+='</div></div>';
-    html+='<div style="margin-top:14px"><div class="lbl">Niches</div>';
-    (d.nichesFocus||[]).forEach(function(n){html+='<span class="pill">'+n+'</span>';});
-    html+='</div></div>';
-    res.innerHTML=html;
-  }catch(e){
-    res.innerHTML='<div class="card-red"><strong>Error:</strong> '+(e.message||'Try again')+'</div>';
-  }
-}
-
-function copyTags(){
-  var tags=window._scanTags||[];
-  if(navigator.clipboard)navigator.clipboard.writeText(tags.join(', '));
-}
-</script>
 </body>
 </html>
