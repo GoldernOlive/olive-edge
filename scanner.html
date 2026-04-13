@@ -7,19 +7,49 @@
 <link rel="stylesheet" href="css/style.css"/>
 </head>
 <body>
-<div id="nav-placeholder"></div>
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="dashboard.html" class="nav-logo" style="text-decoration:none"><span class="sub">Golden Olive</span><span class="main">Olive <span>Edge</span></span></a>
+    <div class="nav-links">
+      <a href="dashboard.html" class="nav-link">Dashboard</a>
+      <div class="nav-drop" id="drop-research">
+        <button class="nav-drop-btn" id="drop-research-btn" onclick="toggleDrop('drop-research')">Research <svg viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5" style="width:10px;height:10px"><path d="M2 3.5L5 6.5L8 3.5"/></svg></button>
+        <div class="nav-drop-menu"><div class="nav-drop-menu-inner">
+          <a href="opportunities.html">🔥 Opportunities</a>
+          <a href="scanner.html" class="active">🔍 Scanner</a>
+          <a href="trend-velocity.html">⚡ Trend Velocity</a>
+          <a href="global-arbitrage.html">🌍 Global Arbitrage</a>
+        </div></div>
+      </div>
+      <div class="nav-drop" id="drop-create">
+        <button class="nav-drop-btn" id="drop-create-btn" onclick="toggleDrop('drop-create')">Create <svg viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5" style="width:10px;height:10px"><path d="M2 3.5L5 6.5L8 3.5"/></svg></button>
+        <div class="nav-drop-menu"><div class="nav-drop-menu-inner">
+          <a href="listing-generator.html">✍️ Listing Writer</a>
+          <a href="listing-auditor.html">🔎 Listing Auditor</a>
+        </div></div>
+      </div>
+      <a href="trends.html" class="nav-link">Trends</a>
+      <a href="suppliers.html" class="nav-link">Suppliers</a>
+      <a href="workspace.html" class="nav-link">Workspace</a>
+    </div>
+    <div class="nav-user">
+      <span class="nav-email" id="nav-email"></span>
+      <button class="btn-ghost btn-sm" onclick="logout()">Log Out</button>
+    </div>
+  </div>
+</nav>
+
 <div class="page">
   <div class="fu">
-    <div class="page-title serif">🔍 Product & Shop Scanner</div>
+    <div class="page-title serif">🔍 Product &amp; Shop Scanner</div>
     <div class="page-sub">Scan any keyword, product or shop — get full performance, design and competitive intelligence</div>
   </div>
 
   <div class="card fu">
     <div style="display:flex;gap:0;margin-bottom:16px;border:1.5px solid var(--b1);border-radius:8px;overflow:hidden">
-      <button class="tab-btn on" id="tb-kw" onclick="switchMode('kw')" style="flex:1;background:transparent;border:none;padding:10px;font-family:Jost,sans-serif;font-size:13px;font-weight:600;color:var(--mu);cursor:pointer;transition:all .15s">🔍 Keyword Search</button>
-      <button class="tab-btn" id="tb-shop" onclick="switchMode('shop')" style="flex:1;background:transparent;border:none;padding:10px;font-family:Jost,sans-serif;font-size:13px;font-weight:600;color:var(--mu);cursor:pointer;transition:all .15s">🏪 Shop Intelligence</button>
+      <button id="tb-kw" onclick="switchMode('kw')" style="flex:1;background:var(--ol);color:#fff;border:none;padding:10px;font-family:Jost,sans-serif;font-size:13px;font-weight:600;cursor:pointer">🔍 Keyword Search</button>
+      <button id="tb-shop" onclick="switchMode('shop')" style="flex:1;background:transparent;color:var(--mu);border:none;padding:10px;font-family:Jost,sans-serif;font-size:13px;font-weight:600;cursor:pointer;border-left:1px solid var(--b1)">🏪 Shop Intelligence</button>
     </div>
-
     <div id="kw-mode">
       <div style="display:flex;gap:10px;flex-wrap:wrap">
         <input id="kw-input" placeholder="Enter keyword e.g. custom mug, pet portrait, wall art..." style="flex:1;min-width:200px" onkeydown="if(event.key==='Enter')doKeywordScan()"/>
@@ -27,16 +57,14 @@
           <option value="score">Sort by Relevance</option>
           <option value="num_favorers">Sort by Favourites</option>
           <option value="created">Sort by Newest</option>
-          <option value="price">Sort by Price</option>
         </select>
         <button class="btn-olive" onclick="doKeywordScan()">Scan →</button>
       </div>
     </div>
-
     <div id="shop-mode" style="display:none">
       <div style="display:flex;gap:10px;flex-wrap:wrap">
-        <input id="shop-input" placeholder="Enter Etsy shop name e.g. ThePrintablePlace, GoldenOliveShop..." style="flex:1;min-width:200px" onkeydown="if(event.key==='Enter')doShopScan()"/>
-        <button class="btn-olive" onclick="doShopScan()">Analyse Shop →</button>
+        <input id="shop-input" placeholder="Enter Etsy shop name e.g. ThePrintablePlace..." style="flex:1;min-width:200px" onkeydown="if(event.key==='Enter')doShopScan()"/>
+        <button class="btn-olive" onclick="doShopScan()">Analyse Shop</button>
       </div>
     </div>
   </div>
@@ -44,7 +72,13 @@
   <div id="scan-res"></div>
 </div>
 
-<script src="js/auth.js?v=5">
+<script>
+function getSession(){return{token:localStorage.getItem('oe_token')||'',email:localStorage.getItem('oe_email')||'',userId:localStorage.getItem('oe_uid')||''};}
+function logout(){localStorage.removeItem('oe_token');localStorage.removeItem('oe_email');localStorage.removeItem('oe_uid');window.location.href='index.html';}
+var SESSION=getSession();
+if(!SESSION.token){window.location.href='index.html';}
+else{var em=document.getElementById('nav-email');if(em)em.textContent=SESSION.email;}
+
 function toggleDrop(id){
   var el=document.getElementById(id);
   var btn=document.getElementById(id+'-btn');
@@ -60,286 +94,177 @@ document.addEventListener('click',function(e){
   }
 });
 
-</script>
-<script>
-requireAuth();
-document.getElementById('nav-placeholder').innerHTML = renderNav('scanner.html');
-
-let currentMode = 'kw';
-
-function switchMode(mode) {
-  currentMode = mode;
-  document.getElementById('kw-mode').style.display = mode==='kw'?'block':'none';
-  document.getElementById('shop-mode').style.display = mode==='shop'?'block':'none';
-  document.getElementById('tb-kw').style.background = mode==='kw'?'var(--ol)':'transparent';
-  document.getElementById('tb-kw').style.color = mode==='kw'?'#fff':'var(--mu)';
-  document.getElementById('tb-shop').style.background = mode==='shop'?'var(--ol)':'transparent';
-  document.getElementById('tb-shop').style.color = mode==='shop'?'#fff':'var(--mu)';
+function switchMode(mode){
+  document.getElementById('kw-mode').style.display=mode==='kw'?'block':'none';
+  document.getElementById('shop-mode').style.display=mode==='shop'?'block':'none';
+  document.getElementById('tb-kw').style.background=mode==='kw'?'var(--ol)':'transparent';
+  document.getElementById('tb-kw').style.color=mode==='kw'?'#fff':'var(--mu)';
+  document.getElementById('tb-shop').style.background=mode==='shop'?'var(--ol)':'transparent';
+  document.getElementById('tb-shop').style.color=mode==='shop'?'#fff':'var(--mu)';
 }
 
-function getKeys() { return { etsy: localStorage.getItem('oe_etsy')||'', groq: localStorage.getItem('oe_groq')||'' }; }
-
-async function callGroq(prompt) {
-  const keys = getKeys();
-  const r = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-    method:'POST', headers:{'Content-Type':'application/json','Authorization':'Bearer '+keys.groq},
-    body: JSON.stringify({ model:'llama-3.3-70b-versatile', messages:[
-      {role:'system',content:'You are an expert Etsy market analyst. Give specific, accurate, actionable intelligence.'},
-      {role:'user',content:prompt+'\n\nReturn ONLY valid raw JSON starting with { ending with }'}
-    ], temperature:0.2, max_tokens:2048 })
-  });
-  const d = await r.json();
-  if (!r.ok) throw new Error(d.error?.message||'Groq error');
-  const t = d.choices?.[0]?.message?.content||'';
-  const s=t.indexOf('{'),e=t.lastIndexOf('}');
-  if(s<0||e<0) throw new Error('No JSON');
-  return JSON.parse(t.slice(s,e+1));
+async function callAI(prompt){
+  var controller=new AbortController();
+  var timeout=setTimeout(function(){controller.abort();},25000);
+  try{
+    var r=await fetch('/api/groq',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompt:prompt}),signal:controller.signal});
+    clearTimeout(timeout);
+    var text=await r.text();
+    try{return JSON.parse(text);}
+    catch(e){var s=text.indexOf('{'),en=text.lastIndexOf('}');if(s>=0&&en>s)return JSON.parse(text.slice(s,en+1));throw new Error('No JSON in response');}
+  }catch(e){clearTimeout(timeout);if(e.name==='AbortError')throw new Error('Timed out — try again');throw e;}
 }
 
-async function callEtsy(path) {
-  const keys = getKeys();
-  if (!keys.etsy) throw new Error('No Etsy key — add it from dashboard');
-  const r = await fetch('https://openapi.etsy.com/v3/application/'+path,{headers:{'x-api-key':keys.etsy}});
-  if (!r.ok) throw new Error('Etsy API error '+r.status+' — key may be pending approval');
-  return r.json();
+function platformLinks(kw){
+  var k=encodeURIComponent(kw);
+  var links=[['Etsy UK','https://www.etsy.com/uk/search?q='+k],['Etsy USA','https://www.etsy.com/search?q='+k],['eBay Sold','https://www.ebay.co.uk/sch/i.html?_nkw='+k+'&LH_Sold=1'],['Printify','https://printify.com/app/products?search='+k],['Pinterest','https://www.pinterest.co.uk/search/pins/?q='+k],['NOTHS','https://www.notonthehighstreet.com/search?search_term='+k]];
+  var html='<div class="card" style="margin-bottom:14px;border:2px solid var(--olbr)"><div class="lbl" style="color:var(--ol)">See Real Products</div><div style="display:flex;flex-wrap:wrap;gap:6px">';
+  for(var i=0;i<links.length;i++){html+='<a href="'+links[i][1]+'" target="_blank" style="font-size:11px;padding:5px 10px;border:1.5px solid var(--b1);border-radius:7px;color:var(--tx);text-decoration:none;font-weight:600">'+links[i][0]+'</a>';}
+  return html+'</div></div>';
 }
 
-async function doKeywordScan() {
-  const kw = document.getElementById('kw-input').value.trim();
-  const sortOn = document.getElementById('kw-sort').value;
-  if (!kw) return;
-  const res = document.getElementById('scan-res');
-  res.innerHTML = `<div class="card"><div class="loading-row"><div class="spin"></div>Fetching live listings for "${kw}"...</div></div>`;
+function sbox(l,v,c){return '<div class="sbox"><div class="lbl">'+l+'</div><div style="font-size:15px;color:'+(c||'var(--tx)')+';font-weight:700;font-family:DM Mono,monospace">'+(v||'--')+'</div></div>';}
 
-  let listings=[], tags=[], prices={};
-  try {
-    const er = await callEtsy(`listings/active?keywords=${encodeURIComponent(kw)}&limit=50&sort_on=${sortOn}&sort_order=desc`);
-    listings = er.results || [];
-    const tm={};
-    listings.forEach(l=>(l.tags||[]).forEach(t=>tm[t]=(tm[t]||0)+1));
-    tags = Object.entries(tm).sort((a,b)=>b[1]-a[1]).map(e=>({tag:e[0],count:e[1]}));
-    const pp = listings.map(l=>(l.price?.amount||0)/100).filter(p=>p>0).sort((a,b)=>a-b);
-    if (pp.length) prices={min:pp[0].toFixed(2),max:pp[pp.length-1].toFixed(2),avg:(pp.reduce((s,p)=>s+p,0)/pp.length).toFixed(2)};
-  } catch(e) {
-    res.innerHTML = `<div class="card-red">${e.message}</div>`;
-    return;
-  }
+async function doKeywordScan(){
+  var kw=document.getElementById('kw-input').value.trim();
+  if(!kw)return;
+  var res=document.getElementById('scan-res');
+  res.innerHTML='<div class="card"><div class="loading-row"><div class="spin"></div>Scanning "'+kw+'" — pulling real market intelligence...</div></div>';
 
-  res.innerHTML = `<div class="card"><div class="loading-row"><div class="spin"></div>Analysing ${listings.length} listings with AI...</div></div>`;
+  // Get real market data
+  var ebayData={};var redditData=[];
+  try{
+    var mr=await fetch('/api/market?keyword='+encodeURIComponent(kw));
+    var md=await mr.json();
+    ebayData=md.sources&&md.sources.ebayUK||{};
+    redditData=md.sources&&md.sources.reddit||[];
+  }catch(e){}
 
-  const etsyCtx = `${listings.length} real listings. Prices £${prices.min}-£${prices.max} avg £${prices.avg}. Top tags: ${tags.slice(0,10).map(t=>t.tag).join(', ')}. Titles: ${listings.slice(0,5).map(l=>'"'+l.title+'"').join(' | ')}`;
+  var ebayCtx=ebayData.avgPrice?'REAL EBAY UK SOLD PRICES: avg £'+ebayData.avgPrice+', min £'+ebayData.minPrice+', max £'+ebayData.maxPrice:'';
+  var redditCtx=redditData.length?'REAL REDDIT DISCUSSIONS: '+redditData.slice(0,5).map(function(p){return'"'+p.title+'"('+p.score+' upvotes)';}).join(' | '):'';
 
-  try {
-    const d = await callGroq(`Analyse "${kw}" Etsy listings: ${etsyCtx}. Provide listing intelligence, visual analysis, SEO insights and competitive analysis. Return JSON: {"summary":"paragraph","listingIntel":{"avgPhotos":4,"freeShippingPct":"X%","personalisationPct":"X%","saleListingsPct":"X%","avgAge":"X months","imageTypes":["lifestyle","mockup"]},"visualIntel":{"topColours":["colour1","colour2","colour3"],"dominantStyles":["Minimalist","Script"],"topPhrases":["phrase1","phrase2","phrase3"],"fontStyles":["Script","Bold","Serif"],"layoutTypes":["Text-only","Mixed","Image-based"]},"seoIntel":{"topKeywordsInTitles":["kw1","kw2","kw3"],"descriptionPatterns":["pattern1","pattern2"],"titleFormula":"[Adj] [Product] | [Keyword]","emotionalTriggers":["funny","personalised","sentimental"]},"competitive":{"weakListings":"describe weak listings","strongListings":"describe strong listings","priceStrategy":"pricing insight","gap":"specific gap"},"topRecommendations":["rec1","rec2","rec3"]}`);
+  try{
+    var d=await callAI('Deep competitive analysis for Etsy keyword "'+kw+'" UK POD market. '+ebayCtx+' '+redditCtx+' Return JSON: {"summary":"2 sentence niche overview with real insights","opportunityScore":7.5,"verdict":"BUY IN","competitionLevel":"Medium","priceRange":{"min":"£8","max":"£35","sweet":"£14-18"},"listingIntel":{"avgPhotos":6,"freeShipping":"65%","personalisation":"40%","topImageType":"Lifestyle mockup"},"visualIntel":{"topColours":["Sage Green","Blush Pink","Black"],"topStyles":["Minimalist","Script text","Watercolour"],"topPhrases":["But First Coffee","You Got This","Plant Lady"]},"seoIntel":{"titleFormula":"[Adj] [Product] | [Keyword] Gift for [Audience]","topKeywords":["personalised","custom","funny","gift for her"],"emotionalTriggers":["sentimental","humorous","empowering"]},"competitive":{"weakListings":"Poor quality mockups, generic designs, missing personalisation","strongListings":"Lifestyle photos, niche-specific humour, strong branding","gap":"Specific niche not well served","recommendation":"Exact action to take"},"topTags":["tag1","tag2","tag3","tag4","tag5","tag6","tag7","tag8","tag9","tag10","tag11","tag12","tag13"]}');
 
-    let html = platformLinksHTML(shopName)+`
-    <div class="card-live fu">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px">
-        <div class="serif" style="font-size:26px;font-weight:600">"${kw}" — ${listings.length} Live Listings</div>
-        <span class="badge b-live">● Live Etsy Data</span>
-      </div>
-      <div class="grid-auto" style="margin-bottom:14px">
-        ${sbox('Min Price','£'+prices.min,'var(--gn)')}
-        ${sbox('Avg Price','£'+prices.avg,'var(--gd)')}
-        ${sbox('Max Price','£'+prices.max,'var(--rd)')}
-        ${sbox('Total Listed',listings.length,'var(--bl)')}
-      </div>
-      <p style="font-size:14px;color:var(--mu);line-height:1.7">${d.summary}</p>
-    </div>
+    var html=platformLinks(kw);
 
-    <div class="grid-2 d1">
-      <div class="card">
-        <div class="lbl">📊 Listing Intelligence</div>
-        ${sbox('Avg Photos',d.listingIntel?.avgPhotos,'var(--mu)')}
-        <div style="margin-top:8px">${sbox('Free Shipping',d.listingIntel?.freeShippingPct,'var(--ol)')}</div>
-        <div style="margin-top:8px">${sbox('Personalisation',d.listingIntel?.personalisationPct,'var(--gd)')}</div>
-        <div style="margin-top:8px">${sbox('Running Sales',d.listingIntel?.saleListingsPct,'var(--or)')}</div>
-        <div style="margin-top:8px">${sbox('Avg Listing Age',d.listingIntel?.avgAge,'var(--mu)')}</div>
-        <div style="margin-top:10px"><div class="lbl">Image Types</div>${(d.listingIntel?.imageTypes||[]).map(t=>`<span class="pill">${t}</span>`).join('')}</div>
-      </div>
-      <div class="card">
-        <div class="lbl">🎨 Visual Intelligence</div>
-        <div class="lbl" style="margin-top:0;margin-bottom:6px">Top Colours</div>
-        ${(d.visualIntel?.topColours||[]).map(c=>`<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px"><span style="width:20px;height:20px;border-radius:50%;background:${c};border:1px solid rgba(0,0,0,.1);flex-shrink:0;display:inline-block"></span><span style="font-size:13px">${c}</span></div>`).join('')}
-        <div style="margin-top:10px"><div class="lbl">Design Styles</div>${(d.visualIntel?.dominantStyles||[]).map(s=>`<span class="pill-o" style="background:var(--olbg);border:1px solid var(--olbr);border-radius:20px;padding:3px 11px;font-size:11px;color:var(--ol);font-family:DM Mono,monospace;margin:2px;display:inline-block">${s}</span>`).join('')}</div>
-        <div style="margin-top:10px"><div class="lbl">Font Styles</div>${(d.visualIntel?.fontStyles||[]).map(s=>`<span class="pill">${s}</span>`).join('')}</div>
-      </div>
-    </div>
+    // Score + verdict
+    var sc=d.opportunityScore||7;
+    var scClass=sc>=7?'score-high':sc>=5?'score-mid':'score-low';
+    var vc={'BUY IN':'var(--gn)','WORTH TESTING':'var(--gd)','PROCEED WITH CAUTION':'var(--or)','AVOID':'var(--rd)'}[d.verdict]||'var(--gd)';
 
-    <div class="grid-2 d2">
-      <div class="card">
-        <div class="lbl">🔤 Language Intelligence</div>
-        <div class="lbl">Top Selling Phrases</div>
-        ${(d.visualIntel?.topPhrases||[]).map(p=>`<div style="padding:6px 0;border-bottom:1px solid var(--b1);font-style:italic;font-size:14px;color:var(--gd)">"${p}"</div>`).join('')}
-        <div style="margin-top:10px"><div class="lbl">Title Formula</div><div style="background:var(--gdbg);border:1px solid var(--gdbr);border-radius:7px;padding:10px;font-size:12px">${d.seoIntel?.titleFormula||''}</div></div>
-        <div style="margin-top:10px"><div class="lbl">Emotional Triggers</div>${(d.seoIntel?.emotionalTriggers||[]).map(t=>`<span class="pill">${t}</span>`).join('')}</div>
-      </div>
-      <div class="card">
-        <div class="lbl">⚔️ Competitive Analysis</div>
-        <div style="padding:10px;background:var(--rdbg);border-radius:7px;margin-bottom:10px"><div style="font-size:10px;color:var(--rd);font-weight:700;letter-spacing:.08em;margin-bottom:4px">WEAK LISTINGS</div><p style="font-size:12px;color:var(--mu)">${d.competitive?.weakListings||''}</p></div>
-        <div style="padding:10px;background:var(--olbg);border-radius:7px;margin-bottom:10px"><div style="font-size:10px;color:var(--ol);font-weight:700;letter-spacing:.08em;margin-bottom:4px">STRONG LISTINGS</div><p style="font-size:12px;color:var(--mu)">${d.competitive?.strongListings||''}</p></div>
-        <div style="padding:10px;background:var(--gdbg);border-radius:7px"><div style="font-size:10px;color:var(--gd);font-weight:700;letter-spacing:.08em;margin-bottom:4px">💡 THE GAP</div><p style="font-size:13px;font-weight:600">${d.competitive?.gap||''}</p></div>
-      </div>
-    </div>
+    html+='<div class="card-live fu">';
+    html+='<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:14px;flex-wrap:wrap;margin-bottom:14px">';
+    html+='<div style="flex:1"><div class="serif" style="font-size:26px;font-weight:600;margin-bottom:8px">"'+kw+'"</div>';
+    html+='<span style="background:'+vc+'18;color:'+vc+';border:1px solid '+vc+'44;border-radius:20px;padding:4px 14px;font-size:12px;font-weight:700">'+d.verdict+'</span>';
+    html+='<p style="margin-top:8px;font-size:13px;color:var(--mu);line-height:1.7">'+d.summary+'</p></div>';
+    html+='<div class="score-ring '+scClass+'">'+sc+'</div></div>';
 
-    <div class="card d2">
-      <div class="lbl">🏷️ Real Tags from ${listings.length} Listings</div>
-      <div style="margin-bottom:10px">${tags.slice(0,20).map(t=>{const i=t.count/tags[0].count;const c=i>0.7?'var(--ol)':i>0.4?'var(--gd)':'var(--mu)';return `<span style="display:inline-block;background:var(--p2);border:1px solid var(--b1);border-radius:20px;padding:3px 11px;font-size:11px;color:${c};font-family:DM Mono,monospace;margin:2px">${t.tag} <span style="opacity:.5;font-size:9px">×${t.count}</span></span>`;}).join('')}</div>
-    </div>
-
-    <div class="card-gold d3">
-      <div class="lbl" style="color:var(--gd)">✅ Top Recommendations</div>
-      ${(d.topRecommendations||[]).map((r,i)=>`<div style="display:flex;gap:10px;margin-bottom:12px;align-items:flex-start"><span class="serif" style="font-size:24px;color:var(--gdbr);font-weight:600;min-width:24px;line-height:1">${i+1}</span><span style="font-size:14px;line-height:1.6">${r}</span></div>`).join('')}
-    </div>
-
-    <div class="card d3">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px">
-        <span class="lbl" style="margin-bottom:0">🛍️ Live Proof — All ${listings.length} Listings</span>
-        <button class="btn-ghost btn-sm" onclick="exportListings()">↓ Export CSV</button>
-      </div>
-      <div class="grid-auto">
-        ${listings.slice(0,12).map(l=>`
-          <div class="proof-card">
-            ${l.images?.[0]?.url_570xN ? `<img src="${l.images[0].url_570xN}" class="proof-img" onerror="this.style.display='none'" loading="lazy"/>` : `<div class="proof-img" style="display:flex;align-items:center;justify-content:center;color:var(--mu2);font-size:12px">No image</div>`}
-            <div class="proof-body">
-              <div style="font-size:11px;font-weight:600;margin-bottom:5px;line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">${l.title}</div>
-              <div style="font-size:11px;color:var(--mu);margin-bottom:4px">${l.shop?.shop_name||''}</div>
-              <div style="display:flex;justify-content:space-between;margin-bottom:6px">
-                <span class="mono" style="color:var(--gd);font-weight:700;font-size:13px">£${((l.price?.amount||0)/100).toFixed(2)}</span>
-                <span style="font-size:10px;color:var(--mu)">${fmt(l.num_favorers||0)} ♡ · ${fmt(l.views||0)} views</span>
-              </div>
-              <a href="${l.url||'#'}" target="_blank" class="btn btn-olive btn-sm" style="width:100%;font-size:11px;text-align:center">View Listing →</a>
-            </div>
-          </div>
-        `).join('')}
-      </div>
-    </div>`;
-
-    window._scanListings = listings;
-    res.innerHTML = html;
-  } catch(e) { res.innerHTML = errBox(e.message); }
-}
-
-async function doShopScan() {
-  const shopName = document.getElementById('shop-input').value.trim();
-  if (!shopName) return;
-  const res = document.getElementById('scan-res');
-  res.innerHTML = `<div class="card"><div class="loading-row"><div class="spin"></div>Fetching shop data for "${shopName}"...</div></div>`;
-
-  let shopInfo=null, shopListings=[], tags=[];
-  try {
-    const sr = await callEtsy(`shops?shop_name=${encodeURIComponent(shopName)}`);
-    shopInfo = (sr.results||[])[0];
-    if (shopInfo) {
-      const lr = await callEtsy(`shops/${shopInfo.shop_id}/listings/active?limit=50&sort_on=num_favorers&sort_order=desc`);
-      shopListings = lr.results || [];
-      const tm={};
-      shopListings.forEach(l=>(l.tags||[]).forEach(t=>tm[t]=(tm[t]||0)+1));
-      tags = Object.entries(tm).sort((a,b)=>b[1]-a[1]).map(e=>({tag:e[0],count:e[1]}));
+    // Real eBay prices
+    if(ebayData.avgPrice){
+      html+='<div style="padding:10px;background:var(--gdbg);border-radius:8px;margin-bottom:12px"><div class="lbl" style="color:var(--gd)">Real eBay UK Sold Prices</div>';
+      html+='<div class="grid-auto">'+sbox('Avg','£'+ebayData.avgPrice,'var(--gd)')+sbox('Min','£'+ebayData.minPrice,'var(--gn)')+sbox('Max','£'+ebayData.maxPrice,'var(--rd)')+'</div></div>';
     }
-  } catch(e) {
-    res.innerHTML = `<div class="card-red">${e.message}</div>`; return;
+
+    // Price range + intelligence
+    html+='<div class="grid-auto" style="margin-bottom:12px">';
+    html+=sbox('Competition',d.competitionLevel,d.competitionLevel==='Low'?'var(--gn)':d.competitionLevel==='Medium'?'var(--gd)':'var(--rd)');
+    if(d.priceRange){html+=sbox('Sweet Spot',d.priceRange.sweet,'var(--gd)');}
+    if(d.listingIntel){
+      html+=sbox('Avg Photos',d.listingIntel.avgPhotos,'var(--mu)');
+      html+=sbox('Free Shipping',d.listingIntel.freeShipping,'var(--ol)');
+    }
+    html+='</div></div>';
+
+    // Visual Intel + SEO
+    html+='<div class="grid-2 d1">';
+    if(d.visualIntel){
+      html+='<div class="card"><div class="lbl">What Sells Visually</div>';
+      html+='<div class="lbl" style="font-size:10px;margin-top:8px">TOP COLOURS</div>';
+      (d.visualIntel.topColours||[]).forEach(function(c){html+='<span class="pill">'+c+'</span>';});
+      html+='<div class="lbl" style="font-size:10px;margin-top:8px">DESIGN STYLES</div>';
+      (d.visualIntel.topStyles||[]).forEach(function(s){html+='<span class="pill">'+s+'</span>';});
+      html+='<div class="lbl" style="font-size:10px;margin-top:8px">TOP PHRASES</div>';
+      (d.visualIntel.topPhrases||[]).forEach(function(p){html+='<span style="display:inline-block;font-style:italic;font-size:12px;color:var(--gd);margin:2px 6px">"'+p+'"</span>';});
+      html+='</div>';
+    }
+    if(d.seoIntel){
+      html+='<div class="card"><div class="lbl">SEO Intelligence</div>';
+      html+='<div style="padding:10px;background:var(--gdbg);border-radius:8px;margin-bottom:10px"><div class="lbl" style="font-size:10px;color:var(--gd)">TITLE FORMULA</div><p style="font-size:12px;font-style:italic">'+d.seoIntel.titleFormula+'</p></div>';
+      html+='<div class="lbl" style="font-size:10px">EMOTIONAL TRIGGERS</div>';
+      (d.seoIntel.emotionalTriggers||[]).forEach(function(t){html+='<span class="pill">'+t+'</span>';});
+      html+='</div>';
+    }
+    html+='</div>';
+
+    // Competitive gap
+    if(d.competitive){
+      html+='<div class="card d2"><div class="lbl">Competitive Analysis</div>';
+      html+='<div style="padding:10px;background:var(--rdbg);border-radius:7px;margin-bottom:8px"><div style="font-size:10px;color:var(--rd);font-weight:700;margin-bottom:4px">WEAK LISTINGS DO THIS</div><p style="font-size:12px;color:var(--mu)">'+d.competitive.weakListings+'</p></div>';
+      html+='<div style="padding:10px;background:var(--olbg);border-radius:7px;margin-bottom:8px"><div style="font-size:10px;color:var(--ol);font-weight:700;margin-bottom:4px">STRONG LISTINGS DO THIS</div><p style="font-size:12px;color:var(--mu)">'+d.competitive.strongListings+'</p></div>';
+      html+='<div style="padding:10px;background:var(--gdbg);border-radius:7px"><div style="font-size:10px;color:var(--gd);font-weight:700;margin-bottom:4px">THE GAP YOU CAN EXPLOIT</div><p style="font-size:13px;font-weight:600">'+d.competitive.gap+'</p><p style="font-size:12px;color:var(--ol);font-weight:600">→ '+d.competitive.recommendation+'</p></div></div>';
+    }
+
+    // Reddit real discussions
+    if(redditData.length){
+      html+='<div class="card d2" style="border-left:4px solid #ff4500"><div class="lbl" style="color:#cc4400">Real Reddit Discussions</div>';
+      redditData.slice(0,5).forEach(function(p){
+        html+='<div style="padding:8px 0;border-bottom:1px solid var(--b1)"><div style="font-size:13px;font-weight:600;margin-bottom:3px">'+p.title+'</div>';
+        html+='<div style="display:flex;gap:10px"><span style="font-size:11px;color:var(--mu)">'+p.score+' upvotes</span><span style="font-size:10px;background:var(--p3);padding:1px 6px;border-radius:10px;color:var(--mu)">r/'+p.subreddit+'</span><a href="'+p.url+'" target="_blank" style="font-size:11px;color:var(--bl)">Read →</a></div></div>';
+      });
+      html+='</div>';
+    }
+
+    // Tags
+    if(d.topTags&&d.topTags.length){
+      html+='<div class="card d2"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><span class="lbl" style="margin-bottom:0">13 Tags to Use</span><button class="btn-ghost btn-sm" onclick="copyTags()">Copy All</button></div>';
+      html+='<div>';
+      d.topTags.forEach(function(t){html+='<span class="pill" style="cursor:pointer;font-family:DM Mono,monospace;font-size:11px" onclick="navigator.clipboard&&navigator.clipboard.writeText(\''+t+'\')">'+t+'</span>';});
+      html+='</div>';
+      html+='<div style="margin-top:10px;background:var(--p3);border-radius:8px;padding:10px;cursor:pointer" onclick="copyTags()"><p id="tags-text" style="font-family:DM Mono,monospace;font-size:11px;line-height:2">'+d.topTags.join(', ')+'</p></div></div>';
+      window._scanTags=d.topTags;
+    }
+
+    // Actions
+    html+='<div class="card-gold d3"><div class="lbl" style="color:var(--gd)">Next Steps</div>';
+    html+='<div style="display:flex;gap:10px;flex-wrap:wrap">';
+    html+='<button class="btn-olive" onclick="window.location.href=\'opportunities.html?kw='+encodeURIComponent(kw)+'\'">Full Opportunity Analysis</button>';
+    html+='<button class="btn-ghost" onclick="window.location.href=\'listing-generator.html\'">Generate Listing</button>';
+    html+='</div></div>';
+
+    res.innerHTML=html;
+  }catch(e){
+    res.innerHTML='<div class="card-red"><strong>Scan failed:</strong> '+(e.message||'Please try again')+'</div>';
   }
-
-  res.innerHTML = `<div class="card"><div class="loading-row"><div class="spin"></div>Analysing shop strategy with AI...</div></div>`;
-
-  const shopCtx = shopInfo
-    ? `Shop: ${shopInfo.shop_name}, ${shopInfo.transaction_sold_count||0} sales, ${shopInfo.listing_active_count||0} active listings. Top listing titles: ${shopListings.slice(0,8).map(l=>'"'+l.title+'"').join(', ')}. Top tags: ${tags.slice(0,10).map(t=>t.tag).join(', ')}`
-    : `Shop name: ${shopName}. No direct API data.`;
-
-  try {
-    const d = await callGroq(`Analyse Etsy shop "${shopName}". ${shopCtx}. Provide full shop intelligence. Return JSON: {"shopName":"${shopName}","totalSales":"X,XXX","avgPrice":"£X","priceRange":"£X-£Y","nichesFocus":["niche1","niche2"],"growthScore":7,"fastGrowing":true,"estimatedMonthlyRevenue":"£X-£Y","evergreen":["evergreen product1","product2"],"newListings":["new1","new2"],"crossSellStrategy":"how they cross-sell","bundlePatterns":"bundle approach","estimatedAdUsage":"Yes|No|Likely","designStyle":"their visual approach","colourPalette":"colours used","pricingStrategy":"pricing analysis","seoStrength":"SEO analysis","strongPoints":["s1","s2","s3"],"weakPoints":["w1","w2"],"stealThese":["tactic1","tactic2","tactic3"],"globalGaps":[{"market":"UK|USA|Germany","gap":"specific gap","action":"how to exploit"}]}`);
-
-    const pp = shopListings.map(l=>(l.price?.amount||0)/100).filter(p=>p>0).sort((a,b)=>a-b);
-    const avgP = pp.length?(pp.reduce((s,p)=>s+p,0)/pp.length).toFixed(2):'—';
-
-    let html = platformLinksHTML(shopName)+`
-    <div class="card-live fu">
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:14px;flex-wrap:wrap;margin-bottom:16px">
-        <div>
-          <div class="serif" style="font-size:28px;font-weight:600;margin-bottom:6px">${d.shopName}</div>
-          ${d.fastGrowing ? '<span class="badge b-live" style="margin-bottom:8px;display:inline-flex">🚀 Fast Growing</span>' : ''}
-          ${shopInfo ? `<div style="margin-top:6px"><span class="badge b-live">● Live Etsy Data</span></div>` : ''}
-        </div>
-        <div class="score-ring ${d.growthScore>=7?'score-high':d.growthScore>=5?'score-mid':'score-low'}" style="width:64px;height:64px;font-size:18px">${d.growthScore}</div>
-      </div>
-      <div class="grid-auto">
-        ${sbox('Total Sales',d.totalSales||shopInfo?.transaction_sold_count||'—','var(--gd)')}
-        ${sbox('Active Listings',shopInfo?.listing_active_count||'—','var(--bl)')}
-        ${sbox('Avg Price',shopInfo?'£'+avgP:d.avgPrice,'var(--gd)')}
-        ${sbox('Est Monthly Rev',d.estimatedMonthlyRevenue,'var(--ol)')}
-        ${sbox('Est Ads',d.estimatedAdUsage,'var(--or)')}
-      </div>
-    </div>
-
-    <div class="grid-2 d1">
-      <div class="card">
-        <div class="lbl">🎨 Brand Identity</div>
-        ${sbox('Visual Style',d.designStyle,'var(--ol)')}
-        <div style="margin-top:8px">${sbox('Colour Palette',d.colourPalette,'var(--gd)')}</div>
-        <div style="margin-top:10px"><div class="lbl">Niche Focus</div>${(d.nichesFocus||[]).map(n=>`<span class="pill">${n}</span>`).join('')}</div>
-      </div>
-      <div class="card">
-        <div class="lbl">💰 Business Intelligence</div>
-        <p style="font-size:13px;color:var(--mu);line-height:1.6;margin-bottom:10px">${d.pricingStrategy}</p>
-        <div class="lbl">SEO Strength</div>
-        <p style="font-size:13px;color:var(--mu);line-height:1.6">${d.seoStrength}</p>
-      </div>
-    </div>
-
-    <div class="grid-2 d2">
-      <div class="card-olive">
-        <div class="lbl" style="color:var(--ol)">✅ Steal These Tactics</div>
-        ${(d.stealThese||[]).map(s=>`<div style="display:flex;gap:8px;margin-bottom:10px;font-size:13px;line-height:1.6"><span style="color:var(--ol);font-weight:700">→</span>${s}</div>`).join('')}
-        <div style="margin-top:12px"><div class="lbl">Cross-sell Strategy</div><p style="font-size:13px;color:var(--mu)">${d.crossSellStrategy}</p></div>
-      </div>
-      <div class="card">
-        <div class="lbl" style="color:var(--rd)">⚠️ Their Weaknesses</div>
-        ${(d.weakPoints||[]).map(w=>`<div style="display:flex;gap:8px;margin-bottom:10px;font-size:13px;line-height:1.6"><span style="color:var(--rd);font-weight:700">!</span><span style="color:var(--mu)">${w}</span></div>`).join('')}
-      </div>
-    </div>
-
-    ${d.globalGaps?.length ? `<div class="card-gold d3">
-      <div class="lbl" style="color:var(--gd)">💡 Global Gaps to Exploit</div>
-      ${d.globalGaps.map(g=>`<div style="padding:12px 0;border-bottom:1px solid var(--gdbr)"><div style="display:flex;gap:10px;align-items:flex-start"><span class="badge b-gold" style="flex-shrink:0">${g.market}</span><div><div style="font-weight:600;font-size:14px;margin-bottom:3px">${g.gap}</div><div style="font-size:12px;color:var(--mu)">${g.action}</div></div></div></div>`).join('')}
-    </div>` : ''}
-
-    ${tags.length ? `<div class="card d3"><div class="lbl">🏷️ Their Real Tags</div><div>${tags.slice(0,15).map(t=>`<span class="pill">${t.tag} <span style="opacity:.5;font-size:9px">×${t.count}</span></span>`).join('')}</div></div>` : ''}
-
-    ${shopListings.length ? `<div class="card d4">
-      <div class="lbl">🛍️ Their Top ${Math.min(shopListings.length,12)} Listings by Favourites</div>
-      <div class="grid-auto">
-        ${shopListings.slice(0,12).map(l=>`
-          <div class="proof-card">
-            ${l.images?.[0]?.url_570xN?`<img src="${l.images[0].url_570xN}" class="proof-img" onerror="this.style.display='none'" loading="lazy"/>` : `<div class="proof-img"></div>`}
-            <div class="proof-body">
-              <div style="font-size:11px;font-weight:600;margin-bottom:5px;line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">${l.title}</div>
-              <div style="display:flex;justify-content:space-between;margin-bottom:6px">
-                <span class="mono" style="color:var(--gd);font-weight:700;font-size:13px">£${((l.price?.amount||0)/100).toFixed(2)}</span>
-                <span style="font-size:10px;color:var(--mu)">${fmt(l.num_favorers||0)} ♡</span>
-              </div>
-              <a href="${l.url||'#'}" target="_blank" class="btn btn-olive btn-sm" style="width:100%;font-size:11px;text-align:center">View →</a>
-            </div>
-          </div>
-        `).join('')}
-      </div>
-    </div>` : ''}`;
-
-    res.innerHTML = html;
-  } catch(e) { res.innerHTML = errBox(e.message); }
 }
 
-function exportListings() {
-  if (!window._scanListings) return;
-  csvExport(window._scanListings.map(l=>({
-    Title: l.title,
-    Price: '£'+((l.price?.amount||0)/100).toFixed(2),
-    Favorites: l.num_favorers||0,
-    Views: l.views||0,
-    Shop: l.shop?.shop_name||'',
-    Tags: (l.tags||[]).join(', '),
-    URL: l.url||''
-  })), 'etsy-scan.csv');
+async function doShopScan(){
+  var shopName=document.getElementById('shop-input').value.trim();
+  if(!shopName)return;
+  var res=document.getElementById('scan-res');
+  res.innerHTML='<div class="card"><div class="loading-row"><div class="spin"></div>Analysing shop "'+shopName+'"...</div></div>';
+  try{
+    var d=await callAI('Analyse Etsy shop "'+shopName+'". What niche do they focus on? What makes them successful? What are their weaknesses? Return JSON: {"shopName":"'+shopName+'","estimatedSales":"X,XXX","nichesFocus":["niche1","niche2"],"designStyle":"their style","pricingStrategy":"their pricing","seoStrength":"SEO analysis","strongPoints":["s1","s2","s3"],"weakPoints":["w1","w2","w3"],"stealThese":["tactic1","tactic2","tactic3"],"globalGaps":[{"market":"UK","gap":"gap","action":"action"},{"market":"USA","gap":"gap","action":"action"}]}');
+    var html='<div class="card-live fu"><div class="serif" style="font-size:24px;font-weight:600;margin-bottom:12px">'+d.shopName+'</div>';
+    html+='<div class="grid-auto" style="margin-bottom:14px">'+sbox('Est Sales',d.estimatedSales,'var(--gd)')+sbox('Style',d.designStyle,'var(--ol)')+'</div>';
+    html+='<div class="grid-2">';
+    html+='<div class="card"><div class="lbl" style="color:var(--ol)">Steal These Tactics</div>';
+    (d.stealThese||[]).forEach(function(t){html+='<div style="display:flex;gap:8px;padding:6px 0;border-bottom:1px solid var(--b1);font-size:13px"><span style="color:var(--ol)">→</span>'+t+'</div>';});
+    html+='</div><div class="card"><div class="lbl" style="color:var(--rd)">Their Weaknesses</div>';
+    (d.weakPoints||[]).forEach(function(w){html+='<div style="display:flex;gap:8px;padding:6px 0;border-bottom:1px solid var(--b1);font-size:13px"><span style="color:var(--rd)">!</span><span style="color:var(--mu)">'+w+'</span></div>';});
+    html+='</div></div>';
+    html+='<div style="margin-top:14px"><div class="lbl">Niches</div>';
+    (d.nichesFocus||[]).forEach(function(n){html+='<span class="pill">'+n+'</span>';});
+    html+='</div></div>';
+    res.innerHTML=html;
+  }catch(e){
+    res.innerHTML='<div class="card-red"><strong>Error:</strong> '+(e.message||'Try again')+'</div>';
+  }
+}
+
+function copyTags(){
+  var tags=window._scanTags||[];
+  if(navigator.clipboard)navigator.clipboard.writeText(tags.join(', '));
 }
 </script>
 </body>
