@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Market Intelligence — Olive Edge</title>
+<link rel="stylesheet" href="css/style.css"/>
+</head>
+<body>
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="dashboard.html" class="nav-logo" style="text-decoration:none"><span class="sub">Golden Olive</span><span class="main">Olive <span>Edge</span></span></a>
+    <div class="nav-links">
+      <a href="dashboard.html" class="nav-link">Dashboard</a>
+      <a href="intelligence.html" class="nav-link active" style="background:var(--olbg);color:var(--ol);font-weight:700">🧠 Intelligence</a>
+      <div class="nav-drop" id="drop-research">
+        <button class="nav-drop-btn" id="drop-research-btn" onclick="toggleDrop('drop-research')">Research <svg viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5" style="width:10px;height:10px"><path d="M2 3.5L5 6.5L8 3.5"/></svg></button>
+        <div class="nav-drop-menu"><div class="nav-drop-menu-inner">
+          <a href="opportunities.html">🔥 Opportunities</a>
+          <a href="scanner.html">🔍 Scanner</a>
+          <a href="trend-velocity.html">⚡ Trend Velocity</a>
+          <a href="global-arbitrage.html">🌍 Global Arbitrage</a>
+          <a href="buyer-language.html">💬 Buyer Language</a>
+          <a href="first-mover.html">🚨 First Mover Alerts</a>
+        </div></div>
+      </div>
+      <div class="nav-drop" id="drop-create">
+        <button class="nav-drop-btn" id="drop-create-btn" onclick="toggleDrop('drop-create')">Create <svg viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5" style="width:10px;height:10px"><path d="M2 3.5L5 6.5L8 3.5"/></svg></button>
+        <div class="nav-drop-menu"><div class="nav-drop-menu-inner">
+          <a href="listing-generator.html">✍️ Listing Writer</a>
+          <a href="listing-auditor.html">🔎 Listing Auditor</a>
+        </div></div>
+      </div>
+      <a href="trends.html" class="nav-link">Trends</a>
+      <a href="suppliers.html" class="nav-link">Suppliers</a>
+      <a href="workspace.html" class="nav-link">Workspace</a>
+    </div>
+    <div class="nav-user">
+      <span class="nav-email" id="nav-email"></span>
+      <button class="btn-ghost btn-sm" onclick="logout()">Log Out</button>
+    </div>
+  </div>
+</nav>
+
+<div class="page">
+  <div class="fu" style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px">
+    <div>
+      <div class="page-title serif">🧠 Market Intelligence Feed</div>
+      <div class="page-sub">What you should be selling right now — automatically analysed from Google Trends, Reddit, Pinterest, eBay and TikTok</div>
+    </div>
+    <button class="btn-olive" onclick="runFullIntelligence()" id="refresh-btn">🔄 Refresh Intelligence</button>
+  </div>
+
+  <div id="intel-status" class="card" style="padding:12px;margin-bottom:16px">
+    <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+      <div class="loading-row" style="margin:0"><div class="spin"></div><span style="font-size:13px">Gathering intelligence from all platforms...</span></div>
+      <div id="source-dots" style="display:flex;gap:6px;flex-wrap:wrap"></div>
+    </div>
+  </div>
+
+  <!-- SELL THIS TODAY -->
+  <div id="sell-today-section" class="card-live d1">
+    <div class="lbl" style="color:var(--rd);margin-bottom:14px">🔥 SELL THIS TODAY — Top Opportunities Right Now</div>
+    <div id="sell-today"><div class="loading-row"><div class="spin"></div>Analysing...</div></div>
+  </div>
+
+  <!-- FULL PRODUCT INTEL -->
+  <div id="product-intel-section" class="card d1">
+    <div class="lbl" style="color:var(--ol);margin-bottom:14px">📦 Complete Product Intelligence — What Exactly to Make</div>
+    <div id="product-intel"><div class="loading-row"><div class="spin"></div>Analysing products...</div></div>
+  </div>
+
+  <!-- DESIGN INTELLIGENCE -->
+  <div id="design-section" class="card d2">
+    <div class="lbl" style="color:var(--gd);margin-bottom:14px">🎨 Design Intelligence — What is Selling Visually</div>
+    <div id="design-intel"><div class="loading-row"><div class="spin"></div>Analysing design trends...</div></div>
+  </div>
+
+  <!-- SEASONAL CALENDAR -->
+  <div id="seasonal-section" class="card d2">
+    <div class="lbl" style="color:var(--bl);margin-bottom:14px">📅 Seasonal Intelligence — What to List and When</div>
+    <div id="seasonal-intel"><div class="loading-row"><div class="spin"></div>Building seasonal calendar...</div></div>
+  </div>
+
+  <!-- MARKET BY MARKET -->
+  <div id="market-section" class="card d3">
+    <div class="lbl" style="color:var(--mu);margin-bottom:14px">🌍 Market Intelligence — What Each Country Wants</div>
+    <div id="market-intel"><div class="loading-row"><div class="spin"></div>Analysing markets...</div></div>
+  </div>
+
+  <!-- TRENDING PHRASES -->
+  <div id="phrases-section" class="card d3">
+    <div class="lbl" style="color:var(--ol);margin-bottom:14px">💬 Trending Phrases & Words — Put These on Your Products</div>
+    <div id="phrases-intel"><div class="loading-row"><div class="spin"></div>Mining phrases...</div></div>
+  </div>
+</div>
+
+<script>
+function getSession(){return{token:localStorage.getItem('oe_token')||'',email:localStorage.getItem('oe_email')||'',userId:localStorage.getItem('oe_uid')||''};}
+function logout(){localStorage.removeItem('oe_token');localStorage.removeItem('oe_email');localStorage.removeItem('oe_uid');window.location.href='index.html';}
+var SESSION=getSession();
+if(!SESSION.token){window.location.href='index.html';}
+else{var em=document.getElementById('nav-email');if(em)em.textContent=SESSION.email;}
+
+function toggleDrop(id){
+  var el=document.getElementById(id);var btn=document.getElementById(id+'-btn');
+  var isOpen=el.classList.contains('open');
+  document.querySelectorAll('.nav-drop').forEach(function(d){d.classList.remove('open');});
+  document.querySelectorAll('.nav-drop-btn').forEach(function(b){b.classList.remove('open');});
+  if(!isOpen){el.classList.add('open');btn.classList.add('open');}
+}
+document.addEventListener('click',function(e){
+  if(!e.target.closest('.nav-drop')){
+    document.querySelectorAll('.nav-drop').forEach(function(d){d.classList.remove('open');});
+    document.querySelectorAll('.nav-drop-btn').forEach(function(b){b.classList.remove('open');});
+  }
+});
+
+function addSourceDot(label,ok){
+  var el=document.getElementById('source-dots');
+  if(!el)return;
+  var dot=document.createElement('span');
+  dot.style.cssText='font-size:10px;padding:2px 8px;border-radius:10px;font-weight:600;background:'+(ok?'var(--olbg)':'var(--p2)')+';color:'+(ok?'var(--ol)':'var(--mu)')+';border:1px solid '+(ok?'var(--olbr)':'var(--b1)');
+  dot.textContent=(ok?'✓ ':'• ')+label;
+  el.appendChild(dot);
+}
+
+async function callAI(prompt){
+  var controller=new AbortController();
+  var timeout=setTimeout(function(){controller.abort();},28000);
+  try{
+    var r=await fetch('/api/groq',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompt:prompt}),signal:controller.signal});
+    clearTimeout(timeout);
+    var text=await r.text();
+    try{return JSON.parse(text);}
+    catch(e){var s=text.indexOf('{'),en=text.lastIndexOf('}');if(s>=0&&en>s)return JSON.parse(text.slice(s,en+1));throw new Error('Parse error');}
+  }catch(e){clearTimeout(timeout);if(e.name==='AbortError')throw new Error('Timed out');throw e;}
+}
+
+function sbox(l,v,c){return '<div class="sbox"><div class="lbl">'+l+'</div><div style="font-size:15px;color:'+(c||'var(--tx)')+';font-weight:700;font-family:DM Mono,monospace">'+(v||'--')+'</div></div>';}
+function colorSwatch(hex,name){return '<div style="display:flex;align-items:center;gap:6px;margin-bottom:6px"><div style="width:28px;height:28px;border-radius:6px;background:'+hex+';border:1px solid rgba(0,0,0,.1);flex-shrink:0"></div><span style="font-size:12px">'+name+' <span style="font-family:DM Mono,monospace;font-size:10px;color:var(--mu)">'+hex+'</span></span></div>';}
+
+async function runFullIntelligence(){
+  document.getElementById('refresh-btn').disabled=true;
+  document.getElementById('source-dots').innerHTML='';
+
+  // Reset all sections to loading
+  ['sell-today','product-intel','design-intel','seasonal-intel','market-intel','phrases-intel'].forEach(function(id){
+    document.getElementById(id).innerHTML='<div class="loading-row"><div class="spin"></div>Loading...</div>';
+  });
+
+  document.getElementById('intel-status').innerHTML='<div class="loading-row" style="margin:0"><div class="spin"></div><span style="font-size:13px">Step 1/4 — Fetching live data from Google Trends, Reddit, eBay UK and Pinterest...</span></div><div id="source-dots" style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px"></div>';
+
+  // STEP 1: Fetch all real data simultaneously
+  var trendsData={},redditData=[],ebayData={},acData={};
+
+  await Promise.all([
+    fetch('/api/trends').then(function(r){return r.json();}).then(function(d){trendsData=d;addSourceDot('Google Trends',true);}).catch(function(){addSourceDot('Google Trends',false);}),
+    fetch('/api/market?keyword=etsy+gifts+uk').then(function(r){return r.json();}).then(function(d){redditData=(d.sources&&d.sources.reddit)||[];ebayData=d.sources&&d.sources.ebayUK||{};addSourceDot('Reddit '+redditData.length+' posts',redditData.length>0);addSourceDot('eBay UK',!!ebayData.avgPrice);}).catch(function(){addSourceDot('Reddit',false);}),
+    fetch('/api/autocomplete?keyword=personalised+gift+etsy').then(function(r){return r.json();}).then(function(d){acData=d;addSourceDot('Google Searches '+(d.googleBuyerSearches||[]).length,true);}).catch(function(){addSourceDot('Google Searches',false);})
+  ]);
+
+  var gbTrends=(trendsData.trendingByMarket&&trendsData.trendingByMarket.GB||[]).map(function(t){return t.term;}).join(', ');
+  var usTrends=(trendsData.trendingByMarket&&trendsData.trendingByMarket.US||[]).map(function(t){return t.term;}).join(', ');
+  var deTrends=(trendsData.trendingByMarket&&trendsData.trendingByMarket.DE||[]).map(function(t){return t.term;}).join(', ');
+  var googleSearches=(acData.googleBuyerSearches||[]).join(', ');
+  var redditCtx=redditData.slice(0,8).map(function(p){return '"'+p.title+'"('+p.score+' upvotes)';}).join(' | ');
+
+  document.getElementById('intel-status').innerHTML='<div class="loading-row" style="margin:0"><div class="spin"></div><span style="font-size:13px">Step 2/4 — AI synthesising all market signals into product recommendations...</span></div>';
+
+  // STEP 2: Main intelligence analysis
+  try{
+    var intel=await callAI(
+      'You are a world-class Etsy POD market analyst for a UK seller. Analyse ALL this real data and tell me EXACTLY what to sell right now.\n\n'+
+      'REAL GOOGLE TRENDING UK TODAY: '+gbTrends+'\n'+
+      'REAL GOOGLE TRENDING USA TODAY: '+usTrends+'\n'+
+      'REAL GOOGLE TRENDING GERMANY: '+deTrends+'\n'+
+      'REAL BUYER SEARCHES: '+googleSearches+'\n'+
+      'REAL REDDIT DISCUSSIONS: '+redditCtx+'\n\n'+
+      'Based on this REAL data, give me a complete market intelligence report. Return JSON only:\n'+
+      '{"topOpportunities":[{"rank":1,"product":"EXACT product e.g. Personalised Pet Portrait Ceramic Mug 11oz","niche":"parent niche","whyNow":"specific reason based on real data above","urgency":"List Today","platform":"Printify","baseCost":"£3.50","sellPrice":"£16.99","margin":"79%","expectedMonthlySales":"~45 sales/mo","expectedRevenue":"~£765/mo","competition":"Low","markets":["UK","USA"],"keywords":["kw1","kw2","kw3"]},{"rank":2,"product":"product2","niche":"niche","whyNow":"real reason","urgency":"This Week","platform":"Printify","baseCost":"£X","sellPrice":"£X","margin":"X%","expectedMonthlySales":"~X","expectedRevenue":"~£X/mo","competition":"Medium","markets":["UK"],"keywords":["kw1","kw2"]},{"rank":3,"product":"product3","niche":"niche","whyNow":"real reason","urgency":"This Week","platform":"Gelato","baseCost":"£X","sellPrice":"£X","margin":"X%","expectedMonthlySales":"~X","expectedRevenue":"~£X/mo","competition":"Low","markets":["UK","USA"],"keywords":["kw1","kw2"]},{"rank":4,"product":"product4","niche":"niche","whyNow":"real reason","urgency":"This Month","platform":"Printify","baseCost":"£X","sellPrice":"£X","margin":"X%","expectedMonthlySales":"~X","expectedRevenue":"~£X/mo","competition":"Medium","markets":["UK","Germany"],"keywords":["kw1","kw2"]},{"rank":5,"product":"product5","niche":"niche","whyNow":"real reason","urgency":"This Month","platform":"Printful","baseCost":"£X","sellPrice":"£X","margin":"X%","expectedMonthlySales":"~X","expectedRevenue":"~£X/mo","competition":"Low","markets":["UK"],"keywords":["kw1","kw2"]}]}'
+    );
+
+    renderTopOpportunities(intel.topOpportunities||[]);
+  }catch(e){
+    document.getElementById('sell-today').innerHTML='<div class="card-red">Error: '+(e.message||'try again')+'</div>';
+  }
+
+  document.getElementById('intel-status').innerHTML='<div class="loading-row" style="margin:0"><div class="spin"></div><span style="font-size:13px">Step 3/4 — Analysing design trends, colours, fonts and phrases...</span></div>';
+
+  // STEP 3: Design + phrases intelligence
+  try{
+    var design=await callAI(
+      'Analyse current Etsy POD design trends for UK seller April 2025. What exact colours, fonts, sizes, styles and phrases are selling? Based on real current trends.\n'+
+      'REAL UK TRENDS: '+gbTrends+'\n'+
+      'REAL USA TRENDS: '+usTrends+'\n'+
+      'Return JSON only:\n'+
+      '{"topColours":[{"name":"Sage Green","hex":"#87A878","popularity":82,"usedFor":"backgrounds, text colour","hotProducts":["mugs","tote bags","prints"],"whyTrending":"Cottagecore and wellness aesthetic dominant"},{"name":"colour2","hex":"#XXXXXX","popularity":75,"usedFor":"use case","hotProducts":["product1"],"whyTrending":"reason"},{"name":"colour3","hex":"#XXXXXX","popularity":68,"usedFor":"use case","hotProducts":["product1"],"whyTrending":"reason"},{"name":"colour4","hex":"#XXXXXX","popularity":61,"usedFor":"use case","hotProducts":["product1"],"whyTrending":"reason"},{"name":"colour5","hex":"#XXXXXX","popularity":55,"usedFor":"use case","hotProducts":["product1"],"whyTrending":"reason"}],'+
+      '"topFonts":[{"style":"Script/Cursive","examples":"Great Vibes, Playfair Display","popularity":74,"bestFor":"personalised gifts, wedding prints","avoid":"use for humour or bold statements"},{"style":"font2","examples":"examples","popularity":65,"bestFor":"best use","avoid":"avoid"},{"style":"font3","examples":"examples","popularity":58,"bestFor":"best use","avoid":"avoid"}],'+
+      '"topSizes":[{"product":"Ceramic Mug","bestSize":"11oz standard","note":"outsells 15oz 3:1"},{"product":"Art Print","bestSize":"A4 (21x29.7cm)","note":"most gifted size"},{"product":"Tote Bag","bestSize":"38x42cm","note":"standard canvas"}],'+
+      '"topPhrases":[{"phrase":"But First Coffee","frequency":89,"emotion":"humour","products":["mugs"],"markets":["UK","USA"]},{"phrase":"phrase2","frequency":75,"emotion":"emotion","products":["product"],"markets":["UK"]},{"phrase":"phrase3","frequency":70,"emotion":"emotion","products":["product"],"markets":["UK","USA"]},{"phrase":"phrase4","frequency":65,"emotion":"emotion","products":["product"],"markets":["UK"]},{"phrase":"phrase5","frequency":60,"emotion":"emotion","products":["product"],"markets":["UK","USA"]},{"phrase":"phrase6","frequency":55,"emotion":"emotion","products":["product"],"markets":["UK"]}],'+
+      '"risingPhrases":["new phrase trending now 1","phrase2","phrase3"],'+
+      '"avoidPhrases":["oversaturated phrase to avoid","phrase2"],'+
+      '"topAesthetics":["Cottagecore","Dark Academia","Coastal","Minimalist","Maximalist"],'+
+      '"designRules":["specific rule 1 that makes listings sell","rule2","rule3","rule4"]}'
+    );
+
+    renderDesign(design);
+  }catch(e){
+    document.getElementById('design-intel').innerHTML='<p style="color:var(--mu);font-size:13px">Could not load design intelligence.</p>';
+  }
+
+  document.getElementById('intel-status').innerHTML='<div class="loading-row" style="margin:0"><div class="spin"></div><span style="font-size:13px">Step 4/4 — Building seasonal calendar and market breakdown...</span></div>';
+
+  // STEP 4: Seasonal + market intelligence
+  try{
+    var seasonal=await callAI(
+      'UK Etsy POD seller. Give me the seasonal intelligence for the next 6 months AND what each market wants differently. Real specific advice.\n'+
+      'Return JSON only:\n'+
+      '{"nextEvents":[{"event":"Mothers Day UK","date":"March 30 2025","daysUntil":0,"urgency":"LIST NOW OR MISS IT","products":["Personalised Mug","Photo Print","Tote Bag","Jewellery"],"topKeywords":["mothers day gift personalised","mum gift from daughter","gift for mum uk"],"avgPrice":"£14-22","expectedSalesLift":"400%","designTip":"Floral borders, soft pinks, script fonts, heartfelt messages"},{"event":"event2","date":"date","daysUntil":45,"urgency":"List in 2 weeks","products":["product"],"topKeywords":["kw1"],"avgPrice":"£X","expectedSalesLift":"X%","designTip":"tip"},{"event":"event3","date":"date","daysUntil":70,"urgency":"Start preparing","products":["product"],"topKeywords":["kw1"],"avgPrice":"£X","expectedSalesLift":"X%","designTip":"tip"},{"event":"event4","date":"date","daysUntil":90,"urgency":"List within 4 weeks","products":["product"],"topKeywords":["kw1"],"avgPrice":"£X","expectedSalesLift":"X%","designTip":"tip"},{"event":"event5","date":"date","daysUntil":120,"urgency":"Prepare now","products":["product"],"topKeywords":["kw1"],"avgPrice":"£X","expectedSalesLift":"X%","designTip":"tip"}],'+
+      '"marketDiff":{"UK":{"unique":"what makes UK buyers different","topCategories":["cat1","cat2"],"avoidance":"what UK buyers hate","priceSweet":"£12-18","topOccasions":["occasion1","occasion2"]},"USA":{"unique":"what makes US buyers different","topCategories":["cat1","cat2"],"avoidance":"what to avoid","priceSweet":"$15-25","topOccasions":["occasion1","occasion2"]},"Germany":{"unique":"German buyer traits","topCategories":["cat1"],"avoidance":"avoid","priceSweet":"€12-20","topOccasions":["occasion1"]},"Australia":{"unique":"Aussie buyer traits","topCategories":["cat1"],"avoidance":"avoid","priceSweet":"AU$18-28","topOccasions":["occasion1"]}}}'
+    );
+
+    renderSeasonal(seasonal.nextEvents||[]);
+    renderMarkets(seasonal.marketDiff||{});
+  }catch(e){
+    document.getElementById('seasonal-intel').innerHTML='<p style="color:var(--mu);font-size:13px">Could not load seasonal data.</p>';
+  }
+
+  document.getElementById('intel-status').innerHTML='<div style="display:flex;align-items:center;gap:8px;font-size:13px"><span style="color:var(--ol);font-weight:700">✓ Intelligence updated — '+new Date().toLocaleTimeString()+'</span><span style="color:var(--mu)">All platforms scanned</span></div>';
+  document.getElementById('refresh-btn').disabled=false;
+}
+
+function renderTopOpportunities(opps){
+  var html='';
+  for(var i=0;i<opps.length;i++){
+    var p=opps[i];
+    var urgencyColor={'List Today':'var(--rd)','This Week':'var(--or)','This Month':'var(--bl)'}[p.urgency]||'var(--gd)';
+    var compColor={'Low':'var(--gn)','Medium':'var(--gd)','High':'var(--rd)'}[p.competition]||'var(--gd)';
+    html+='<div style="padding:16px;background:var(--p2);border-radius:12px;margin-bottom:12px;border-left:4px solid '+urgencyColor+'">';
+    html+='<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap;margin-bottom:10px">';
+    html+='<div style="flex:1">';
+    html+='<div style="display:flex;align-items:center;gap:8px;margin-bottom:5px">';
+    html+='<span style="width:26px;height:26px;border-radius:50%;background:'+urgencyColor+';color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0">'+p.rank+'</span>';
+    html+='<span style="font-weight:700;font-size:16px">'+p.product+'</span></div>';
+    html+='<div style="font-size:12px;color:var(--mu);margin-bottom:6px">'+p.niche+' · <span style="color:'+compColor+';font-weight:600">'+p.competition+' competition</span></div>';
+    html+='<div style="padding:8px;background:var(--w);border-radius:7px;font-size:12px;border-left:3px solid '+urgencyColor+';margin-bottom:8px"><strong>Why now:</strong> '+p.whyNow+'</div>';
+    html+='</div>';
+    html+='<div style="text-align:right;flex-shrink:0">';
+    html+='<div style="font-size:22px;font-weight:800;color:'+urgencyColor+';font-family:DM Mono,monospace">'+p.urgency+'</div>';
+    html+='</div></div>';
+    // Financials
+    html+='<div class="grid-auto" style="margin-bottom:10px">';
+    html+=sbox('Platform',p.platform,'var(--bl)');
+    html+=sbox('Base',p.baseCost,'var(--mu)');
+    html+=sbox('Sell',p.sellPrice,'var(--gd)');
+    html+=sbox('Margin',p.margin,'var(--ol)');
+    html+=sbox('Est Sales',p.expectedMonthlySales,'var(--gd)');
+    html+=sbox('Est Revenue',p.expectedRevenue,'var(--ol)');
+    html+='</div>';
+    // Markets
+    html+='<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">';
+    var flags={'UK':'🇬🇧','USA':'🇺🇸','Germany':'🇩🇪','Australia':'🇦🇺'};
+    (p.markets||[]).forEach(function(m){html+='<span style="font-size:11px;background:var(--p3);padding:2px 8px;border-radius:10px">'+(flags[m]||'')+' '+m+'</span>';});
+    html+='</div>';
+    // Keywords
+    if(p.keywords&&p.keywords.length){
+      html+='<div style="margin-bottom:10px"><div style="font-size:10px;color:var(--mu);font-weight:700;letter-spacing:.05em;margin-bottom:4px">KEY TAGS</div>';
+      p.keywords.forEach(function(k){html+='<span style="font-family:DM Mono,monospace;font-size:11px;background:var(--olbg);border:1px solid var(--olbr);padding:2px 8px;border-radius:10px;color:var(--ol);margin:2px;display:inline-block">'+k+'</span>';});
+      html+='</div>';
+    }
+    // Actions
+    html+='<div style="display:flex;gap:6px;flex-wrap:wrap">';
+    html+='<button class="btn-olive btn-sm" onclick="window.location.href=\'opportunities.html?kw='+encodeURIComponent(p.product)+'\'">Full Analysis</button>';
+    html+='<button class="btn-ghost btn-sm" onclick="window.location.href=\'listing-generator.html\'">Write Listing</button>';
+    html+='<button class="btn-ghost btn-sm" onclick="window.location.href=\'buyer-language.html\'">Mine Language</button>';
+    html+='<a href="https://www.etsy.com/uk/search?q='+encodeURIComponent(p.product)+'" target="_blank" class="btn-ghost btn-sm">Etsy UK</a>';
+    html+='<a href="https://www.pinterest.co.uk/search/pins/?q='+encodeURIComponent(p.product)+'" target="_blank" class="btn-ghost btn-sm">Pinterest</a>';
+    html+='</div></div>';
+  }
+  document.getElementById('sell-today').innerHTML=html||'<p style="color:var(--mu)">No data.</p>';
+
+  // Also render product intel section
+  var piHtml='<div class="grid-2">';
+  opps.forEach(function(p){
+    piHtml+='<div style="padding:12px;background:var(--p2);border-radius:10px">';
+    piHtml+='<div style="font-weight:700;font-size:13px;margin-bottom:4px">'+p.product+'</div>';
+    piHtml+='<div style="font-size:11px;color:var(--mu);margin-bottom:6px">'+p.platform+' · '+p.baseCost+' base · '+p.sellPrice+' sell · '+p.margin+' margin</div>';
+    piHtml+='<div style="font-size:11px;color:var(--gd);font-weight:600">'+p.expectedRevenue+'</div>';
+    piHtml+='</div>';
+  });
+  piHtml+='</div>';
+  document.getElementById('product-intel').innerHTML=piHtml;
+}
+
+function renderDesign(d){
+  var html='';
+
+  // Colours
+  html+='<div class="lbl" style="font-size:10px;margin-bottom:10px">TRENDING COLOURS RIGHT NOW</div>';
+  html+='<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;margin-bottom:18px">';
+  (d.topColours||[]).forEach(function(c){
+    html+='<div style="padding:10px;background:var(--p2);border-radius:9px">';
+    html+=colorSwatch(c.hex,c.name);
+    html+='<div style="height:4px;background:var(--b1);border-radius:2px;margin-bottom:6px"><div style="height:4px;width:'+c.popularity+'%;background:'+c.hex+';border-radius:2px"></div></div>';
+    html+='<div style="font-size:11px;color:var(--mu);margin-bottom:3px">Used for: '+c.usedFor+'</div>';
+    html+='<div style="font-size:11px;color:var(--mu)">Hot on: '+(c.hotProducts||[]).join(', ')+'</div>';
+    html+='<div style="font-size:11px;color:var(--ol);margin-top:4px;font-style:italic">'+c.whyTrending+'</div>';
+    html+='</div>';
+  });
+  html+='</div>';
+
+  // Fonts
+  html+='<div class="grid-2" style="margin-bottom:18px">';
+  html+='<div><div class="lbl" style="font-size:10px;margin-bottom:10px">TRENDING FONT STYLES</div>';
+  (d.topFonts||[]).forEach(function(f){
+    html+='<div style="padding:10px;background:var(--p2);border-radius:8px;margin-bottom:8px">';
+    html+='<div style="display:flex;justify-content:space-between;margin-bottom:4px"><strong>'+f.style+'</strong><span style="font-family:DM Mono,monospace;font-size:12px;color:var(--gd)">'+f.popularity+'%</span></div>';
+    html+='<div style="font-size:11px;color:var(--mu);margin-bottom:3px">e.g. '+f.examples+'</div>';
+    html+='<div style="font-size:11px;color:var(--ol)">Best for: '+f.bestFor+'</div>';
+    html+='</div>';
+  });
+  html+='</div>';
+  html+='<div><div class="lbl" style="font-size:10px;margin-bottom:10px">BEST SIZES TO SELL</div>';
+  (d.topSizes||[]).forEach(function(s){
+    html+='<div style="padding:10px;background:var(--p2);border-radius:8px;margin-bottom:8px">';
+    html+='<div style="font-weight:700;font-size:13px;margin-bottom:3px">'+s.product+'</div>';
+    html+='<div style="font-size:12px;color:var(--ol);font-weight:600;margin-bottom:3px">'+s.bestSize+'</div>';
+    html+='<div style="font-size:11px;color:var(--mu)">'+s.note+'</div>';
+    html+='</div>';
+  });
+  html+='</div></div>';
+
+  // Design rules
+  if(d.designRules&&d.designRules.length){
+    html+='<div style="background:var(--gdbg);border:1px solid var(--gdbr);border-radius:10px;padding:14px;margin-bottom:14px"><div class="lbl" style="color:var(--gd);font-size:10px;margin-bottom:10px">DESIGN RULES THAT MAKE LISTINGS SELL</div>';
+    d.designRules.forEach(function(r,i){html+='<div style="display:flex;gap:8px;padding:6px 0;border-bottom:1px solid var(--gdbr);font-size:13px"><span style="color:var(--gd);font-weight:700;flex-shrink:0">'+(i+1)+'.</span>'+r+'</div>';});
+    html+='</div>';
+  }
+
+  // Top aesthetics
+  if(d.topAesthetics&&d.topAesthetics.length){
+    html+='<div><div class="lbl" style="font-size:10px;margin-bottom:8px">HOT AESTHETICS</div>';
+    d.topAesthetics.forEach(function(a){html+='<span style="display:inline-block;background:var(--olbg);border:1px solid var(--olbr);border-radius:20px;padding:4px 14px;font-size:12px;font-weight:600;color:var(--ol);margin:3px">'+a+'</span>';});
+    html+='</div>';
+  }
+
+  document.getElementById('design-intel').innerHTML=html;
+
+  // Render phrases section
+  var pHtml='';
+  pHtml+='<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;margin-bottom:16px">';
+  (d.topPhrases||[]).forEach(function(p){
+    pHtml+='<div style="padding:12px;background:var(--p2);border-radius:9px;cursor:pointer" onclick="navigator.clipboard&&navigator.clipboard.writeText(\''+p.phrase.replace(/'/g,"\\'")+'\');">';
+    pHtml+='<div style="font-family:Cormorant Garamond,serif;font-size:18px;font-style:italic;font-weight:600;color:var(--gd);margin-bottom:6px">"'+p.phrase+'"</div>';
+    pHtml+='<div style="display:flex;gap:6px;margin-bottom:5px">';
+    pHtml+='<span style="font-size:10px;font-weight:700;color:var(--ol)">'+p.frequency+'% usage</span>';
+    pHtml+='<span style="font-size:10px;color:var(--mu)">'+p.emotion+'</span></div>';
+    pHtml+='<div style="font-size:11px;color:var(--mu)">'+(p.products||[]).join(', ')+' · '+(p.markets||[]).join(', ')+'</div>';
+    pHtml+='<div style="font-size:10px;color:var(--mu2);margin-top:4px">Click to copy</div>';
+    pHtml+='</div>';
+  });
+  pHtml+='</div>';
+
+  if(d.risingPhrases&&d.risingPhrases.length){
+    pHtml+='<div style="margin-bottom:12px"><div class="lbl" style="color:var(--ol);font-size:10px;margin-bottom:6px">RISING PHRASES — USE THESE NOW BEFORE EVERYONE DOES</div>';
+    d.risingPhrases.forEach(function(p){pHtml+='<span style="display:inline-block;background:var(--olbg);border:1px solid var(--olbr);border-radius:20px;padding:4px 14px;font-size:12px;color:var(--ol);margin:3px;cursor:pointer;font-style:italic;font-family:Cormorant Garamond,serif" onclick="navigator.clipboard&&navigator.clipboard.writeText(\''+p.replace(/'/g,"\\'")+'\')">'+p+'</span>';});
+    pHtml+='</div>';
+  }
+  if(d.avoidPhrases&&d.avoidPhrases.length){
+    pHtml+='<div><div class="lbl" style="color:var(--rd);font-size:10px;margin-bottom:6px">AVOID — TOO SATURATED</div>';
+    d.avoidPhrases.forEach(function(p){pHtml+='<span style="display:inline-block;background:var(--rdbg);border:1px solid var(--rdbr);border-radius:20px;padding:4px 14px;font-size:12px;color:var(--rd);margin:3px;text-decoration:line-through">'+p+'</span>';});
+    pHtml+='</div>';
+  }
+
+  document.getElementById('phrases-intel').innerHTML=pHtml;
+}
+
+function renderSeasonal(events){
+  var html='';
+  events.forEach(function(ev){
+    var uc=ev.daysUntil<=7?'var(--rd)':ev.daysUntil<=30?'var(--or)':'var(--bl)';
+    html+='<div style="padding:14px;background:var(--p2);border-radius:10px;margin-bottom:10px;border-left:4px solid '+uc+'">';
+    html+='<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap;margin-bottom:10px">';
+    html+='<div><div style="font-weight:700;font-size:16px;margin-bottom:3px">'+ev.event+'</div>';
+    html+='<div style="font-size:12px;color:var(--mu)">'+ev.date+'</div></div>';
+    html+='<div style="text-align:right;flex-shrink:0">';
+    html+='<div style="font-size:11px;font-weight:700;color:'+uc+'">'+ev.urgency+'</div>';
+    html+='<div style="font-size:18px;font-weight:700;color:var(--gn);font-family:DM Mono,monospace">+'+ev.expectedSalesLift+'</div>';
+    html+='<div style="font-size:10px;color:var(--mu)">sales lift</div>';
+    html+='</div></div>';
+    html+='<div class="grid-2" style="margin-bottom:8px">';
+    html+='<div><div style="font-size:10px;color:var(--mu);margin-bottom:4px">PRODUCTS TO SELL</div>';
+    (ev.products||[]).forEach(function(p){html+='<span class="pill" style="font-size:10px">'+p+'</span>';});
+    html+='</div>';
+    html+='<div><div style="font-size:10px;color:var(--mu);margin-bottom:4px">TOP KEYWORDS</div>';
+    (ev.topKeywords||[]).forEach(function(k){html+='<span style="font-family:DM Mono,monospace;font-size:10px;background:var(--olbg);border:1px solid var(--olbr);padding:2px 7px;border-radius:10px;color:var(--ol);margin:2px;display:inline-block">'+k+'</span>';});
+    html+='</div></div>';
+    html+='<div style="padding:8px;background:var(--w);border-radius:7px;font-size:12px;color:var(--mu)"><strong>Design tip:</strong> '+ev.designTip+'</div>';
+    html+='<div style="margin-top:8px;display:flex;gap:6px">';
+    html+='<a href="https://www.etsy.com/uk/search?q='+encodeURIComponent(ev.event)+'" target="_blank" class="btn-ghost btn-sm" style="font-size:11px">Etsy UK</a>';
+    html+='<button class="btn-ghost btn-sm" style="font-size:11px" onclick="window.location.href=\'opportunities.html?kw='+encodeURIComponent(ev.event)+' gift\'">Analyse</button>';
+    html+='</div></div>';
+  });
+  document.getElementById('seasonal-intel').innerHTML=html||'<p style="color:var(--mu)">No seasonal data.</p>';
+}
+
+function renderMarkets(markets){
+  var flags={'UK':'🇬🇧','USA':'🇺🇸','Germany':'🇩🇪','Australia':'🇦🇺'};
+  var html='<div class="grid-2">';
+  Object.keys(markets).forEach(function(mk){
+    var m=markets[mk];
+    html+='<div style="padding:14px;background:var(--p2);border-radius:10px">';
+    html+='<div style="font-weight:700;font-size:15px;margin-bottom:10px">'+(flags[mk]||'')+' '+mk+'</div>';
+    html+='<div style="font-size:12px;color:var(--mu);margin-bottom:8px">'+m.unique+'</div>';
+    html+='<div style="margin-bottom:8px"><div style="font-size:10px;color:var(--mu);margin-bottom:4px">TOP CATEGORIES</div>';
+    (m.topCategories||[]).forEach(function(c){html+='<span class="pill" style="font-size:10px">'+c+'</span>';});
+    html+='</div>';
+    html+='<div style="padding:8px;background:var(--gdbg);border-radius:7px;font-size:12px;margin-bottom:6px"><strong>Price sweet spot:</strong> '+m.priceSweet+'</div>';
+    html+='<div style="font-size:11px;color:var(--rd)">Avoid: '+m.avoidance+'</div>';
+    html+='</div>';
+  });
+  html+='</div>';
+  document.getElementById('market-intel').innerHTML=html;
+}
+
+// Auto-run on page load
+runFullIntelligence();
+</script>
+</body>
+</html>
