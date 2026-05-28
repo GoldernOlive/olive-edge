@@ -7,7 +7,40 @@
 <link rel="stylesheet" href="css/style.css"/>
 </head>
 <body>
-<div id="nav-placeholder"></div>
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="dashboard.html" class="nav-logo" style="text-decoration:none"><span class="sub">Golden Olive</span><span class="main">Olive <span>Edge</span></span></a>
+    <div class="nav-links">
+      <a href="dashboard.html" class="nav-link">Dashboard</a>
+      <a href="intelligence.html" class="nav-link">🧠 Intelligence</a>
+      <div class="nav-drop" id="drop-research">
+        <button class="nav-drop-btn" id="drop-research-btn" onclick="toggleDrop('drop-research')">Research <svg viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5" style="width:10px;height:10px"><path d="M2 3.5L5 6.5L8 3.5"/></svg></button>
+        <div class="nav-drop-menu"><div class="nav-drop-menu-inner">
+          <a href="opportunities.html">🔥 Opportunities</a>
+          <a href="scanner.html">🔍 Scanner</a>
+          <a href="trend-velocity.html">⚡ Trend Velocity</a>
+          <a href="global-arbitrage.html">🌍 Global Arbitrage</a>
+          <a href="first-mover.html">🚨 First Mover</a>
+          <a href="buyer-language.html">💬 Buyer Language</a>
+        </div></div>
+      </div>
+      <div class="nav-drop" id="drop-create">
+        <button class="nav-drop-btn" id="drop-create-btn" onclick="toggleDrop('drop-create')">Create <svg viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5" style="width:10px;height:10px"><path d="M2 3.5L5 6.5L8 3.5"/></svg></button>
+        <div class="nav-drop-menu"><div class="nav-drop-menu-inner">
+          <a href="listing-generator.html">✍️ Listing Writer</a>
+          <a href="listing-auditor.html">🔎 Listing Auditor</a>
+        </div></div>
+      </div>
+      <a href="suppliers.html" class="nav-link">Suppliers</a>
+      <a href="workspace.html" class="nav-link">Workspace</a>
+    </div>
+    <div class="nav-user">
+      <span class="nav-email" id="nav-email"></span>
+      <button class="btn-ghost btn-sm" onclick="logout()">Log Out</button>
+    </div>
+  </div>
+</nav>
+
 <div class="page">
   <div class="fu">
     <div class="page-title serif">🔎 Listing Auditor</div>
@@ -43,10 +76,19 @@
   <div id="audit-result"></div>
 </div>
 
-<script src="js/auth.js?v=5">
+<script>
+// Auth
+var SB_URL='https://oktpizrevqehfrkcqphq.supabase.co';
+var SB_KEY='sb_publishable_r4lLwwInTT76wXjP-Cha4Q_T1yALqyt';
+function getSession(){return{token:localStorage.getItem('oe_token')||'',email:localStorage.getItem('oe_email')||'',userId:localStorage.getItem('oe_uid')||''};}
+function logout(){localStorage.removeItem('oe_token');localStorage.removeItem('oe_email');localStorage.removeItem('oe_uid');window.location.href='index.html';}
+var SESSION=getSession();
+if(!SESSION.token){window.location.href='index.html';}
+else{var em=document.getElementById('nav-email');if(em)em.textContent=SESSION.email;}
+
+// Nav dropdowns
 function toggleDrop(id){
-  var el=document.getElementById(id);
-  var btn=document.getElementById(id+'-btn');
+  var el=document.getElementById(id);var btn=document.getElementById(id+'-btn');
   var isOpen=el.classList.contains('open');
   document.querySelectorAll('.nav-drop').forEach(function(d){d.classList.remove('open');});
   document.querySelectorAll('.nav-drop-btn').forEach(function(b){b.classList.remove('open');});
@@ -58,11 +100,6 @@ document.addEventListener('click',function(e){
     document.querySelectorAll('.nav-drop-btn').forEach(function(b){b.classList.remove('open');});
   }
 });
-
-</script>
-<script>
-requireAuth();
-document.getElementById('nav-placeholder').innerHTML=renderNav('listing-auditor.html');
 
 async function callAI(prompt){
   try{
@@ -86,12 +123,18 @@ async function callEtsy(path){
 
 function scoreColor(s){return s>=8?'var(--ol)':s>=6?'var(--gd)':s>=4?'var(--or)':'var(--rd)';}
 function scoreLabel(s){return s>=8?'Excellent':s>=6?'Good':s>=4?'Needs Work':'Poor';}
+function sbox(l,v,c){return '<div class="sbox"><div class="lbl">'+l+'</div><div class="mono" style="font-size:15px;color:'+(c||'var(--tx)')+';font-weight:600">'+(v||'—')+'</div></div>';}
 
 function scoreBar(score,max){
   max=max||10;
   var pct=(score/max)*100;
   var c=score/max>=0.8?'var(--ol)':score/max>=0.6?'var(--gd)':score/max>=0.4?'var(--or)':'var(--rd)';
   return '<div style="display:flex;align-items:center;gap:10px"><div style="flex:1;height:8px;background:var(--p3);border-radius:4px;overflow:hidden"><div style="height:100%;width:'+pct+'%;background:'+c+';border-radius:4px"></div></div><span class="mono" style="font-size:13px;color:'+c+';font-weight:700;min-width:32px;text-align:right">'+score+'/'+max+'</span></div>';
+}
+
+function copyText(text,btn){
+  if(navigator.clipboard){navigator.clipboard.writeText(text).then(function(){if(btn){var o=btn.textContent;btn.textContent='Copied!';setTimeout(function(){btn.textContent=o;},1500);}});}
+  else{var el=document.createElement('textarea');el.value=text;document.body.appendChild(el);el.select();document.execCommand('copy');document.body.removeChild(el);if(btn){var o=btn.textContent;btn.textContent='Copied!';setTimeout(function(){btn.textContent=o;},1500);}}
 }
 
 async function doAudit(){
@@ -108,7 +151,6 @@ async function doAudit(){
   document.getElementById('audit-btn').disabled=true;
   res.innerHTML='<div class="card"><div class="loading-row"><div class="spin"></div>Step 1 — Scanning competitors for your keyword...</div></div>';
 
-  // Get competitor data
   var compTags=[],compTitles=[],compPrices={};
   try{
     var er=await callEtsy('listings/active?keywords='+encodeURIComponent(keyword)+'&limit=50&sort_on=score');
@@ -138,15 +180,13 @@ async function doAudit(){
       'PRICE: '+(price||'Not provided')+'\n\n'+
       compCtx+'\n\n'+
       'Score each element and give specific fixes. Return JSON:\n'+
-      '{"overallScore":72,"overallGrade":"C+","verdict":"Needs significant work to compete","titleScore":7,"titleCharCount":'+title.length+',"titleMaxChars":140,"titleIssues":["specific issue 1","issue 2"],"titleFixes":["exact fix 1","fix 2"],"titleRewrite":"Complete rewritten title that would score higher","tagScore":6,"tagCount":'+userTags.length+',"missingTags":["tag competitors use that you dont","tag2","tag3"],"weakTags":["your tag that is too generic or competitive","tag2"],"strongTags":["your best performing tags","tag2"],"tagFixes":["specific tag fix 1","fix 2","fix 3"],"suggestedTags":["replacement tag1","replacement tag2","replacement tag3"],"descScore":'+( desc?7:2)+',"descIssues":["specific issue","issue 2"],"descFixes":["specific fix 1","fix 2"],"descRewrite":"First 2 improved sentences","keywordPlacement":{"inTitle":true,"inFirstTag":true,"inDescription":'+( desc&&desc.toLowerCase().includes(keyword.toLowerCase()))+'},"priceScore":7,"priceAdvice":"advice about their price vs competition","competitorGaps":["specific thing competitors do that you dont","gap 2","gap 3"],"quickWins":["easiest fix with biggest impact","quick win 2","quick win 3"],"estimatedRankImprovement":"if all fixes applied, estimated rank improvement"}'
+      '{"overallScore":72,"overallGrade":"C+","verdict":"Needs significant work to compete","titleScore":7,"titleCharCount":'+title.length+',"titleMaxChars":140,"titleIssues":["specific issue 1","issue 2"],"titleFixes":["exact fix 1","fix 2"],"titleRewrite":"Complete rewritten title that would score higher","tagScore":6,"tagCount":'+userTags.length+',"missingTags":["tag competitors use that you dont","tag2","tag3"],"weakTags":["your tag that is too generic or competitive","tag2"],"strongTags":["your best performing tags","tag2"],"tagFixes":["specific tag fix 1","fix 2","fix 3"],"suggestedTags":["replacement tag1","replacement tag2","replacement tag3"],"descScore":'+(desc?7:2)+',"descIssues":["specific issue","issue 2"],"descFixes":["specific fix 1","fix 2"],"descRewrite":"First 2 improved sentences","keywordPlacement":{"inTitle":true,"inFirstTag":true,"inDescription":'+(desc&&desc.toLowerCase().includes(keyword.toLowerCase()))+'},"priceScore":7,"priceAdvice":"advice about their price vs competition","competitorGaps":["specific thing competitors do that you dont","gap 2","gap 3"],"quickWins":["easiest fix with biggest impact","quick win 2","quick win 3"],"estimatedRankImprovement":"if all fixes applied, estimated rank improvement"}'
     );
 
     var overall=d.overallScore||50;
     var overallColor=overall>=80?'var(--ol)':overall>=60?'var(--gd)':overall>=40?'var(--or)':'var(--rd)';
-
     var html='';
 
-    // OVERALL SCORE
     html+='<div class="card-live fu">';
     html+='<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:20px;flex-wrap:wrap;margin-bottom:20px">';
     html+='<div style="flex:1">';
@@ -158,14 +198,8 @@ async function doAudit(){
     html+='<div style="font-size:72px;font-weight:800;color:'+overallColor+';font-family:DM Mono,monospace;line-height:1">'+overall+'</div>';
     html+='<div style="font-size:18px;color:var(--mu);font-weight:600">'+(d.overallGrade||'')+'</div></div></div>';
 
-    // Score breakdown
     html+='<div class="grid-auto">';
-    var scores=[
-      ['Title',d.titleScore||0],
-      ['Tags',d.tagScore||0],
-      ['Description',d.descScore||0],
-      ['Price',d.priceScore||0]
-    ];
+    var scores=[['Title',d.titleScore||0],['Tags',d.tagScore||0],['Description',d.descScore||0],['Price',d.priceScore||0]];
     for(var i=0;i<scores.length;i++){
       html+='<div class="sbox"><div class="lbl">'+scores[i][0]+'</div>';
       html+=scoreBar(scores[i][1],10);
@@ -173,20 +207,14 @@ async function doAudit(){
     }
     html+='</div>';
 
-    // Keyword placement
     html+='<div style="margin-top:14px"><div class="lbl">Keyword Placement Check</div><div style="display:flex;gap:10px;flex-wrap:wrap">';
-    var kpChecks=[
-      ['In Title',d.keywordPlacement&&d.keywordPlacement.inTitle],
-      ['In First Tag',d.keywordPlacement&&d.keywordPlacement.inFirstTag],
-      ['In Description',d.keywordPlacement&&d.keywordPlacement.inDescription]
-    ];
+    var kpChecks=[['In Title',d.keywordPlacement&&d.keywordPlacement.inTitle],['In First Tag',d.keywordPlacement&&d.keywordPlacement.inFirstTag],['In Description',d.keywordPlacement&&d.keywordPlacement.inDescription]];
     for(var i=0;i<kpChecks.length;i++){
       var ok=kpChecks[i][1];
       html+='<span style="display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:20px;font-size:12px;font-weight:600;background:'+(ok?'var(--olbg)':'var(--rdbg)')+';color:'+(ok?'var(--ol)':'var(--rd)')+';border:1px solid '+(ok?'var(--olbr)':'var(--rdbr)')+'">'+( ok?'✓':'✗')+' '+kpChecks[i][0]+'</span>';
     }
     html+='</div></div></div>';
 
-    // QUICK WINS
     html+='<div class="card-gold d1"><div class="lbl" style="color:var(--gd)">⚡ Quick Wins — Do These First</div>';
     var qw=d.quickWins||[];
     for(var i=0;i<qw.length;i++){
@@ -197,7 +225,6 @@ async function doAudit(){
     if(d.estimatedRankImprovement)html+='<div style="margin-top:10px;padding:10px;background:var(--w);border-radius:8px;font-size:13px;color:var(--ol);font-weight:600">If all fixes applied: '+d.estimatedRankImprovement+'</div>';
     html+='</div>';
 
-    // TITLE AUDIT
     html+='<div class="card d1"><div class="lbl">Title Audit — '+d.titleCharCount+'/140 chars</div>';
     html+=scoreBar(d.titleScore||0,10);
     html+='<div style="margin-top:10px;padding:12px;background:var(--p2);border-radius:8px;font-size:13px;font-weight:600;line-height:1.5;margin-bottom:12px">'+title+'</div>';
@@ -208,12 +235,10 @@ async function doAudit(){
     if(d.titleRewrite){html+='<div class="lbl" style="color:var(--gd);margin-top:12px">Rewritten Title</div><div style="background:var(--olbg);border:1.5px solid var(--olbr);border-radius:8px;padding:12px;font-size:14px;font-weight:700;line-height:1.5;cursor:pointer" onclick="copyText(\''+d.titleRewrite.replace(/'/g,"\\'")+'\',this)" title="Click to copy">'+d.titleRewrite+'<div style="font-size:10px;color:var(--ol);margin-top:6px">Click to copy</div></div>';}
     html+='</div>';
 
-    // TAG AUDIT
     html+='<div class="card d2"><div class="lbl">Tag Audit — '+userTags.length+'/13 tags used</div>';
     html+=scoreBar(d.tagScore||0,10);
     html+='<div class="grid-2" style="margin-top:12px">';
-    var strongTags=d.strongTags||[];
-    var weakTags=d.weakTags||[];
+    var strongTags=d.strongTags||[];var weakTags=d.weakTags||[];
     html+='<div><div class="lbl" style="color:var(--ol)">Strong Tags — Keep These</div>';
     for(var i=0;i<strongTags.length;i++){html+='<span style="display:inline-block;background:var(--olbg);border:1px solid var(--olbr);border-radius:20px;padding:3px 11px;font-size:11px;color:var(--ol);font-family:DM Mono,monospace;margin:2px">✓ '+strongTags[i]+'</span>';}
     html+='</div><div><div class="lbl" style="color:var(--rd)">Weak Tags — Replace These</div>';
@@ -226,7 +251,6 @@ async function doAudit(){
     if(compTags.length){html+='<div style="margin-top:12px"><div class="lbl">Top Competitor Tags for "'+keyword+'"</div><div>';for(var i=0;i<Math.min(compTags.length,15);i++){html+='<span style="display:inline-block;background:var(--p2);border:1px solid var(--b1);border-radius:20px;padding:3px 10px;font-size:11px;color:var(--mu);font-family:DM Mono,monospace;margin:2px">'+compTags[i]+'</span>';}html+='</div></div>';}
     html+='</div>';
 
-    // DESCRIPTION AUDIT
     if(desc){
       html+='<div class="card d2"><div class="lbl">Description Audit</div>';
       html+=scoreBar(d.descScore||0,10);
@@ -238,7 +262,6 @@ async function doAudit(){
       html+='</div>';
     }
 
-    // COMPETITOR GAPS
     var cg=d.competitorGaps||[];
     if(cg.length){
       html+='<div class="card-olive d3"><div class="lbl" style="color:var(--ol)">What Competitors Do That You Don\'t Yet</div>';
@@ -246,14 +269,11 @@ async function doAudit(){
       html+='</div>';
     }
 
-    // PRICE
     html+='<div class="card d3"><div class="lbl">Price Analysis</div>';
     html+=scoreBar(d.priceScore||0,10);
     if(compPrices.avg)html+='<div class="grid-auto" style="margin-top:10px">'+sbox('Your Price',price||'—','var(--mu)')+sbox('Competitor Min','£'+compPrices.min,'var(--gn)')+sbox('Competitor Avg','£'+compPrices.avg,'var(--gd)')+sbox('Competitor Max','£'+compPrices.max,'var(--rd)')+'</div>';
     if(d.priceAdvice)html+='<p style="margin-top:10px;font-size:13px;color:var(--mu);line-height:1.6">'+d.priceAdvice+'</p>';
     html+='</div>';
-
-    function sbox(l,v,c){return '<div class="sbox"><div class="lbl">'+l+'</div><div class="mono" style="font-size:15px;color:'+(c||'var(--tx)')+';font-weight:600">'+(v||'—')+'</div></div>';}
 
     res.innerHTML=html;
   }catch(e){
@@ -261,8 +281,6 @@ async function doAudit(){
   }
   document.getElementById('audit-btn').disabled=false;
 }
-
-function sbox(l,v,c){return '<div class="sbox"><div class="lbl">'+l+'</div><div class="mono" style="font-size:15px;color:'+(c||'var(--tx)')+';font-weight:600">'+(v||'—')+'</div></div>';}
 </script>
 </body>
 </html>
