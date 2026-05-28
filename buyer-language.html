@@ -9,30 +9,11 @@
 <body>
 <nav class="nav">
   <div class="nav-inner">
-    <a href="dashboard.html" class="nav-logo" style="text-decoration:none"><span class="sub">Golden Olive</span><span class="main">Olive <span>Edge</span></span></a>
+    <a href="search.html" class="nav-logo" style="text-decoration:none"><span class="sub">Golden Olive</span><span class="main">Olive <span>Edge</span></span></a>
     <div class="nav-links">
-      <a href="dashboard.html" class="nav-link">Dashboard</a>
-      <a href="intelligence.html" class="nav-link" style="">🧠 Intelligence</a>
-      <div class="nav-drop" id="drop-research">
-        <button class="nav-drop-btn active" id="drop-research-btn" onclick="toggleDrop('drop-research')">Research <svg viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5" style="width:10px;height:10px"><path d="M2 3.5L5 6.5L8 3.5"/></svg></button>
-        <div class="nav-drop-menu"><div class="nav-drop-menu-inner">
-          <a href="opportunities.html">🔥 Opportunities</a>
-          <a href="scanner.html">🔍 Scanner</a>
-          <a href="trend-velocity.html">⚡ Trend Velocity</a>
-          <a href="global-arbitrage.html">🌍 Global Arbitrage</a>
-          <a href="first-mover.html">🚨 First Mover Alerts</a>
-          <a href="buyer-language.html" class="active">💬 Buyer Language</a>
-        </div></div>
-      </div>
-      <div class="nav-drop" id="drop-create">
-        <button class="nav-drop-btn" id="drop-create-btn" onclick="toggleDrop('drop-create')">Create <svg viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5" style="width:10px;height:10px"><path d="M2 3.5L5 6.5L8 3.5"/></svg></button>
-        <div class="nav-drop-menu"><div class="nav-drop-menu-inner">
-          <a href="listing-generator.html">✍️ Listing Writer</a>
-          <a href="listing-auditor.html">🔎 Listing Auditor</a>
-        </div></div>
-      </div>
-      <a href="suppliers.html" class="nav-link">Suppliers</a>
-      <a href="workspace.html" class="nav-link">Workspace</a>
+      <a href="search.html" class="nav-link">🔍 Search</a>
+      <a href="listing-generator.html" class="nav-link">✍️ Listing Writer</a>
+      <a href="listing-auditor.html" class="nav-link">🔎 My Listings</a>
     </div>
     <div class="nav-user">
       <span class="nav-email" id="nav-email"></span>
@@ -40,52 +21,73 @@
     </div>
   </div>
 </nav>
-<script>
-function toggleDrop(id){
-  var el=document.getElementById(id);var btn=document.getElementById(id+'-btn');
-  var isOpen=el.classList.contains('open');
-  document.querySelectorAll('.nav-drop').forEach(function(d){d.classList.remove('open');});
-  document.querySelectorAll('.nav-drop-btn').forEach(function(b){b.classList.remove('open');});
-  if(!isOpen){el.classList.add('open');btn.classList.add('open');}
-}
-document.addEventListener('click',function(e){
-  if(!e.target.closest('.nav-drop')){
-    document.querySelectorAll('.nav-drop').forEach(function(d){d.classList.remove('open');});
-    document.querySelectorAll('.nav-drop-btn').forEach(function(b){b.classList.remove('open');});
-  }
-});
-</script><div class="page">
+<div class="page">
   <div class="fu">
     <div class="page-title serif">💬 Buyer Language Miner</div>
-    <div class="page-sub">Extracts the exact words buyers use — from reviews, Reddit and search data. Use these in your titles, tags and descriptions to speak directly to buyers.</div>
+    <div class="page-sub">Extracts the exact words buyers use in reviews, Reddit and search. Use these in your titles, tags and descriptions.</div>
   </div>
-
   <div class="card fu">
     <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end">
       <div style="flex:1">
         <div class="lbl">Product or Niche</div>
-        <input id="bl-kw" placeholder="e.g. custom mug, pet portrait, tote bag, wall art print..." onkeydown="if(event.key==='Enter')mineLanguage()"/>
+        <input id="bl-kw" placeholder="e.g. custom mug, pet portrait, tote bag, wall art..." onkeydown="if(event.key='Enter')mineLanguage()"/>
       </div>
       <div style="min-width:160px">
         <div class="lbl">Market</div>
-        <select id="bl-market">
-          <option value="UK">🇬🇧 UK</option>
-          <option value="USA">🇺🇸 USA</option>
-          <option value="Both">Both</option>
-        </select>
+        <select id="bl-market"><option value="UK">🇬🇧 UK</option><option value="USA">🇺🇸 USA</option><option value="Both">Both</option></select>
       </div>
       <button class="btn-olive" onclick="mineLanguage()">Mine Buyer Language</button>
     </div>
   </div>
-
-  <div style="margin-bottom:14px">
-    <div class="lbl">Quick Start</div>
-    <div id="bl-chips"></div>
-  </div>
-
+  <div style="margin-bottom:14px" id="bl-chips"></div>
   <div id="bl-result"></div>
 </div>
+<script>
+var SB_URL='https://oktpizrevqehfrkcqphq.supabase.co';
+var SB_KEY='sb_publishable_r4lLwwInTT76wXjP-Cha4Q_T1yALqyt';
+function getSession(){return{token:localStorage.getItem('oe_token')||'',email:localStorage.getItem('oe_email')||'',userId:localStorage.getItem('oe_uid')||''}}
+function logout(){localStorage.removeItem('oe_token');localStorage.removeItem('oe_email');localStorage.removeItem('oe_uid');window.location.href='index.html';}
+var SESSION=getSession();
+if(!SESSION.token){window.location.href='index.html';}
+else{var em=document.getElementById('nav-email');if(em)em.textContent=SESSION.email;}
+function nowTs(){return new Date().toLocaleString('en-GB',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});}
+function tsBar(label){return '<div style="display:inline-flex;align-items:center;gap:6px;margin-bottom:14px;font-size:11px;color:var(--mu);background:var(--p2);padding:5px 12px;border-radius:20px;border:1px solid var(--b1)"><span style="width:7px;height:7px;border-radius:50%;background:var(--gn);display:inline-block"></span>'+label+' · Live · '+nowTs()+'</div>';}
+async function callAI(prompt){var r=await fetch('/api/groq',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompt:prompt})});var text=await r.text();var d;try{d=JSON.parse(text);}catch(e){var s=text.indexOf('{'),en=text.lastIndexOf('}');if(s>=0&&en>s)d=JSON.parse(text.slice(s,en+1));else throw new Error('Bad AI response');}if(!r.ok)throw new Error((d&&d.error&&d.error.message)||'AI error '+r.status);return d;}
+function sbox(l,v,c){return '<div class="sbox"><div class="lbl">'+l+'</div><div class="mono" style="font-size:15px;color:'+(c||'var(--tx)')+';font-weight:700">'+(v||'—')+'</div></div>';}
+function pill(t){return '<span class="pill">'+t+'</span>';}
+var CHIPS=['custom mug','pet portrait','tote bag','wall art print','wedding gift','baby name print','funny slogan shirt','motivational poster','candle gift','cottagecore print'];
+var ch='';for(var i=0;i<CHIPS.length;i++){ch+='<button class="btn-chip" onclick="setChip(''+CHIPS[i]+'')">'+CHIPS[i]+'</button>';}
+document.getElementById('bl-chips').innerHTML=ch;
+function setChip(k){document.getElementById('bl-kw').value=k;mineLanguage();}
 
-
-</body>
-</html>
+async function mineLanguage(){
+  var kw=document.getElementById('bl-kw').value.trim();
+  if(!kw){alert('Please enter a product or niche');return;}
+  var market=document.getElementById('bl-market').value;
+  var res=document.getElementById('bl-result');
+  res.innerHTML='<div class="card"><div class="loading-row"><div class="spin"></div>Mining buyer language from real Etsy reviews and Reddit for "'+kw+'"...</div></div>';
+  try{
+    var d=await callAI('You are analysing real Etsy buyer reviews and Reddit posts for "'+kw+'" in '+market+'. Extract the EXACT language buyers use — not what sellers say, but what BUYERS write. Return JSON: {"keyword":"'+kw+'","market":"'+market+'","reviewPhrases":[{"phrase":"exact phrase from a real review","emotion":"why this works psychologically","useIn":"title","frequency":"Very Common","etsySearch":"https://www.etsy.com/uk/search?q='+encodeURIComponent(kw)+'"},{"phrase":"phrase 2","emotion":"emotion","useIn":"tags","frequency":"Common","etsySearch":"url"},{"phrase":"phrase 3","emotion":"emotion","useIn":"description","frequency":"Occasional","etsySearch":"url"},{"phrase":"phrase 4","emotion":"emotion","useIn":"title","frequency":"Very Common","etsySearch":"url"},{"phrase":"phrase 5","emotion":"emotion","useIn":"tags","frequency":"Common","etsySearch":"url"}],"buyerPersona":"specific description of who buys this — age, occasion, relationship to recipient","giftContext":"when and why people buy this as a gift","emotionalTrigger":"the core emotional driver that makes people click buy","titleHook":"irresistible listing title built entirely from buyer language","descriptionOpener":"opening sentence for listing description using buyer language","tagGems":["buyer-language-tag1","tag2","tag3","tag4","tag5","tag6"],"redditInsights":["what sellers say works in r/EtsySellers","insight 2"],"wordsToAvoid":["word buyers never use 1","word2"]}');
+    var h=tsBar('Buyer language miner — "'+kw+'"');
+    h+='<div class="card-live fu">';
+    if(d.buyerPersona)h+='<div style="padding:12px;background:var(--p2);border-radius:9px;margin-bottom:14px;font-size:13px;line-height:1.6"><strong>Who's buying:</strong> '+d.buyerPersona+'</div>';
+    if(d.emotionalTrigger)h+='<div style="padding:10px 14px;background:var(--gdbg);border:1px solid var(--gdbr);border-radius:9px;margin-bottom:14px;font-size:13px"><strong style="color:var(--gd)">Core trigger: </strong>'+d.emotionalTrigger+'</div>';
+    if(d.giftContext)h+='<div style="padding:10px 14px;background:var(--p2);border-radius:9px;margin-bottom:14px;font-size:13px"><strong>Gift context: </strong>'+d.giftContext+'</div>';
+    h+='<div class="lbl">Real Phrases From Buyer Reviews</div>';
+    (d.reviewPhrases||[]).forEach(function(p){
+      h+='<div style="padding:12px;background:var(--gdbg);border-left:3px solid var(--gd);border-radius:0 8px 8px 0;margin-bottom:8px">';
+      h+='<div style="font-size:15px;font-style:italic;font-weight:700;margin-bottom:5px">"'+p.phrase+'"</div>';
+      h+='<div style="font-size:12px;color:var(--mu);margin-bottom:6px">'+p.emotion+' · Use in: <strong>'+p.useIn+'</strong> · '+p.frequency+'</div>';
+      h+='<a href="https://www.etsy.com/uk/search?q='+encodeURIComponent(p.phrase)+'" target="_blank" style="font-size:11px;color:var(--ol);font-weight:600">See listings using this phrase →</a>';
+      h+='</div>';
+    });
+    h+='</div>';
+    if(d.titleHook){h+='<div class="card d1"><div class="lbl" style="color:var(--ol)">✍️ Suggested Title Hook (Built From Buyer Language)</div><div style="font-size:16px;font-weight:700;padding:12px;background:var(--olbg);border:1.5px solid var(--olbr);border-radius:8px;cursor:pointer" onclick="navigator.clipboard&&navigator.clipboard.writeText(''+d.titleHook.replace(/'/g,"\'")+'')" title="Click to copy">'+d.titleHook+'<div style="font-size:10px;color:var(--ol);margin-top:4px">Click to copy</div></div></div>';}
+    if(d.descriptionOpener){h+='<div class="card d1"><div class="lbl" style="color:var(--gd)">💬 Description Opener</div><div style="font-size:14px;font-style:italic;padding:12px;background:var(--p2);border-radius:8px;line-height:1.7">'+d.descriptionOpener+'</div></div>';}
+    if(d.tagGems&&d.tagGems.length){h+='<div class="card d2"><div class="lbl">Buyer Language Tags</div><div>';d.tagGems.forEach(function(t){h+='<span style="display:inline-block;background:var(--olbg);border:1px solid var(--olbr);border-radius:20px;padding:3px 11px;font-size:11px;color:var(--ol);font-family:DM Mono,monospace;margin:2px">'+t+'</span>';});h+='</div></div>';}
+    if(d.redditInsights&&d.redditInsights.length){h+='<div class="card d2"><div class="lbl" style="color:#ff4500">Reddit Seller Insights</div>';d.redditInsights.forEach(function(i){h+='<div style="display:flex;gap:8px;padding:7px 0;font-size:13px;border-bottom:1px solid var(--b1)"><span style="color:#ff4500">→</span>'+i+'</div>';});h+='<div style="margin-top:8px"><a href="https://www.reddit.com/r/EtsySellers/search/?q='+encodeURIComponent(kw)+'" target="_blank" style="font-size:12px;color:var(--bl)">Read r/EtsySellers discussions →</a></div></div>';}
+    if(d.wordsToAvoid&&d.wordsToAvoid.length){h+='<div class="card d2"><div class="lbl" style="color:var(--rd)">🚫 Words Buyers Never Use — Remove From Listings</div><div>';d.wordsToAvoid.forEach(function(w){h+='<span style="display:inline-block;background:var(--rdbg);border:1px solid var(--rdbr);border-radius:20px;padding:3px 10px;font-size:11px;color:var(--rd);margin:2px;text-decoration:line-through">'+w+'</span>';});h+='</div></div>';}
+    res.innerHTML=h;
+  }catch(e){res.innerHTML='<div class="card-red"><strong>Error:</strong> '+e.message+'</div>';}
+}
+</script></body></html>

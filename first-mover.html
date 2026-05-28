@@ -9,30 +9,11 @@
 <body>
 <nav class="nav">
   <div class="nav-inner">
-    <a href="dashboard.html" class="nav-logo" style="text-decoration:none"><span class="sub">Golden Olive</span><span class="main">Olive <span>Edge</span></span></a>
+    <a href="search.html" class="nav-logo" style="text-decoration:none"><span class="sub">Golden Olive</span><span class="main">Olive <span>Edge</span></span></a>
     <div class="nav-links">
-      <a href="dashboard.html" class="nav-link">Dashboard</a>
-      <a href="intelligence.html" class="nav-link" style="">🧠 Intelligence</a>
-      <div class="nav-drop" id="drop-research">
-        <button class="nav-drop-btn active" id="drop-research-btn" onclick="toggleDrop('drop-research')">Research <svg viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5" style="width:10px;height:10px"><path d="M2 3.5L5 6.5L8 3.5"/></svg></button>
-        <div class="nav-drop-menu"><div class="nav-drop-menu-inner">
-          <a href="opportunities.html">🔥 Opportunities</a>
-          <a href="scanner.html">🔍 Scanner</a>
-          <a href="trend-velocity.html">⚡ Trend Velocity</a>
-          <a href="global-arbitrage.html">🌍 Global Arbitrage</a>
-          <a href="first-mover.html" class="active">🚨 First Mover Alerts</a>
-          <a href="buyer-language.html">💬 Buyer Language</a>
-        </div></div>
-      </div>
-      <div class="nav-drop" id="drop-create">
-        <button class="nav-drop-btn" id="drop-create-btn" onclick="toggleDrop('drop-create')">Create <svg viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5" style="width:10px;height:10px"><path d="M2 3.5L5 6.5L8 3.5"/></svg></button>
-        <div class="nav-drop-menu"><div class="nav-drop-menu-inner">
-          <a href="listing-generator.html">✍️ Listing Writer</a>
-          <a href="listing-auditor.html">🔎 Listing Auditor</a>
-        </div></div>
-      </div>
-      <a href="suppliers.html" class="nav-link">Suppliers</a>
-      <a href="workspace.html" class="nav-link">Workspace</a>
+      <a href="search.html" class="nav-link">🔍 Search</a>
+      <a href="listing-generator.html" class="nav-link">✍️ Listing Writer</a>
+      <a href="listing-auditor.html" class="nav-link">🔎 My Listings</a>
     </div>
     <div class="nav-user">
       <span class="nav-email" id="nav-email"></span>
@@ -40,85 +21,75 @@
     </div>
   </div>
 </nav>
-<script>
-function toggleDrop(id){
-  var el=document.getElementById(id);var btn=document.getElementById(id+'-btn');
-  var isOpen=el.classList.contains('open');
-  document.querySelectorAll('.nav-drop').forEach(function(d){d.classList.remove('open');});
-  document.querySelectorAll('.nav-drop-btn').forEach(function(b){b.classList.remove('open');});
-  if(!isOpen){el.classList.add('open');btn.classList.add('open');}
-}
-document.addEventListener('click',function(e){
-  if(!e.target.closest('.nav-drop')){
-    document.querySelectorAll('.nav-drop').forEach(function(d){d.classList.remove('open');});
-    document.querySelectorAll('.nav-drop-btn').forEach(function(b){b.classList.remove('open');});
-  }
-});
-</script><div class="page">
-  <div class="fu">
-    <div class="page-title serif">🚨 First Mover Alerts</div>
-    <div class="page-sub">Trends exploding right now across Google, Reddit, Pinterest and TikTok — before other Etsy sellers notice them</div>
-  </div>
-
-  <!-- Alert status bar -->
-  <div class="card-gold fu" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">
+<div class="page">
+  <div class="fu" style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px">
     <div>
-      <div style="font-weight:700;font-size:15px;color:var(--gd)">Live Trend Scanner</div>
-      <div style="font-size:12px;color:var(--mu)" id="last-checked">Checking now...</div>
+      <div class="page-title serif">🚨 First Mover Alerts</div>
+      <div class="page-sub">Trends exploding right now — before other Etsy sellers notice them</div>
     </div>
-    <div style="display:flex;gap:10px">
-      <button class="btn-olive" onclick="scanAllTrends()">🔄 Scan Now</button>
-      <button class="btn-ghost" onclick="showWatchlist()">📋 My Watchlist</button>
-    </div>
+    <button class="btn-olive" onclick="scanAllTrends()" id="scan-btn">🔄 Scan Now</button>
   </div>
-
-  <!-- Exploding now section -->
+  <div id="fm-ts"></div>
   <div class="card d1">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:8px">
-      <div>
-        <div class="lbl" style="color:var(--rd);margin-bottom:2px">🔥 EXPLODING RIGHT NOW</div>
-        <div style="font-size:11px;color:var(--mu)">List in the next 48 hours to be first</div>
-      </div>
-      <span id="exploding-badge" class="badge b-live">Scanning...</span>
-    </div>
+    <div class="lbl" style="color:var(--rd);margin-bottom:4px">🔥 EXPLODING — List in Next 48 Hours</div>
+    <div style="font-size:11px;color:var(--mu);margin-bottom:14px">First movers earn 3-5x more before the market saturates</div>
     <div id="exploding-list"><div class="loading-row"><div class="spin"></div>Scanning all platforms...</div></div>
   </div>
-
-  <!-- Rising section -->
   <div class="card d1">
-    <div style="margin-bottom:14px">
-      <div class="lbl" style="color:var(--or);margin-bottom:2px">📈 RISING — List This Week</div>
-      <div style="font-size:11px;color:var(--mu)">Strong upward momentum — 1-2 weeks to peak</div>
-    </div>
+    <div class="lbl" style="color:var(--or);margin-bottom:4px">📈 RISING — List This Week</div>
+    <div style="font-size:11px;color:var(--mu);margin-bottom:14px">Strong upward momentum — 1-2 weeks to peak</div>
     <div id="rising-list"><div class="loading-row"><div class="spin"></div>Loading...</div></div>
   </div>
-
-  <!-- Watch section -->
-  <div class="card d1">
-    <div style="margin-bottom:14px">
-      <div class="lbl" style="color:var(--bl);margin-bottom:2px">👁️ WATCH — Early Signals</div>
-      <div style="font-size:11px;color:var(--mu)">Early momentum — monitor these, list within 2-4 weeks</div>
-    </div>
+  <div class="card d2">
+    <div class="lbl" style="color:var(--bl);margin-bottom:4px">👁 WATCH — Early Signals</div>
+    <div style="font-size:11px;color:var(--mu);margin-bottom:14px">Early momentum — monitor and list within 2-4 weeks</div>
     <div id="watch-list"><div class="loading-row"><div class="spin"></div>Loading...</div></div>
   </div>
-
-  <!-- Platform breakdown -->
-  <div class="card d2">
-    <div class="lbl">Where These Trends Are Coming From</div>
-    <div id="platform-breakdown" class="grid-2">
-      <div class="card2"><div style="font-weight:700;margin-bottom:8px">🔴 Google Trends UK</div><div id="google-trends-uk" style="font-size:13px;color:var(--mu)">Loading...</div></div>
-      <div class="card2"><div style="font-weight:700;margin-bottom:8px">🇺🇸 Google Trends USA</div><div id="google-trends-us" style="font-size:13px;color:var(--mu)">Loading...</div></div>
-      <div class="card2"><div style="font-weight:700;margin-bottom:8px">📌 Pinterest Rising</div><div id="pinterest-trends" style="font-size:13px;color:var(--mu)">Loading...</div></div>
-      <div class="card2"><div style="font-weight:700;margin-bottom:8px">💬 Reddit Buzzing</div><div id="reddit-buzz" style="font-size:13px;color:var(--mu)">Loading...</div></div>
-    </div>
-  </div>
-
-  <div id="watchlist-panel" style="display:none" class="card d2">
-    <div class="lbl">My Watchlist</div>
-    <div id="watchlist-items"><p style="color:var(--mu);font-size:13px">No items on watchlist yet. Click "Watch" on any trend above.</p></div>
-  </div>
 </div>
+<script>
+var SB_URL='https://oktpizrevqehfrkcqphq.supabase.co';
+var SB_KEY='sb_publishable_r4lLwwInTT76wXjP-Cha4Q_T1yALqyt';
+function getSession(){return{token:localStorage.getItem('oe_token')||'',email:localStorage.getItem('oe_email')||'',userId:localStorage.getItem('oe_uid')||''}}
+function logout(){localStorage.removeItem('oe_token');localStorage.removeItem('oe_email');localStorage.removeItem('oe_uid');window.location.href='index.html';}
+var SESSION=getSession();
+if(!SESSION.token){window.location.href='index.html';}
+else{var em=document.getElementById('nav-email');if(em)em.textContent=SESSION.email;}
+function nowTs(){return new Date().toLocaleString('en-GB',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});}
+function tsBar(label){return '<div style="display:inline-flex;align-items:center;gap:6px;margin-bottom:14px;font-size:11px;color:var(--mu);background:var(--p2);padding:5px 12px;border-radius:20px;border:1px solid var(--b1)"><span style="width:7px;height:7px;border-radius:50%;background:var(--gn);display:inline-block"></span>'+label+' · Live · '+nowTs()+'</div>';}
+async function callAI(prompt){var r=await fetch('/api/groq',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompt:prompt})});var text=await r.text();var d;try{d=JSON.parse(text);}catch(e){var s=text.indexOf('{'),en=text.lastIndexOf('}');if(s>=0&&en>s)d=JSON.parse(text.slice(s,en+1));else throw new Error('Bad AI response');}if(!r.ok)throw new Error((d&&d.error&&d.error.message)||'AI error '+r.status);return d;}
+function sbox(l,v,c){return '<div class="sbox"><div class="lbl">'+l+'</div><div class="mono" style="font-size:15px;color:'+(c||'var(--tx)')+';font-weight:700">'+(v||'—')+'</div></div>';}
+function pill(t){return '<span class="pill">'+t+'</span>';}
+function alertCard(item, urgencyColor){
+  var k=encodeURIComponent(item.keyword||'');
+  var h='<div style="padding:12px 0;border-bottom:1px solid var(--b1)">';
+  h+='<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:6px">';
+  h+='<div><strong style="font-size:15px">'+item.keyword+'</strong>';
+  if(item.growth)h+=' <span style="color:var(--gn);font-weight:700;font-family:DM Mono,monospace;font-size:12px">'+item.growth+'</span>';
+  h+='</div><span style="font-size:10px;color:'+urgencyColor+';font-weight:700;flex-shrink:0">'+item.urgency+'</span></div>';
+  h+='<div style="font-size:12px;color:var(--mu);margin-bottom:8px">'+item.reason+'</div>';
+  h+='<div style="font-size:12px;color:var(--ol);font-weight:600;margin-bottom:8px">'+item.action+'</div>';
+  h+='<div style="display:flex;gap:6px;flex-wrap:wrap">';
+  h+='<a href="https://www.etsy.com/uk/search?q='+k+'" target="_blank" style="font-size:11px;padding:3px 9px;border:1px solid var(--olbr);border-radius:5px;color:var(--ol);text-decoration:none;font-weight:600">Etsy UK →</a>';
+  h+='<a href="https://www.pinterest.co.uk/search/pins/?q='+k+'" target="_blank" style="font-size:11px;padding:3px 9px;border:1px solid #ffb0a0;border-radius:5px;color:#e60023;text-decoration:none;font-weight:600">Pinterest →</a>';
+  h+='<a href="https://www.tiktok.com/search?q='+k+'" target="_blank" style="font-size:11px;padding:3px 9px;border:1px solid var(--b1);border-radius:5px;color:var(--tx);text-decoration:none;font-weight:600">TikTok →</a>';
+  h+='<button class="btn-ghost btn-sm" style="font-size:11px" onclick="window.location.href='search.html?kw='+k+''">Full Research →</button>';
+  h+='</div></div>';
+  return h;
+}
 
-
-</body>
-</html>
+async function scanAllTrends(){
+  document.getElementById('fm-ts').innerHTML=tsBar('First mover scanner');
+  document.getElementById('scan-btn').disabled=true;
+  try{
+    var d=await callAI('UK Etsy POD seller. What trends are EXPLODING right now across TikTok, Pinterest, Reddit and Google? Give SPECIFIC keywords not general categories. Each alert needs genuinely different data based on real signals. Return JSON: {"exploding":[{"keyword":"specific keyword","growth":"+890% this week","urgency":"LIST TODAY","reason":"Went viral on TikTok 3 days ago — under 50 UK Etsy listings","action":"List a personalised version immediately on Printify"},{"keyword":"keyword2","growth":"+340%","urgency":"LIST TODAY","reason":"Reddit r/EtsySellers discussion this week","action":"action"}],"rising":[{"keyword":"keyword","growth":"+180%","urgency":"LIST THIS WEEK","reason":"Pinterest boards exploding","action":"specific action"},{"keyword":"keyword2","growth":"+140%","urgency":"LIST THIS WEEK","reason":"reason","action":"action"},{"keyword":"keyword3","growth":"+120%","urgency":"LIST THIS WEEK","reason":"reason","action":"action"}],"watch":[{"keyword":"keyword","growth":"+75%","urgency":"MONITOR","reason":"Early Google Trends signal","action":"action"},{"keyword":"keyword2","growth":"+60%","urgency":"MONITOR","reason":"reason","action":"action"}]}');
+    var h='';(d.exploding||[]).forEach(function(i){h+=alertCard(i,'var(--rd)');});
+    document.getElementById('exploding-list').innerHTML=h||'<p style="color:var(--mu);font-size:13px">No exploding trends detected right now.</p>';
+    h='';(d.rising||[]).forEach(function(i){h+=alertCard(i,'var(--or)');});
+    document.getElementById('rising-list').innerHTML=h;
+    h='';(d.watch||[]).forEach(function(i){h+=alertCard(i,'var(--bl)');});
+    document.getElementById('watch-list').innerHTML=h;
+  }catch(e){document.getElementById('exploding-list').innerHTML='<div class="card-red">Error: '+e.message+'</div>';}
+  document.getElementById('scan-btn').disabled=false;
+}
+scanAllTrends();
+</script></body></html>
