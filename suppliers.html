@@ -9,30 +9,11 @@
 <body>
 <nav class="nav">
   <div class="nav-inner">
-    <a href="dashboard.html" class="nav-logo" style="text-decoration:none"><span class="sub">Golden Olive</span><span class="main">Olive <span>Edge</span></span></a>
+    <a href="search.html" class="nav-logo" style="text-decoration:none"><span class="sub">Golden Olive</span><span class="main">Olive <span>Edge</span></span></a>
     <div class="nav-links">
-      <a href="dashboard.html" class="nav-link">Dashboard</a>
-      <a href="intelligence.html" class="nav-link">🧠 Intelligence</a>
-      <div class="nav-drop" id="drop-research">
-        <button class="nav-drop-btn" id="drop-research-btn" onclick="toggleDrop('drop-research')">Research <svg viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5" style="width:10px;height:10px"><path d="M2 3.5L5 6.5L8 3.5"/></svg></button>
-        <div class="nav-drop-menu"><div class="nav-drop-menu-inner">
-          <a href="opportunities.html">🔥 Opportunities</a>
-          <a href="scanner.html">🔍 Scanner</a>
-          <a href="trend-velocity.html">⚡ Trend Velocity</a>
-          <a href="global-arbitrage.html">🌍 Global Arbitrage</a>
-          <a href="first-mover.html">🚨 First Mover</a>
-          <a href="buyer-language.html">💬 Buyer Language</a>
-        </div></div>
-      </div>
-      <div class="nav-drop" id="drop-create">
-        <button class="nav-drop-btn" id="drop-create-btn" onclick="toggleDrop('drop-create')">Create <svg viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5" style="width:10px;height:10px"><path d="M2 3.5L5 6.5L8 3.5"/></svg></button>
-        <div class="nav-drop-menu"><div class="nav-drop-menu-inner">
-          <a href="listing-generator.html">✍️ Listing Writer</a>
-          <a href="listing-auditor.html">🔎 Listing Auditor</a>
-        </div></div>
-      </div>
-      <a href="suppliers.html" class="nav-link active">Suppliers</a>
-      <a href="workspace.html" class="nav-link">Workspace</a>
+      <a href="search.html" class="nav-link">🔍 Search</a>
+      <a href="listing-generator.html" class="nav-link">✍️ Listing Writer</a>
+      <a href="listing-auditor.html" class="nav-link">🔎 My Listings</a>
     </div>
     <div class="nav-user">
       <span class="nav-email" id="nav-email"></span>
@@ -75,20 +56,7 @@ var SESSION=getSession();
 if(!SESSION.token){window.location.href='index.html';}
 else{var em=document.getElementById('nav-email');if(em)em.textContent=SESSION.email;}
 
-// Nav dropdowns
-function toggleDrop(id){
-  var el=document.getElementById(id);var btn=document.getElementById(id+'-btn');
-  var isOpen=el.classList.contains('open');
-  document.querySelectorAll('.nav-drop').forEach(function(d){d.classList.remove('open');});
-  document.querySelectorAll('.nav-drop-btn').forEach(function(b){b.classList.remove('open');});
-  if(!isOpen){el.classList.add('open');btn.classList.add('open');}
-}
-document.addEventListener('click',function(e){
-  if(!e.target.closest('.nav-drop')){
-    document.querySelectorAll('.nav-drop').forEach(function(d){d.classList.remove('open');});
-    document.querySelectorAll('.nav-drop-btn').forEach(function(b){b.classList.remove('open');});
-  }
-});
+
 
 // Build chip buttons
 var CHIPS=['ceramic mug 11oz','unisex t-shirt','tote bag canvas','A4 art print','phone case','hoodie','canvas print','greeting card','throw pillow','sticker sheet','water bottle'];
