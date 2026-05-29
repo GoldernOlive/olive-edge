@@ -213,6 +213,7 @@
   <div class="nav-inner">
     <a href="search.html" class="nav-logo" style="text-decoration:none"><span class="sub">Golden Olive</span><span class="main">Olive <span>Edge</span></span></a>
     <div class="nav-links">
+      <a href="dashboard.html" class="nav-link">🏠 Dashboard</a>
       <a href="search.html" class="nav-link">🔍 Search</a>
       <a href="listing-generator.html" class="nav-link">✍️ Listing Writer</a>
       <a href="listing-auditor.html" class="nav-link">🔎 My Listings</a>
@@ -249,6 +250,76 @@ function logout(){localStorage.removeItem('oe_token');localStorage.removeItem('o
 var SESSION=getSession();
 if(!SESSION.token){window.location.href='index.html';}
 else{var em=document.getElementById('nav-email');if(em)em.textContent=SESSION.email;}
+
+
+
+// Fetch real date context from API
+var _dateCtx = null;
+async function getDateContext(){
+  if(_dateCtx) return _dateCtx;
+  try{
+    var r = await fetch('/api/date');
+    _dateCtx = await r.json();
+    return _dateCtx;
+  }catch(e){
+    return { aiContext: 'TODAY IS MAY 2026. ', upcomingEvents: [] };
+  }
+}
+
+// Track keyword velocity every search
+async function trackKeyword(keyword, listingCount, avgPrice, topTags){
+  try{
+    await fetch('/api/track', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        keyword: keyword,
+        listingCount: listingCount,
+        avgPrice: avgPrice,
+        topTags: topTags,
+        userId: SESSION.userId
+      })
+    });
+  }catch(e){ /* silent fail */ }
+}
+
+// Get velocity history for a keyword
+async function getVelocity(keyword){
+  try{
+    var r = await fetch('/api/track?keyword='+encodeURIComponent(keyword)+'&days=90');
+    return r.json();
+  }catch(e){ return null; }
+}
+
+// Save keyword alert
+async function saveAlert(keyword){
+  try{
+    var r = await fetch('/api/alerts', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer '+SESSION.token
+      },
+      body: JSON.stringify({
+        keyword: keyword,
+        userId: SESSION.userId,
+        email: SESSION.email
+      })
+    });
+    if(r.ok){
+      alert('🔔 Alert saved! You\'ll be notified when "'+keyword+'" spikes.');
+    }
+  }catch(e){ alert('Could not save alert: '+e.message); }
+}
+
+// Auto-run search from URL parameter (e.g. from dashboard)
+window.addEventListener('load', function(){
+  var urlKw = new URLSearchParams(window.location.search).get('kw');
+  if(urlKw){
+    document.getElementById('main-search').value = urlKw;
+    doSearch();
+  }
+});
 
 // Quick chips
 var CHIPS=['personalised dog mug','funny cat tote','wedding print','baby name art','motivational gym print','wildflower tote','custom pet portrait','funny slogan mug','cottagecore wall art','teacher gift mug'];
@@ -319,6 +390,10 @@ async function callEtsy(path){
 }
 
 async function doSearch(){
+  // Get real date context first
+  var dateCtx = await getDateContext();
+  var datePrefix = dateCtx ? dateCtx.aiContext : 'TODAY IS MAY 2026. ';
+
   var kw=document.getElementById('main-search').value.trim();
   if(!kw)return;
 
@@ -348,15 +423,15 @@ async function doSearch(){
   try{
     var results=await Promise.allSettled([
       // 1. Verdict + market reality
-      callAI('UK Etsy POD seller research for "'+kw+'". Etsy data: '+etsyCtx+'. Return JSON: {"verdict":"BUY IN|WORTH TESTING|PROCEED WITH CAUTION|AVOID","score":8.2,"viralSpeed":"+340% in 72hrs","speedPct":85,"demandLevel":"High","competitionLevel":"Medium","saturationScore":3,"saturationLabel":"Wide Open","sweetSpotUK":"£14-18","sweetSpotUSA":"$18-24","reason":"specific reason for verdict","insight":"one key actionable insight","ukDemand":"High|Medium|Low","usaDemand":"High|Medium|Low","euDemand":"High|Medium|Low","ausDemand":"High|Medium|Low","pinterestTrend":"what is trending on pinterest for this","tiktokAngle":"viral tiktok angle for this product"}'),
+      callAI(datePrefix+'UK Etsy POD seller research for "'+kw+'". Etsy data: '+etsyCtx+'. Return JSON: {"verdict":"BUY IN|WORTH TESTING|PROCEED WITH CAUTION|AVOID","score":8.2,"viralSpeed":"+340% in 72hrs","speedPct":85,"demandLevel":"High","competitionLevel":"Medium","saturationScore":3,"saturationLabel":"Wide Open","sweetSpotUK":"£14-18","sweetSpotUSA":"$18-24","reason":"specific reason for verdict","insight":"one key actionable insight","ukDemand":"High|Medium|Low","usaDemand":"High|Medium|Low","euDemand":"High|Medium|Low","ausDemand":"High|Medium|Low","pinterestTrend":"what is trending on pinterest for this","tiktokAngle":"viral tiktok angle for this product"}'),
       // 2. Competitor intelligence
-      callAI('Top 4 Etsy competitors for "'+kw+'" UK. Etsy data: '+etsyCtx+'. Return JSON: {"competitors":[{"shopName":"ShopName","estimatedMonthly":"£2,400","topProduct":"exact product name","pricePoint":"£14.99","reviewCount":847,"tags":["tag1","tag2","tag3"],"weakness":"what they do wrong","shopUrl":"https://www.etsy.com/uk/shop/ShopName"}],"marketGap":"specific underserved angle nobody is doing","topTags":["tag1","tag2","tag3","tag4","tag5"]}'),
+      callAI(datePrefix+'Top 4 Etsy competitors for "'+kw+'" UK. Etsy data: '+etsyCtx+'. Return JSON: {"competitors":[{"shopName":"ShopName","estimatedMonthly":"£2,400","topProduct":"exact product name","pricePoint":"£14.99","reviewCount":847,"tags":["tag1","tag2","tag3"],"weakness":"what they do wrong","shopUrl":"https://www.etsy.com/uk/shop/ShopName"}],"marketGap":"specific underserved angle nobody is doing","topTags":["tag1","tag2","tag3","tag4","tag5"]}'),
       // 3. Buyer language - real review phrases
-      callAI('Real buyer language for "'+kw+'" on Etsy UK. What phrases appear in 5-star reviews? What do buyers say when they love it? Return JSON: {"reviewPhrases":[{"phrase":"exact phrase buyers use","emotion":"why this works","useIn":"title|tags|description"}],"buyerPersona":"who is buying this and why","giftContext":"gift occasion context","emotionalTrigger":"core emotional driver","titleHook":"irresistible listing title using buyer language","tagGems":["buyer-language-tag1","tag2","tag3","tag4","tag5"]}'),
+      callAI(datePrefix+'Real buyer language for "'+kw+'" on Etsy UK. What phrases appear in 5-star reviews? What do buyers say when they love it? Return JSON: {"reviewPhrases":[{"phrase":"exact phrase buyers use","emotion":"why this works","useIn":"title|tags|description"}],"buyerPersona":"who is buying this and why","giftContext":"gift occasion context","emotionalTrigger":"core emotional driver","titleHook":"irresistible listing title using buyer language","tagGems":["buyer-language-tag1","tag2","tag3","tag4","tag5"]}'),
       // 4. Profit + suppliers
-      callAI('Print-on-demand profit analysis for "'+kw+'" UK Etsy. Return JSON: {"bestPlatform":"Printify|Printful|Gelato","baseCostUK":"£3.50","recommendedPriceUK":"£14.99","recommendedPriceUSA":"$18.99","netProfitUK":"£8.20","marginPct":"72%","breakEven":4,"printifyBase":"£X","printfulBase":"£X","gelatoBase":"£X","bestVariant":"exact product variant name","marginTip":"specific tip to maximise margin"}'),
-      // 5. Timing + seasonal
-      callAI('Seasonal timing for "'+kw+'" UK Etsy seller. Return JSON: {"bestMonths":["December","November"],"listBy":"specific date to list by","peakWeeks":"e.g. first 2 weeks of November","upcomingEvent":{"name":"event name","date":"date","urgency":"High|Medium|Low","daysUntil":45},"yearRoundDemand":true,"seasonalSpike":"percentage spike during peak","calendarTip":"specific actionable timing tip","avoidMonths":["January","February"]}')
+      callAI(datePrefix+'Print-on-demand profit analysis for "'+kw+'" UK Etsy. Return JSON: {"bestPlatform":"Printify|Printful|Gelato","baseCostUK":"£3.50","recommendedPriceUK":"£14.99","recommendedPriceUSA":"$18.99","netProfitUK":"£8.20","marginPct":"72%","breakEven":4,"printifyBase":"£X","printfulBase":"£X","gelatoBase":"£X","bestVariant":"exact product variant name","marginTip":"specific tip to maximise margin"}'),
+      // 5. Timing + seasonal  — inject real date so AI doesn't hallucinate
+      callAI(datePrefix+'Seasonal timing for "'+kw+'" UK Etsy seller. Return JSON: {"bestMonths":["December","November"],"listBy":"specific date to list by","peakWeeks":"e.g. first 2 weeks of November","upcomingEvent":{"name":"event name","date":"date","urgency":"High|Medium|Low","daysUntil":45},"yearRoundDemand":true,"seasonalSpike":"percentage spike during peak","calendarTip":"specific actionable timing tip","avoidMonths":["January","February"]}')
     ]);
 
     var verdict=results[0].status==='fulfilled'?results[0].value:{};
@@ -515,6 +590,34 @@ async function doSearch(){
     if(timing.calendarTip)timingHtml+='<div style="padding:10px 14px;background:var(--gdbg);border:1px solid var(--gdbr);border-radius:8px;font-size:13px;color:var(--gd)"><strong>💡 </strong>'+timing.calendarTip+'</div>';
     html+=section('📅','Timing & Seasonal Calendar',timingHtml,.4);
 
+    // SECTION 5b — VELOCITY HISTORY (if data exists)
+    var velocityData = await getVelocity(kw);
+    if(velocityData && velocityData.velocity && velocityData.velocity.dataPoints >= 2){
+      var vel = velocityData.velocity;
+      var velColor = vel.change > 200 ? 'var(--rd)' : vel.change > 50 ? 'var(--or)' : vel.change > 0 ? 'var(--gd)' : 'var(--bl)';
+      var velHtml = '<div class="grid-auto" style="margin-bottom:16px">'
+        +'<div class="sbox"><div class="lbl">Listing Count</div><div class="mono" style="font-size:20px;color:var(--tx);font-weight:700">'+vel.currentCount+'</div></div>'
+        +'<div class="sbox"><div class="lbl">'+vel.daysTracked+'-Day Change</div><div class="mono" style="font-size:20px;color:'+velColor+';font-weight:700">'+vel.changePct+'</div></div>'
+        +'<div class="sbox"><div class="lbl">Daily Growth</div><div class="mono" style="font-size:15px;color:'+velColor+';font-weight:700">'+vel.dailyGrowthRate+'</div></div>'
+        +'<div class="sbox"><div class="lbl">Status</div><div style="font-size:13px;color:'+velColor+';font-weight:700">'+vel.label+'</div></div>'
+        +'</div>';
+      // Mini chart
+      var snaps = velocityData.snapshots || [];
+      if(snaps.length >= 2){
+        var maxCount = Math.max.apply(null, snaps.map(function(s){return s.listingCount;}));
+        velHtml += '<div style="display:flex;align-items:flex-end;gap:2px;height:40px;margin-bottom:8px">';
+        snaps.forEach(function(s){
+          var h = Math.max(3, Math.round((s.listingCount/maxCount)*40));
+          var c = s.listingCount === vel.currentCount ? 'var(--ol)' : 'var(--p3)';
+          velHtml += '<div style="flex:1;height:'+h+'px;background:'+c+';border-radius:2px 2px 0 0" title="'+s.date+': '+s.listingCount+' listings"></div>';
+        });
+        velHtml += '</div>';
+        velHtml += '<div style="font-size:10px;color:var(--mu2)">'+snaps[0].date+' → '+snaps[snaps.length-1].date+'</div>';
+      }
+      velHtml += '<p style="font-size:12px;color:var(--mu);margin-top:8px;font-style:italic">Based on '+vel.dataPoints+' data points collected since first search</p>';
+      html += section('📈', 'Listing Velocity — '+vel.daysTracked+' Day Trend', velHtml, 0.45);
+    }
+
     // SECTION 6 — WRITE LISTING
     var writeHtml='<p style="font-size:14px;color:var(--mu);margin-bottom:16px">Ready to list? Take your research straight into the listing writer — pre-filled with everything we found.</p>'
       +'<div style="display:flex;gap:10px;flex-wrap:wrap">'
@@ -530,5 +633,16 @@ async function doSearch(){
   res.innerHTML=html;
 }
 </script>
+
+<footer style="margin-top:48px;padding:20px 24px;border-top:1px solid var(--b1);background:var(--p2)">
+  <div style="max-width:1200px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">
+    <div style="font-size:11px;color:var(--mu2);line-height:1.6">
+      The term "Etsy" is a trademark of Etsy, Inc. This application uses the Etsy API but is not endorsed or certified by Etsy, Inc.
+    </div>
+    <div style="font-size:11px;color:var(--mu2)">
+      © 2026 Olive Edge · <a href="mailto:support@oliveedge.app" style="color:var(--mu);text-decoration:none">support@oliveedge.app</a>
+    </div>
+  </div>
+</footer>
 </body>
 </html>

@@ -11,6 +11,7 @@
   <div class="nav-inner">
     <a href="search.html" class="nav-logo" style="text-decoration:none"><span class="sub">Golden Olive</span><span class="main">Olive <span>Edge</span></span></a>
     <div class="nav-links">
+      <a href="dashboard.html" class="nav-link">🏠 Dashboard</a>
       <a href="search.html" class="nav-link">🔍 Search</a>
       <a href="listing-generator.html" class="nav-link">✍️ Listing Writer</a>
       <a href="listing-auditor.html" class="nav-link">🔎 My Listings</a>
@@ -81,7 +82,7 @@ async function scanAllTrends(){
   document.getElementById('fm-ts').innerHTML=tsBar('First mover scanner');
   document.getElementById('scan-btn').disabled=true;
   try{
-    var d=await callAI('UK Etsy POD seller. What trends are EXPLODING right now across TikTok, Pinterest, Reddit and Google? Give SPECIFIC keywords not general categories. Each alert needs genuinely different data based on real signals. Return JSON: {"exploding":[{"keyword":"specific keyword","growth":"+890% this week","urgency":"LIST TODAY","reason":"Went viral on TikTok 3 days ago — under 50 UK Etsy listings","action":"List a personalised version immediately on Printify"},{"keyword":"keyword2","growth":"+340%","urgency":"LIST TODAY","reason":"Reddit r/EtsySellers discussion this week","action":"action"}],"rising":[{"keyword":"keyword","growth":"+180%","urgency":"LIST THIS WEEK","reason":"Pinterest boards exploding","action":"specific action"},{"keyword":"keyword2","growth":"+140%","urgency":"LIST THIS WEEK","reason":"reason","action":"action"},{"keyword":"keyword3","growth":"+120%","urgency":"LIST THIS WEEK","reason":"reason","action":"action"}],"watch":[{"keyword":"keyword","growth":"+75%","urgency":"MONITOR","reason":"Early Google Trends signal","action":"action"},{"keyword":"keyword2","growth":"+60%","urgency":"MONITOR","reason":"reason","action":"action"}]}');
+    var d=await callAI('UK Etsy POD seller. TODAY IS MAY 2026 - What trends are EXPLODING right now across TikTok, Pinterest, Reddit and Google? Give SPECIFIC keywords not general categories. Each alert needs genuinely different data based on real signals. Return JSON: {"exploding":[{"keyword":"specific keyword","growth":"+890% this week","urgency":"LIST TODAY","reason":"Went viral on TikTok 3 days ago — under 50 UK Etsy listings","action":"List a personalised version immediately on Printify"},{"keyword":"keyword2","growth":"+340%","urgency":"LIST TODAY","reason":"Reddit r/EtsySellers discussion this week","action":"action"}],"rising":[{"keyword":"keyword","growth":"+180%","urgency":"LIST THIS WEEK","reason":"Pinterest boards exploding","action":"specific action"},{"keyword":"keyword2","growth":"+140%","urgency":"LIST THIS WEEK","reason":"reason","action":"action"},{"keyword":"keyword3","growth":"+120%","urgency":"LIST THIS WEEK","reason":"reason","action":"action"}],"watch":[{"keyword":"keyword","growth":"+75%","urgency":"MONITOR","reason":"Early Google Trends signal","action":"action"},{"keyword":"keyword2","growth":"+60%","urgency":"MONITOR","reason":"reason","action":"action"}]}');
     var h='';(d.exploding||[]).forEach(function(i){h+=alertCard(i,'var(--rd)');});
     document.getElementById('exploding-list').innerHTML=h||'<p style="color:var(--mu);font-size:13px">No exploding trends detected right now.</p>';
     h='';(d.rising||[]).forEach(function(i){h+=alertCard(i,'var(--or)');});
@@ -92,4 +93,15 @@ async function scanAllTrends(){
   document.getElementById('scan-btn').disabled=false;
 }
 scanAllTrends();
-</script></body></html>
+</script>
+<footer style="margin-top:48px;padding:20px 24px;border-top:1px solid var(--b1);background:var(--p2)">
+  <div style="max-width:1200px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">
+    <div style="font-size:11px;color:var(--mu2);line-height:1.6">
+      The term "Etsy" is a trademark of Etsy, Inc. This application uses the Etsy API but is not endorsed or certified by Etsy, Inc.
+    </div>
+    <div style="font-size:11px;color:var(--mu2)">
+      © 2026 Olive Edge · <a href="mailto:support@oliveedge.app" style="color:var(--mu);text-decoration:none">support@oliveedge.app</a>
+    </div>
+  </div>
+</footer>
+</body></html>

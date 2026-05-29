@@ -11,6 +11,7 @@
   <div class="nav-inner">
     <a href="search.html" class="nav-logo" style="text-decoration:none"><span class="sub">Golden Olive</span><span class="main">Olive <span>Edge</span></span></a>
     <div class="nav-links">
+      <a href="dashboard.html" class="nav-link">🏠 Dashboard</a>
       <a href="search.html" class="nav-link">🔍 Search</a>
       <a href="listing-generator.html" class="nav-link">✍️ Listing Writer</a>
       <a href="listing-auditor.html" class="nav-link">🔎 My Listings</a>
@@ -70,7 +71,7 @@ async function runFullIntelligence(){
   try{
     var[d1,d2,d3]=await Promise.all([
       callAI('UK Etsy POD seller. Top 5 products to sell TODAY. IMPORTANT: each product must have DIFFERENT scores based on real market conditions — do not give all products the same scores. A product with 1000 competing listings scores lower on competition than one with 100. Return JSON: {"sellNow":[{"product":"Personalised Pet Portrait Mug","platform":"Printful","ukPrice":"£16.99","usaPrice":"$21.99","demandScore":9,"competitionScore":3,"marginScore":8,"urgency":"Today","reason":"Viral on TikTok this week, under 200 UK Etsy listings, £12-18 sweet spot confirmed by eBay sold data","etsyUrl":"https://www.etsy.com/uk/search?q=personalised+pet+portrait+mug","pinterestUrl":"https://www.pinterest.co.uk/search/pins/?q=pet+portrait+mug"}],"weekHighlight":"key insight"}'),
-      callAI('UK Etsy seasonal calendar. Upcoming gifting events next 90 days. List what to make NOW. Return JSON: {"upcoming":[{"event":"Fathers Day","date":"15 June 2025","daysUntil":28,"listBy":"List NOW — 4 weeks minimum","products":["Funny Dad Mug","Personalised Golf Print","BBQ Master Apron"],"urgency":"High","etsyUrl":"https://www.etsy.com/uk/search?q=fathers+day+personalised+gift"}]}'),
+      callAI('UK Etsy seasonal calendar. TODAY IS MAY 2026. Upcoming gifting events next 90 days from now. List what to make NOW. Return JSON: {"upcoming":[{"event":"Fathers Day","date":"15 June 2025","daysUntil":28,"listBy":"List NOW — 4 weeks minimum","products":["Funny Dad Mug","Personalised Golf Print","BBQ Master Apron"],"urgency":"High","etsyUrl":"https://www.etsy.com/uk/search?q=fathers+day+personalised+gift"}]}'),
       callAI('Top 10 buyer phrases trending on Etsy UK right now. These should go ON products. Avoid generic advice. Return JSON: {"phrases":[{"phrase":"But First Coffee","emotion":"Relatable morning humour","products":["mugs","totes"],"growth":"+180%"},{"phrase":"Dog Mum","emotion":"Pet owner identity","products":["mugs","t-shirts"],"growth":"+220%"}],"avoidPhrases":["Live Laugh Love","Hustle Hard"]}')
     ]);
     var h='';
@@ -111,4 +112,15 @@ async function runFullIntelligence(){
   document.getElementById('refresh-btn').disabled=false;
 }
 runFullIntelligence();
-</script></body></html>
+</script>
+<footer style="margin-top:48px;padding:20px 24px;border-top:1px solid var(--b1);background:var(--p2)">
+  <div style="max-width:1200px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">
+    <div style="font-size:11px;color:var(--mu2);line-height:1.6">
+      The term "Etsy" is a trademark of Etsy, Inc. This application uses the Etsy API but is not endorsed or certified by Etsy, Inc.
+    </div>
+    <div style="font-size:11px;color:var(--mu2)">
+      © 2026 Olive Edge · <a href="mailto:support@oliveedge.app" style="color:var(--mu);text-decoration:none">support@oliveedge.app</a>
+    </div>
+  </div>
+</footer>
+</body></html>

@@ -11,6 +11,7 @@
   <div class="nav-inner">
     <a href="search.html" class="nav-logo" style="text-decoration:none"><span class="sub">Golden Olive</span><span class="main">Olive <span>Edge</span></span></a>
     <div class="nav-links">
+      <a href="dashboard.html" class="nav-link">🏠 Dashboard</a>
       <a href="search.html" class="nav-link">🔍 Search</a>
       <a href="listing-generator.html" class="nav-link">✍️ Listing Writer</a>
       <a href="listing-auditor.html" class="nav-link">🔎 My Listings</a>
@@ -114,4 +115,15 @@ async function doShopScan(){
     res.innerHTML=h;
   }catch(e){res.innerHTML='<div class="card-red"><strong>Error:</strong> '+e.message+'</div>';}
 }
-</script></body></html>
+</script>
+<footer style="margin-top:48px;padding:20px 24px;border-top:1px solid var(--b1);background:var(--p2)">
+  <div style="max-width:1200px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">
+    <div style="font-size:11px;color:var(--mu2);line-height:1.6">
+      The term "Etsy" is a trademark of Etsy, Inc. This application uses the Etsy API but is not endorsed or certified by Etsy, Inc.
+    </div>
+    <div style="font-size:11px;color:var(--mu2)">
+      © 2026 Olive Edge · <a href="mailto:support@oliveedge.app" style="color:var(--mu);text-decoration:none">support@oliveedge.app</a>
+    </div>
+  </div>
+</footer>
+</body></html>
