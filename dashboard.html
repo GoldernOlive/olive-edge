@@ -144,6 +144,8 @@ function card(p){
   h+='<button onclick="event.stopPropagation();window.location.href=\'search.html?kw='+encodeURIComponent(p.kw)+'\'" style="background:var(--ol);color:#fff;border:none;padding:7px 12px;border-radius:7px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap">Research →</button>';
   h+='</div></div>';
 
+  // Why this product
+  if(p.reason)h+='<div style="font-size:13px;color:var(--mu);line-height:1.5;margin-bottom:10px">'+p.reason+'</div>';
   // Signal strength bar
   h+='<div style="margin-bottom:10px"><div style="font-size:10px;color:var(--mu2);margin-bottom:2px">Signal strength</div>';
   h+='<div class="signal-bar"><div class="signal-fill" style="width:'+scoreWidth+'%"></div></div></div>';
@@ -161,7 +163,9 @@ function card(p){
   if(p.listingCount)h+='<span class="metric">📋 <strong>'+p.listingCount.toLocaleString()+'</strong> live listings</span>';
   if(p.avgPrice)h+='<span class="metric">💷 Avg <strong>£'+p.avgPrice+'</strong></span>';
   if(p.sweetSpot)h+='<span class="metric">🎯 Sweet spot <strong>'+p.sweetSpot+'</strong></span>';
-  if(p.totalFavs)h+='<span class="metric">♡ <strong>'+p.totalFavs.toLocaleString()+'</strong> total favs</span>';
+  if(p.searches)h+='<span class="metric">🔍 <strong>'+p.searches+'</strong></span>';
+  if(p.sales)h+='<span class="metric">💰 <strong>'+p.sales+'</strong></span>';
+  if(p.totalFavs&&p.totalFavs>0)h+='<span class="metric">♡ <strong>'+p.totalFavs.toLocaleString()+'</strong> favs</span>';
   if(p.margin)h+='<span class="metric">📈 <strong>'+p.margin+'</strong> margin</span>';
   if(p.supplier)h+='<span class="metric">🖨️ <strong>'+p.supplier+'</strong></span>';
   h+='</div>';
@@ -192,6 +196,12 @@ function card(p){
   // Buyer + photo
   if(p.buyer)h+='<div style="font-size:12px;color:var(--mu);margin-bottom:4px">👤 <strong>Who buys:</strong> '+p.buyer+'</div>';
   if(p.photo)h+='<div style="font-size:12px;color:var(--mu)">📸 <strong>Photo tip:</strong> '+p.photo+'</div>';
+  // Top phrases
+  if(p.phrases&&p.phrases.length){
+    h+='<div style="margin-top:8px"><div style="font-size:11px;color:var(--mu);font-weight:600;margin-bottom:4px">💬 TOP PHRASES ON BESTSELLERS</div>';
+    p.phrases.slice(0,4).forEach(function(ph){h+='<span style="font-style:italic;color:var(--gd);font-size:13px;margin-right:10px;display:inline-block;margin-bottom:2px">\"'+ph+'\"</span>';});
+    h+='</div>';
+  }
   h+='</div>';
 
   // Real Etsy tags
