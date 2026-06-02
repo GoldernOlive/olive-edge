@@ -36,23 +36,36 @@ const SEEDS = [
   'dachshund gift', 'french bulldog gift', 'cat gift personalised'
 ];
 
-// Design intelligence for scoring
+// Full design intelligence database
 const DESIGN_DB = {
-  mug: { supplier: 'Printify', baseCost: '£3.50', margin: '72%', size: '11oz ceramic' },
-  print: { supplier: 'Printify', baseCost: '£2.80', margin: '82%', size: 'A4/A3' },
-  tote: { supplier: 'Printify', baseCost: '£4.20', margin: '70%', size: '38x42cm' },
-  shirt: { supplier: 'Printify', baseCost: '£7.50', margin: '65%', size: 'Unisex XS-3XL' },
-  gift: { supplier: 'Printify', baseCost: '£3.50', margin: '72%', size: 'Varies' },
-  default: { supplier: 'Printify', baseCost: '£3.50', margin: '70%', size: 'Standard' }
+  mug:     { supplier:'Printify', baseCost:'£3.50', margin:'72%', size:'11oz ceramic', font:'Handwritten Script', style:'Minimal personalised name/date', colours:['#FFFFFF','#F5F0E8','#2C3E50','#87AE87','#8B4513'], colourNames:['White','Cream','Navy','Sage','Brown'], phrases:['Best Mum Ever','Dog Dad','Est. [Year]','Promoted to Grandma','Cat Mum'], searches:'~45,000/mo', type:'Mug' },
+  print:   { supplier:'Printify', baseCost:'£2.80', margin:'82%', size:'A4/A3 print',  font:'Delicate Serif or Script', style:'Botanical illustration or bold typography', colours:['#F5F0E8','#87AE87','#2C3E50','#DDD8C4','#8B7355'], colourNames:['Cream','Sage','Navy','Sand','Brown'], phrases:['She Believed She Could','Wild and Free','Home is Where the Heart Is'], searches:'~38,000/mo', type:'Print' },
+  tote:    { supplier:'Printify', baseCost:'£4.20', margin:'70%', size:'38x42cm canvas', font:'Script or Bold Sans', style:'Bold slogan or botanical illustration', colours:['#F5DEB3','#FFFFFF','#87AE87','#2C3E50','#000000'], colourNames:['Natural Canvas','White','Sage','Navy','Black'], phrases:['Tote-ally Awesome','Book Lover','Plant Lady','Bookish'], searches:'~22,000/mo', type:'Tote Bag' },
+  shirt:   { supplier:'Printify', baseCost:'£7.50', margin:'65%', size:'Unisex XS-3XL', font:'Bold Sans or Brush', style:'Humour slogan with simple illustration', colours:['#FFFFFF','#000000','#808080','#87AE87','#F5DEB3'], colourNames:['White','Black','Heather Grey','Sage','Natural'], phrases:["But First Coffee","I Can't Adult Today","Dog Mum","Plant Lady"], searches:'~31,000/mo', type:'T-Shirt' },
+  pet:     { supplier:'Printify', baseCost:'£2.80', margin:'75%', size:'A4/A3 print',  font:'Script or Serif', style:'Watercolour pet illustration', colours:['#F5F0E8','#87AE87','#DDD8C4','#2C3E50','#E8D5B7'], colourNames:['Cream','Sage','Sand','Navy','Kraft'], phrases:['[Pet Name] The Good Boy','Best Cat Ever','In Loving Memory'], searches:'~19,000/mo', type:'Pet Art' },
+  keyring: { supplier:'Printify', baseCost:'£2.50', margin:'68%', size:'Standard round', font:'Script or Clean Sans', style:'Minimal engraved text', colours:['#C0C0C0','#FFD700','#CD7F32','#FFFFFF','#000000'], colourNames:['Silver','Gold','Bronze','White','Black'], phrases:['[Name]','Est. [Year]','You Are My Sunshine'], searches:'~12,000/mo', type:'Keyring' },
+  planner: { supplier:'Self-supply', baseCost:'£0', margin:'95%', size:'A4 PDF/GoodNotes', font:'Clean Sans-Serif', style:'Minimal clean layout', colours:['#FFFFFF','#F5F0E8','#87AE87','#2C3E50','#DDA0DD'], colourNames:['White','Cream','Sage','Navy','Pink'], phrases:['2026 Daily Planner','Habit Tracker','Goal Setting'], searches:'~21,000/mo', type:'Digital' },
+  cottage: { supplier:'Printify', baseCost:'£2.80', margin:'82%', size:'A4/A3',         font:'Delicate Serif or Hand-drawn', style:'Botanical pressed flowers', colours:['#87AE87','#F5F0E8','#DDA0DD','#8FBC8F','#F5DEB3'], colourNames:['Sage','Cream','Lavender','Forest','Wheat'], phrases:['Wild Flowers','Gather Here','Bloom Where You Are Planted'], searches:'~14,000/mo', type:'Cottagecore Print' },
+  mental:  { supplier:'Printify', baseCost:'£3.50', margin:'72%', size:'Mug or A4 print', font:'Gentle Rounded Script', style:'Soft uplifting typography', colours:['#DDA0DD','#98FB98','#ADD8E6','#FFB6C1','#F5F0E8'], colourNames:['Lavender','Mint','Sky Blue','Blush','Cream'], phrases:["You've Got This","It's OK Not to Be OK","Be Kind to Your Mind"], searches:'~9,000/mo', type:'Wellness Gift' },
+  baby:    { supplier:'Printify', baseCost:'£2.80', margin:'82%', size:'A4 or 8x10 inch', font:'Delicate Rounded Script', style:'Watercolour floral with name', colours:['#FFB6C1','#ADD8E6','#87AE87','#FFF5E4','#DDA0DD'], colourNames:['Pink','Blue','Sage','Peach','Lavender'], phrases:['[Name] Est. [Year]','Little One','Our Greatest Adventure'], searches:'~18,000/mo', type:'Baby Print' },
+  gift:    { supplier:'Printify', baseCost:'£3.50', margin:'72%', size:'Varies', font:'Script or Bold Sans', style:'Personalised with name or occasion', colours:['#FFFFFF','#F5F0E8','#87AE87','#2C3E50','#C0B080'], colourNames:['White','Cream','Sage','Navy','Gold'], phrases:['Made with Love','Est. [Year]','Best [Recipient] Ever'], searches:'~25,000/mo', type:'Gift Product' },
+  default: { supplier:'Printify', baseCost:'£3.50', margin:'70%', size:'Standard', font:'Handwritten Script', style:'Minimal personalised', colours:['#FFFFFF','#F5F0E8','#87AE87','#2C3E50','#E8D5B7'], colourNames:['White','Cream','Sage','Navy','Kraft'], phrases:['Personalised for [Name]','Est. [Year]','Made with Love'], searches:'~10,000/mo', type:'Gift Product' }
 };
 
 function getDesignInfo(kw) {
   const k = kw.toLowerCase();
-  if (k.includes('mug') || k.includes('cup')) return { ...DESIGN_DB.mug, type: 'Mug' };
-  if (k.includes('print') || k.includes('poster') || k.includes('art') || k.includes('wall')) return { ...DESIGN_DB.print, type: 'Print' };
-  if (k.includes('tote') || k.includes('bag')) return { ...DESIGN_DB.tote, type: 'Tote Bag' };
-  if (k.includes('shirt') || k.includes('tee')) return { ...DESIGN_DB.shirt, type: 'T-Shirt' };
-  return { ...DESIGN_DB.gift, type: 'Gift Product' };
+  if (k.includes('mug') || k.includes('cup')) return DESIGN_DB.mug;
+  if (k.includes('tote') || k.includes('bag')) return DESIGN_DB.tote;
+  if (k.includes('shirt') || k.includes('tee')) return DESIGN_DB.shirt;
+  if (k.includes('pet') || k.includes('portrait') || k.includes('dog') || k.includes('cat') || k.includes('labrador') || k.includes('cockapoo') || k.includes('dachshund')) return DESIGN_DB.pet;
+  if (k.includes('keyring') || k.includes('keychain')) return DESIGN_DB.keyring;
+  if (k.includes('planner') || k.includes('digital') || k.includes('tracker')) return DESIGN_DB.planner;
+  if (k.includes('cottage') || k.includes('botanical') || k.includes('wildflower') || k.includes('mushroom') || k.includes('frog')) return DESIGN_DB.cottage;
+  if (k.includes('mental') || k.includes('wellbeing') || k.includes('anxiety') || k.includes('witchy')) return DESIGN_DB.mental;
+  if (k.includes('baby') || k.includes('nursery') || k.includes('newborn')) return DESIGN_DB.baby;
+  if (k.includes('print') || k.includes('poster') || k.includes('art') || k.includes('wall')) return DESIGN_DB.print;
+  if (k.includes('gift') || k.includes('teacher') || k.includes('nurse') || k.includes('bookish') || k.includes('reading') || k.includes('yoga') || k.includes('gym') || k.includes('gardening') || k.includes('baking') || k.includes('hiking')) return DESIGN_DB.gift;
+  return DESIGN_DB.default;
 }
 
 // Google Autocomplete — completely free, real searches
@@ -286,6 +299,9 @@ export default async function handler(req, res) {
       topFav: etsy?.topFav || [],
       redditBoost,
       design,
+      colours: design.colours,
+      colourNames: design.colourNames,
+      phrases: design.phrases,
       // What makes this specific gap interesting
       insight: count === null ? `Real Google search signal — Etsy data pending`
         : count < 50 ? `Only ${count} sellers — ${item.appearances > 1 ? 'multiple Google searches pointing here' : 'Google autocomplete confirms real demand'}. Move now.`
