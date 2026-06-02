@@ -150,6 +150,77 @@ function urgLabel(score){
 function gc(s){return s>=80?'#dc2626':s>=65?'#ea580c':s>=50?'#ca8a04':s>=35?'#16a34a':'#6b7280';}
 function gg(s){return s>=80?'linear-gradient(90deg,#dc2626,#ef4444)':s>=65?'linear-gradient(90deg,#ea580c,#f97316)':s>=50?'linear-gradient(90deg,#ca8a04,#eab308)':s>=35?'linear-gradient(90deg,#16a34a,#22c55e)':'linear-gradient(90deg,#6b7280,#9ca3af)';}
 
+
+// ── Comprehensive Supplier Database ──
+var SUPPLIERS = {
+  mug: [
+    { name:'Printify', product:'Ceramic 11oz White Mug', cost:'£3.50', rating:'★★★★★', ships:'2-4 days UK', bestFor:'Best value, most popular mug on Etsy', url:'https://printify.com/app/products/167/generic-brand/11-oz-ceramic-mug' },
+    { name:'Printful', product:'White Glossy Mug 11oz', cost:'£4.20', rating:'★★★★☆', ships:'3-5 days UK', bestFor:'Premium quality, great for gift market', url:'https://www.printful.com/custom/mugs' },
+    { name:'Gelato', product:'Mug 11oz White', cost:'£3.80', rating:'★★★★☆', ships:'2-3 days UK', bestFor:'Fastest UK shipping, local print network', url:'https://www.gelato.com/products/mugs' }
+  ],
+  print: [
+    { name:'Printify', product:'Poster (A4/A3/50x70cm)', cost:'£2.80', rating:'★★★★★', ships:'3-5 days UK', bestFor:'Best value prints, huge size range', url:'https://printify.com/app/products/posters' },
+    { name:'Prodigi', product:'Fine Art Print', cost:'£3.20', rating:'★★★★★', ships:'1-3 days UK', bestFor:'Premium art paper, UK-based printing', url:'https://www.prodigi.com/products/prints/' },
+    { name:'Printful', product:'Enhanced Matte Poster', cost:'£3.50', rating:'★★★★☆', ships:'3-5 days UK', bestFor:'Professional finish, reliable quality', url:'https://www.printful.com/custom/posters' },
+    { name:'Gelato', product:'Art Print', cost:'£3.00', rating:'★★★★☆', ships:'2-3 days UK', bestFor:'Fast UK fulfilment, eco paper options', url:'https://www.gelato.com/products/art-prints' }
+  ],
+  tote: [
+    { name:'Printify', product:'Heavy Canvas Tote Bag', cost:'£4.20', rating:'★★★★★', ships:'3-5 days UK', bestFor:'Best value, thick canvas, popular with buyers', url:'https://printify.com/app/products/tote-bags' },
+    { name:'Printful', product:'Market Tote Bag', cost:'£6.50', rating:'★★★★☆', ships:'3-5 days UK', bestFor:'Premium quality, long-lasting print', url:'https://www.printful.com/custom/bags/tote-bags' },
+    { name:'Gelato', product:'Tote Bag', cost:'£4.80', rating:'★★★★☆', ships:'2-3 days UK', bestFor:'Fast dispatch, good for seasonal peaks', url:'https://www.gelato.com/products/bags' }
+  ],
+  shirt: [
+    { name:'Printify', product:'Bella+Canvas 3001 Unisex', cost:'£7.50', rating:'★★★★★', ships:'3-5 days UK', bestFor:'Industry standard, buyers know the quality', url:'https://printify.com/app/products/t-shirts' },
+    { name:'Printful', product:'Bella+Canvas 3001', cost:'£8.20', rating:'★★★★★', ships:'3-5 days UK', bestFor:'Premium finish, consistent sizing', url:'https://www.printful.com/custom/t-shirts' },
+    { name:'Gelato', product:'Unisex Softstyle T-Shirt', cost:'£7.80', rating:'★★★★☆', ships:'2-3 days UK', bestFor:'UK-local printing, fast shipping', url:'https://www.gelato.com/products/t-shirts' }
+  ],
+  keyring: [
+    { name:'Printify', product:'Acrylic Keychain', cost:'£2.50', rating:'★★★★☆', ships:'3-5 days UK', bestFor:'Lightweight, clear print, low cost', url:'https://printify.com/app/products/accessories' },
+    { name:'Contrado', product:'Leather Keyring', cost:'£4.80', rating:'★★★★★', ships:'2-4 days UK', bestFor:'Premium leather, great for personalised gifts', url:'https://www.contrado.co.uk/personalised-keyrings' }
+  ],
+  gift: [
+    { name:'Printify', product:'Browse all product types', cost:'From £2.50', rating:'★★★★★', ships:'3-5 days UK', bestFor:'Widest product range, best overall value', url:'https://printify.com/catalog' },
+    { name:'Printful', product:'Browse all product types', cost:'From £3.00', rating:'★★★★☆', ships:'3-5 days UK', bestFor:'Premium quality across all products', url:'https://www.printful.com/custom' },
+    { name:'Gelato', product:'Browse all product types', cost:'From £2.80', rating:'★★★★☆', ships:'2-3 days UK', bestFor:'Fastest UK dispatch, local print network', url:'https://www.gelato.com/products' }
+  ]
+};
+
+function getSuppliers(kw){
+  var k=kw.toLowerCase();
+  if(k.includes('mug')||k.includes('cup'))return SUPPLIERS.mug;
+  if(k.includes('print')||k.includes('art')||k.includes('wall')||k.includes('poster'))return SUPPLIERS.print;
+  if(k.includes('tote')||k.includes('bag'))return SUPPLIERS.tote;
+  if(k.includes('shirt')||k.includes('tee'))return SUPPLIERS.shirt;
+  if(k.includes('keyring')||k.includes('keychain'))return SUPPLIERS.keyring;
+  return SUPPLIERS.gift;
+}
+
+function buildSupplierSection(kw){
+  var list=getSuppliers(kw);
+  var h='<div style="background:var(--p2);border:1px solid var(--b1);border-radius:10px;padding:14px;margin-bottom:12px">';
+  h+='<div style="font-size:11px;font-weight:700;color:var(--mu);letter-spacing:.06em;margin-bottom:10px">🏭 TOP SUPPLIERS — Where to source the blank product</div>';
+  list.forEach(function(s,i){
+    h+='<div style="background:var(--w);border:1px solid var(--b1);border-radius:9px;padding:12px 14px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px">';
+    h+='<div style="flex:1">';
+    h+='<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">';
+    if(i===0)h+='<span style="background:var(--ol);color:#fff;font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px">RECOMMENDED</span>';
+    h+='<strong style="font-size:14px">'+s.name+'</strong>';
+    h+='<span style="font-size:12px;color:var(--gd)">'+s.rating+'</span>';
+    h+='</div>';
+    h+='<div style="font-size:13px;color:var(--tx);margin-bottom:4px">'+s.product+'</div>';
+    h+='<div style="display:flex;gap:12px;flex-wrap:wrap;font-size:12px;color:var(--mu);margin-bottom:3px">';
+    h+='<span>💷 Base cost: <strong style="color:var(--gd)">'+s.cost+'</strong></span>';
+    h+='<span>🚚 UK Dispatch: <strong>'+s.ships+'</strong></span>';
+    h+='</div>';
+    h+='<div style="font-size:12px;color:var(--mu)">✓ '+s.bestFor+'</div>';
+    h+='</div>';
+    h+='<a href="'+s.url+'" target="_blank" onclick="event.stopPropagation()" style="display:inline-flex;align-items:center;padding:8px 14px;background:var(--ol);color:#fff;border-radius:8px;font-size:12px;font-weight:700;text-decoration:none;flex-shrink:0;white-space:nowrap">View Product →</a>';
+    h+='</div>';
+  });
+  h+='</div>';
+  return h;
+}
+
 function buildCard(p){
   var score=p.gapScore;
   var col=gc(score);
@@ -234,6 +305,9 @@ function buildCard(p){
     if(p.topFav[0].url)h+='<a href="'+p.topFav[0].url+'" target="_blank" style="color:var(--ol);font-size:11px;margin-left:8px;flex-shrink:0;text-decoration:none">View →</a>';
     h+='</div></div>';
   }
+
+  // Supplier section
+  h+=buildSupplierSection(p.kw);
 
   // Live links
   h+='<div style="margin-bottom:12px"><div style="font-size:11px;color:var(--mu);font-weight:600;margin-bottom:5px">🔗 Verify this opportunity:</div>';
