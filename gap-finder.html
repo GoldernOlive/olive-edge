@@ -112,88 +112,172 @@ function gapGradient(score){
 function card(p, tierClass){
   var gc=gapColour(p.gapScore);
   var gg=gapGradient(p.gapScore);
-  var h='<div class="gcard '+tierClass+'" onclick="window.location.href=\'search.html?kw='+encodeURIComponent(p.kw)+'\'">';
+  var kenc=encodeURIComponent(p.kw);
+  var h='<div class="gcard '+tierClass+'">';
 
-  // Header
-  h+='<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:16px;margin-bottom:12px">';
+  // ── HEADER ──
+  h+='<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:16px;margin-bottom:10px">';
   h+='<div style="flex:1">';
-  h+='<div style="font-weight:700;font-size:17px;margin-bottom:4px">'+p.kw+'</div>';
+  h+='<div style="font-weight:700;font-size:18px;margin-bottom:5px">'+p.kw+'</div>';
+  h+='<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">';
   if(p.urgency)h+='<span style="font-size:12px;font-weight:700;color:'+p.urgency.colour+';background:'+p.urgency.colour+'18;padding:3px 10px;border-radius:20px">'+p.urgency.icon+' '+p.urgency.label+'</span>';
-  h+='</div>';
-
-  // Gap score circle
+  if(p.competition)h+='<span style="font-size:11px;font-weight:700;color:'+p.competition.colour+';background:'+p.competition.colour+'18;padding:2px 9px;border-radius:20px">'+p.competition.label+' Competition</span>';
+  if(p.design&&p.design.type)h+='<span style="font-size:11px;background:var(--p2);padding:2px 9px;border-radius:20px;border:1px solid var(--b1);color:var(--mu)">'+p.design.type+'</span>';
+  h+='</div></div>';
+  // Gap score
   h+='<div style="text-align:center;flex-shrink:0">';
-  h+='<div class="gap-score" style="color:'+gc+'">'+p.gapScore+'</div>';
-  h+='<div style="font-size:9px;color:var(--mu2)">gap score / 100</div>';
-  h+='<div class="gap-bar" style="width:80px;margin:4px auto 0"><div class="gap-fill" style="width:'+p.gapScore+'%;background:'+gg+'"></div></div>';
+  h+='<div style="font-size:42px;font-weight:800;font-family:DM Mono,monospace;color:'+gc+';line-height:1">'+p.gapScore+'</div>';
+  h+='<div style="font-size:9px;color:var(--mu2);margin-bottom:3px">gap score / 100</div>';
+  h+='<div style="width:80px;height:7px;background:var(--p3);border-radius:4px;overflow:hidden;margin:0 auto"><div style="height:100%;width:'+p.gapScore+'%;background:'+gg+';border-radius:4px"></div></div>';
   h+='</div></div>';
 
-  // Insight
-  if(p.insight)h+='<div style="font-size:13px;color:var(--mu);line-height:1.5;margin-bottom:12px;padding:8px 12px;background:var(--p2);border-radius:8px">'+p.insight+'</div>';
+  // ── INSIGHT ──
+  if(p.insight)h+='<div style="font-size:13px;color:var(--mu);line-height:1.6;margin-bottom:12px;padding:10px 14px;background:var(--p2);border-left:3px solid '+gc+';border-radius:0 8px 8px 0">'+p.insight+'</div>';
 
-  // Signal breakdown
-  h+='<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;margin-bottom:12px">';
+  // ── MARKET DATA ──
+  h+='<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;margin-bottom:14px">';
 
-  // Google signal
   h+='<div style="padding:8px 10px;background:var(--p2);border-radius:8px;border:1px solid var(--b1)">';
-  h+='<div style="font-size:10px;color:var(--mu);font-weight:600;margin-bottom:2px">🔍 GOOGLE SIGNAL</div>';
-  h+='<div style="font-size:13px;font-weight:700">Position #'+p.googlePosition+'</div>';
-  h+='<div style="font-size:11px;color:var(--mu)">in '+p.googleAppearances+' search'+(p.googleAppearances>1?'es':'')+'</div></div>';
+  h+='<div style="font-size:10px;color:var(--mu);font-weight:600;margin-bottom:3px">🔍 GOOGLE SIGNAL</div>';
+  h+='<div style="font-size:14px;font-weight:700">Position #'+p.googlePosition+'</div>';
+  h+='<div style="font-size:11px;color:var(--mu)">Appears in '+p.googleAppearances+' search'+(p.googleAppearances>1?'es':'')+'</div></div>';
 
-  // Etsy supply
   h+='<div style="padding:8px 10px;background:var(--p2);border-radius:8px;border:1px solid var(--b1)">';
-  h+='<div style="font-size:10px;color:var(--mu);font-weight:600;margin-bottom:2px">🛍 ETSY SUPPLY</div>';
-  h+='<div style="font-size:13px;font-weight:700;color:'+(p.competition?p.competition.colour:'var(--tx)')+'">'+( p.listingCount!==null?p.listingCount.toLocaleString()+' listings':'Checking...')+'</div>';
-  h+='<div style="font-size:11px;color:'+(p.competition?p.competition.colour:'var(--mu)')+';">'+(p.competition?p.competition.label:'')+'</div></div>';
+  h+='<div style="font-size:10px;color:var(--mu);font-weight:600;margin-bottom:3px">🛍 ETSY SUPPLY</div>';
+  h+='<div style="font-size:14px;font-weight:700;color:'+(p.competition?p.competition.colour:'var(--tx)')+'">'+( p.listingCount!==null&&p.listingCount!==undefined?p.listingCount.toLocaleString()+' listings':'Est. '+p.competition.label)+'</div>';
+  h+='<div style="font-size:11px;color:var(--mu)'+(p.listingCount===null?';font-style:italic':'')+'">'+( p.listingCount!==null?'Real Etsy data':'Keyword estimate')+'</div></div>';
 
-  // Avg price
   if(p.avgPrice){
     h+='<div style="padding:8px 10px;background:var(--p2);border-radius:8px;border:1px solid var(--b1)">';
-    h+='<div style="font-size:10px;color:var(--mu);font-weight:600;margin-bottom:2px">💷 AVG PRICE</div>';
-    h+='<div style="font-size:13px;font-weight:700">£'+p.avgPrice+'</div>';
-    h+='<div style="font-size:11px;color:var(--mu)">'+p.design.margin+' margin</div></div>';
+    h+='<div style="font-size:10px;color:var(--mu);font-weight:600;margin-bottom:3px">💷 MARKET PRICE</div>';
+    h+='<div style="font-size:14px;font-weight:700;color:var(--gd)">£'+p.avgPrice+' avg</div>';
+    h+='<div style="font-size:11px;color:var(--mu)">Live Etsy prices</div></div>';
   }
 
-  // Supplier
-  h+='<div style="padding:8px 10px;background:var(--p2);border-radius:8px;border:1px solid var(--b1)">';
-  h+='<div style="font-size:10px;color:var(--mu);font-weight:600;margin-bottom:2px">🖨️ SUPPLIER</div>';
-  h+='<div style="font-size:13px;font-weight:700">'+p.design.supplier+'</div>';
-  h+='<div style="font-size:11px;color:var(--mu)">'+p.design.baseCost+' base · '+p.design.size+'</div></div>';
+  if(p.design){
+    h+='<div style="padding:8px 10px;background:var(--p2);border-radius:8px;border:1px solid var(--b1)">';
+    h+='<div style="font-size:10px;color:var(--mu);font-weight:600;margin-bottom:3px">🖨️ SUPPLIER</div>';
+    h+='<div style="font-size:14px;font-weight:700">'+p.design.supplier+'</div>';
+    h+='<div style="font-size:11px;color:var(--mu)">'+p.design.baseCost+' · '+p.design.margin+' margin</div></div>';
 
+    h+='<div style="padding:8px 10px;background:var(--p2);border-radius:8px;border:1px solid var(--b1)">';
+    h+='<div style="font-size:10px;color:var(--mu);font-weight:600;margin-bottom:3px">📐 PRODUCT SIZE</div>';
+    h+='<div style="font-size:13px;font-weight:700">'+p.design.size+'</div>';
+    h+='<div style="font-size:11px;color:var(--mu)">Best variant</div></div>';
+  }
+
+  if(p.design&&p.design.searches){
+    h+='<div style="padding:8px 10px;background:var(--p2);border-radius:8px;border:1px solid var(--b1)">';
+    h+='<div style="font-size:10px;color:var(--mu);font-weight:600;margin-bottom:3px">📊 SEARCH VOLUME</div>';
+    h+='<div style="font-size:14px;font-weight:700;color:var(--ol)">'+p.design.searches+'</div>';
+    h+='<div style="font-size:11px;color:var(--mu)">Estimated UK/month</div></div>';
+  }
   h+='</div>';
 
-  // Opportunity window
+  // ── DESIGN INTELLIGENCE ──
+  h+='<div style="background:var(--p2);border:1px solid var(--b1);border-radius:10px;padding:14px;margin-bottom:12px">';
+  h+='<div style="font-size:11px;font-weight:700;color:var(--mu);letter-spacing:.06em;margin-bottom:10px">🎨 DESIGN INTELLIGENCE — What to actually make</div>';
+
+  // Colours
+  if(p.colours&&p.colours.length){
+    h+='<div style="margin-bottom:10px"><div style="font-size:11px;color:var(--mu);margin-bottom:5px">Top 5 colours on bestsellers (click to copy hex):</div>';
+    h+='<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">';
+    p.colours.forEach(function(c,i){
+      var name=(p.colourNames&&p.colourNames[i])||c;
+      h+='<div style="text-align:center;cursor:pointer" onclick="copyCol(''+c+'',''+name+'')">';
+      h+='<div style="width:32px;height:32px;border-radius:8px;background:'+c+';border:2px solid rgba(0,0,0,.1);margin-bottom:2px"></div>';
+      h+='<div style="font-size:9px;color:var(--mu2);font-family:DM Mono,monospace">'+c+'</div>';
+      h+='<div style="font-size:9px;color:var(--mu)">'+name+'</div></div>';
+    });
+    h+='</div></div>';
+  }
+
+  // Font + Style
+  h+='<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">';
+  if(p.design&&p.design.font)h+='<div style="padding:6px 12px;background:var(--w);border:1px solid var(--b1);border-radius:20px;font-size:12px"><strong>✏️ Font:</strong> '+p.design.font+'</div>';
+  if(p.design&&p.design.style)h+='<div style="padding:6px 12px;background:var(--w);border:1px solid var(--b1);border-radius:20px;font-size:12px"><strong>🎨 Style:</strong> '+p.design.style+'</div>';
+  h+='</div>';
+
+  // Top phrases
+  if(p.phrases&&p.phrases.length){
+    h+='<div style="margin-bottom:6px"><div style="font-size:11px;color:var(--mu);margin-bottom:5px">💬 Top phrases on bestselling products:</div>';
+    p.phrases.forEach(function(ph){h+='<span style="display:inline-block;font-style:italic;color:var(--gd);font-size:13px;font-weight:600;margin:2px 10px 2px 0">\"'+ph+'\"</span>';});
+    h+='</div>';
+  }
+  h+='</div>';
+
+  // ── OPPORTUNITY WINDOW ──
   if(p.window){
-    var wc=p.gapScore>=75?'var(--rdbg)':p.gapScore>=55?'var(--gdbg)':'var(--p2)';
-    var wbc=p.gapScore>=75?'var(--rdbr)':p.gapScore>=55?'var(--gdbr)':'var(--b1)';
-    var wtc=p.gapScore>=75?'var(--rd)':p.gapScore>=55?'var(--gd)':'var(--mu)';
-    h+='<div style="padding:8px 12px;background:'+wc+';border:1px solid '+wbc+';border-radius:8px;font-size:12px;color:'+wtc+';font-weight:600;margin-bottom:10px">⏰ Window: '+p.window+'</div>';
+    var wc=p.gapScore>=75?'var(--rdbg)':p.gapScore>=55?'#fff7ed':'var(--p2)';
+    var wbc=p.gapScore>=75?'var(--rdbr)':p.gapScore>=55?'#fed7aa':'var(--b1)';
+    var wtc=p.gapScore>=75?'var(--rd)':p.gapScore>=55?'#ea580c':'var(--mu)';
+    h+='<div style="padding:10px 14px;background:'+wc+';border:1px solid '+wbc+';border-radius:8px;margin-bottom:12px">';
+    h+='<div style="font-size:11px;font-weight:700;color:'+wtc+';margin-bottom:2px">⏰ OPPORTUNITY WINDOW</div>';
+    h+='<div style="font-size:13px;color:'+wtc+'">'+p.window+'</div></div>';
   }
 
-  // Real Etsy tags
+  // ── REAL ETSY TAGS ──
   if(p.topTags&&p.topTags.length){
-    h+='<div style="margin-bottom:10px">';
-    h+='<div style="font-size:10px;color:var(--mu);font-weight:600;margin-bottom:4px">✓ Real competitor tags:</div>';
-    p.topTags.slice(0,7).forEach(function(t){h+='<span class="tag">'+t+'</span>';});
+    h+='<div style="margin-bottom:12px">';
+    h+='<div style="font-size:11px;color:var(--mu);font-weight:600;margin-bottom:5px">✓ Real competitor tags from live Etsy data:</div>';
+    p.topTags.forEach(function(t){h+='<span style="display:inline-block;background:var(--olbg);border:1px solid var(--olbr);border-radius:20px;padding:3px 10px;font-size:11px;font-family:DM Mono,monospace;color:var(--ol);margin:2px">'+t+'</span>';});
     h+='</div>';
   }
 
-  // Top favourited
+  // ── TOP SELLING EXAMPLE ──
   if(p.topFav&&p.topFav.length&&p.topFav[0]&&p.topFav[0].title){
-    h+='<div style="font-size:12px;color:var(--mu);padding:6px 10px;background:var(--p2);border-radius:6px;margin-bottom:10px">';
-    h+='<strong>Top listing: </strong>'+p.topFav[0].title;
-    if(p.topFav[0].num_favorers)h+=' <span style="color:var(--gd)">'+p.topFav[0].num_favorers+' ♡</span>';
+    h+='<div style="padding:10px 14px;background:var(--p2);border-radius:8px;margin-bottom:12px">';
+    h+='<div style="font-size:11px;font-weight:600;color:var(--mu);margin-bottom:5px">🏆 TOP SELLING EXAMPLE — see what's working:</div>';
+    p.topFav.slice(0,2).forEach(function(l){
+      if(!l.title)return;
+      h+='<div style="display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:1px solid var(--b1)">';
+      h+='<span style="font-size:12px;color:var(--tx);flex:1;margin-right:8px">'+l.title+'</span>';
+      if(l.num_favorers)h+='<span style="font-size:11px;color:var(--gd);flex-shrink:0">'+l.num_favorers+' ♡</span>';
+      if(l.url)h+='<a href="'+l.url+'" target="_blank" style="font-size:11px;color:var(--ol);margin-left:8px;flex-shrink:0;text-decoration:none" onclick="event.stopPropagation()">View →</a>';
+      h+='</div>';
+    });
     h+='</div>';
   }
 
-  // Reddit signal
-  if(p.redditBoost>0)h+='<div style="font-size:11px;color:#ff4500;margin-bottom:8px">💬 Reddit buyers discussing this niche (+'+p.redditBoost+' signal)</div>';
+  // ── LIVE RESEARCH LINKS ──
+  h+='<div style="margin-bottom:14px">';
+  h+='<div style="font-size:11px;font-weight:600;color:var(--mu);margin-bottom:6px">🔗 VERIFY THIS OPPORTUNITY — live links:</div>';
+  h+='<div style="display:flex;gap:6px;flex-wrap:wrap">';
+  h+='<a href="https://www.etsy.com/uk/search?q='+kenc+'" target="_blank" onclick="event.stopPropagation()" style="display:inline-flex;align-items:center;gap:4px;padding:6px 12px;border-radius:8px;font-size:12px;font-weight:600;text-decoration:none;border:1.5px solid #f1641e55;color:#f1641e;background:var(--w)">🛍 See on Etsy UK</a>';
+  h+='<a href="https://www.etsy.com/search?q='+kenc+'" target="_blank" onclick="event.stopPropagation()" style="display:inline-flex;align-items:center;gap:4px;padding:6px 12px;border-radius:8px;font-size:12px;font-weight:600;text-decoration:none;border:1.5px solid #f1641e55;color:#f1641e;background:var(--w)">🛍 Etsy USA</a>';
+  h+='<a href="https://trends.google.com/trends/explore?q='+kenc+'&geo=GB" target="_blank" onclick="event.stopPropagation()" style="display:inline-flex;align-items:center;gap:4px;padding:6px 12px;border-radius:8px;font-size:12px;font-weight:600;text-decoration:none;border:1.5px solid #4285f455;color:#4285f4;background:var(--w)">📈 Google Trends UK</a>';
+  h+='<a href="https://www.pinterest.co.uk/search/pins/?q='+kenc+'" target="_blank" onclick="event.stopPropagation()" style="display:inline-flex;align-items:center;gap:4px;padding:6px 12px;border-radius:8px;font-size:12px;font-weight:600;text-decoration:none;border:1.5px solid #e6002355;color:#e60023;background:var(--w)">📌 Pinterest</a>';
+  h+='<a href="https://www.ebay.co.uk/sch/i.html?_nkw='+kenc+'&LH_Sold=1&LH_Complete=1" target="_blank" onclick="event.stopPropagation()" style="display:inline-flex;align-items:center;gap:4px;padding:6px 12px;border-radius:8px;font-size:12px;font-weight:600;text-decoration:none;border:1.5px solid #e5323855;color:#e53238;background:var(--w)">💰 eBay Sold</a>';
+  h+='</div></div>';
 
-  // Research button
-  h+='<button onclick="event.stopPropagation();window.location.href=\'search.html?kw='+encodeURIComponent(p.kw)+'\'" style="background:var(--ol);color:#fff;border:none;padding:8px 16px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;margin-top:4px">Full Research Brief →</button>';
+  // ── REDDIT SIGNAL ──
+  if(p.redditBoost>0){
+    h+='<div style="font-size:12px;color:#ff4500;margin-bottom:10px;padding:6px 12px;background:#fff5f0;border:1px solid #ff450022;border-radius:8px">';
+    h+='💬 <strong>Reddit signal:</strong> Buyers discussing this niche on r/EtsySellers and r/Etsy (+'+p.redditBoost+' demand boost)</div>';
+  }
+
+  // ── ACTION BUTTONS ──
+  h+='<div style="display:flex;gap:8px;flex-wrap:wrap">';
+  h+='<button onclick="event.stopPropagation();window.location.href='search.html?kw='+kenc+''" style="background:var(--ol);color:#fff;border:none;padding:10px 18px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer">🔍 Full Intelligence Brief →</button>';
+  h+='<button onclick="event.stopPropagation();window.location.href='listing-generator.html?kw='+kenc+''" style="background:var(--w);color:var(--ol);border:2px solid var(--ol);padding:10px 18px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer">✍️ Write Listing →</button>';
+  h+='</div>';
+
   h+='</div>';
   return h;
 }
+
+function copyCol(hex, name){
+  if(navigator.clipboard){
+    navigator.clipboard.writeText(hex).then(function(){
+      var n=document.createElement('div');
+      n.style.cssText='position:fixed;bottom:20px;right:20px;background:var(--ol);color:#fff;padding:8px 16px;border-radius:8px;font-size:13px;z-index:9999;font-family:Jost,sans-serif;box-shadow:0 4px 12px rgba(0,0,0,.15)';
+      n.textContent='✓ Copied '+name+' ('+hex+')';
+      document.body.appendChild(n);
+      setTimeout(function(){document.body.removeChild(n);},2000);
+    });
+  }
+}
+
 
 function render(data){
   var body=document.getElementById('gf-body');
