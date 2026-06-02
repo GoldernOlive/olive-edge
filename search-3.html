@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Search — Olive Edge</title>
+<link rel="stylesheet" href="css/style.css"/>
+<style>
+/* Search page specific styles */
+.search-hero{
+  text-align:center;
+  padding:48px 20px 36px;
+}
+.search-hero .serif{
+  font-size:38px;
+  font-weight:600;
+  margin-bottom:8px;
+  line-height:1.2;
+}
+.search-hero .sub{
+  font-size:15px;
+  color:var(--mu);
+  margin-bottom:28px;
+}
+.search-bar-wrap{
+  display:flex;
+  gap:0;
+  max-width:680px;
+  margin:0 auto 16px;
+  border:2px solid var(--ol);
+  border-radius:12px;
+  overflow:hidden;
+  box-shadow:0 4px 24px rgba(107,142,35,.12);
+}
+.search-bar-wrap input{
+  flex:1;
+  border:none;
+  border-radius:0;
+  font-size:16px;
+  padding:16px 20px;
+  background:var(--w);
+  color:var(--tx);
+  outline:none;
+}
+.search-bar-wrap button{
+  border:none;
+  border-radius:0;
+  background:var(--ol);
+  color:#fff;
+  font-size:15px;
+  font-weight:700;
+  padding:16px 28px;
+  cursor:pointer;
+  font-family:Jost,sans-serif;
+  white-space:nowrap;
+  transition:background .15s;
+}
+.search-bar-wrap button:hover{background:#5a7a1a;}
+.search-chips{
+  display:flex;
+  flex-wrap:wrap;
+  gap:6px;
+  justify-content:center;
+  max-width:680px;
+  margin:0 auto;
+}
+/* Result sections */
+.result-section{
+  border-radius:12px;
+  overflow:hidden;
+  margin-bottom:16px;
+  border:1px solid var(--b1);
+  background:var(--w);
+  animation:fadeUp .35s ease both;
+}
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+.section-header{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:14px 18px;
+  background:var(--p2);
+  border-bottom:1px solid var(--b1);
+  gap:10px;
+  flex-wrap:wrap;
+}
+.section-header .title{
+  font-weight:700;
+  font-size:13px;
+  letter-spacing:.04em;
+  text-transform:uppercase;
+  color:var(--mu);
+}
+.section-header .ts{
+  font-size:11px;
+  color:var(--mu2);
+  font-family:DM Mono,monospace;
+}
+.section-body{padding:18px;}
+/* Verdict card */
+.verdict-big{
+  display:flex;
+  align-items:center;
+  gap:20px;
+  flex-wrap:wrap;
+  margin-bottom:16px;
+}
+.verdict-badge{
+  font-size:22px;
+  font-weight:800;
+  padding:8px 22px;
+  border-radius:30px;
+  letter-spacing:.02em;
+}
+.verdict-score{
+  font-size:64px;
+  font-weight:800;
+  font-family:DM Mono,monospace;
+  line-height:1;
+}
+/* Link buttons */
+.link-row{
+  display:flex;
+  flex-wrap:wrap;
+  gap:6px;
+  margin-top:10px;
+}
+.link-btn{
+  display:inline-flex;
+  align-items:center;
+  gap:5px;
+  padding:6px 12px;
+  border-radius:7px;
+  font-size:12px;
+  font-weight:600;
+  text-decoration:none;
+  border:1.5px solid var(--b1);
+  color:var(--tx);
+  transition:all .15s;
+  cursor:pointer;
+}
+.link-btn:hover{border-color:var(--ol);color:var(--ol);}
+.link-btn.etsy-uk{border-color:#f1641e44;color:#f1641e;}
+.link-btn.etsy-us{border-color:#f1641e44;color:#f1641e;}
+.link-btn.pinterest{border-color:#e6002344;color:#e60023;}
+.link-btn.google{border-color:#4285f444;color:#4285f4;}
+.link-btn.tiktok{border-color:#00000044;color:#000;}
+.link-btn.ebay{border-color:#e53238aa;color:#e53238;}
+.link-btn.printify{border-color:#22c55e44;color:#16a34a;}
+.link-btn.printful{border-color:#6366f144;color:#4f46e5;}
+.link-btn.gelato{border-color:#f59e0b44;color:#d97706;}
+/* Competitor card */
+.comp-card{
+  padding:12px 14px;
+  border:1px solid var(--b1);
+  border-radius:9px;
+  margin-bottom:8px;
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:12px;
+  flex-wrap:wrap;
+}
+/* Review quote */
+.review-quote{
+  padding:12px 16px;
+  background:var(--gdbg);
+  border-left:3px solid var(--gd);
+  border-radius:0 8px 8px 0;
+  margin-bottom:8px;
+  font-size:14px;
+  font-style:italic;
+  line-height:1.6;
+  color:var(--tx);
+}
+/* Pulse dot */
+.pulse{
+  display:inline-block;
+  width:8px;height:8px;
+  border-radius:50%;
+  background:var(--gn);
+  margin-right:5px;
+  animation:pulse 1.5s infinite;
+}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(1.3)}}
+/* Loading skeleton */
+.skel{
+  background:linear-gradient(90deg,var(--p2) 25%,var(--p3) 50%,var(--p2) 75%);
+  background-size:200% 100%;
+  animation:shimmer 1.2s infinite;
+  border-radius:6px;
+  height:14px;
+  margin-bottom:8px;
+}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+/* Speed meter */
+.speed-bar{
+  height:10px;
+  background:var(--p3);
+  border-radius:5px;
+  overflow:hidden;
+  margin:6px 0;
+}
+.speed-fill{
+  height:100%;
+  border-radius:5px;
+  transition:width .8s ease;
+}
+</style>
+</head>
+<body>
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="search.html" class="nav-logo" style="text-decoration:none"><span class="sub">Golden Olive</span><span class="main">Olive <span>Edge</span></span></a>
+    <div class="nav-links">
+      <a href="dashboard.html" class="nav-link">🏠 Dashboard</a>
+      <a href="search.html" class="nav-link">🔍 Search</a>
+      <a href="listing-generator.html" class="nav-link">✍️ Listing Writer</a>
+      <a href="listing-auditor.html" class="nav-link">🔎 My Listings</a>
+    </div>
+    <div class="nav-user">
+      <span class="nav-email" id="nav-email"></span>
+      <button class="btn-ghost btn-sm" onclick="logout()">Log Out</button>
+    </div>
+  </div>
+</nav>
+
+<div class="page">
+  <!-- Hero search -->
+  <div class="search-hero">
+    <div class="serif">What do you want to sell?</div>
+    <div class="sub">Type any keyword — we'll tell you everything you need to know before you list</div>
+    <div class="search-bar-wrap">
+      <input id="main-search" placeholder="e.g. personalised dog mug, funny cat tote, wedding print..." onkeydown="if(event.key==='Enter')doSearch()"/>
+      <button onclick="doSearch()">Research It →</button>
+    </div>
+    <div class="search-chips" id="search-chips"></div>
+  </div>
+
+  <!-- Results -->
+  <div id="results"></div>
+</div>
+
+<script>
+// Auth
+var SB_URL='https://oktpizrevqehfrkcqphq.supabase.co';
+var SB_KEY='sb_publishable_r4lLwwInTT76wXjP-Cha4Q_T1yALqyt';
+function getSession(){return{token:localStorage.getItem('oe_token')||'',email:localStorage.getItem('oe_email')||'',userId:localStorage.getItem('oe_uid')||''};}
+function logout(){localStorage.removeItem('oe_token');localStorage.removeItem('oe_email');localStorage.removeItem('oe_uid');window.location.href='index.html';}
+var SESSION=getSession();
+if(!SESSION.token){window.location.href='index.html';}
+else{var em=document.getElementById('nav-email');if(em)em.textContent=SESSION.email;}
+
+
+
+// Fetch real date context from API
+var _dateCtx = null;
+async function getDateContext(){
+  if(_dateCtx) return _dateCtx;
+  try{
+    var r = await fetch('/api/date');
+    _dateCtx = await r.json();
+    return _dateCtx;
+  }catch(e){
+    return { aiContext: 'TODAY IS MAY 2026. ', upcomingEvents: [] };
+  }
+}
+
+// Track keyword velocity every search
+async function trackKeyword(keyword, listingCount, avgPrice, topTags){
+  try{
+    await fetch('/api/track', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        keyword: keyword,
+        listingCount: listingCount,
+        avgPrice: avgPrice,
+        topTags: topTags,
+        userId: SESSION.userId
+      })
+    });
+  }catch(e){ /* silent fail */ }
+}
+
+// Get velocity history for a keyword
+async function getVelocity(keyword){
+  try{
+    var r = await fetch('/api/track?keyword='+encodeURIComponent(keyword)+'&days=90');
+    return r.json();
+  }catch(e){ return null; }
+}
+
+// Save keyword alert
+async function saveAlert(keyword){
+  try{
+    var r = await fetch('/api/alerts', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer '+SESSION.token
+      },
+      body: JSON.stringify({
+        keyword: keyword,
+        userId: SESSION.userId,
+        email: SESSION.email
+      })
+    });
+    if(r.ok){
+      alert('🔔 Alert saved! You\'ll be notified when "'+keyword+'" spikes.');
+    }
+  }catch(e){ alert('Could not save alert: '+e.message); }
+}
+
+// Auto-run search from URL parameter (e.g. from dashboard)
+window.addEventListener('load', function(){
+  var urlKw = new URLSearchParams(window.location.search).get('kw');
+  if(urlKw){
+    document.getElementById('main-search').value = urlKw;
+    doSearch();
+  }
+});
+
+// Quick chips
+var CHIPS=['personalised dog mug','funny cat tote','wedding print','baby name art','motivational gym print','wildflower tote','custom pet portrait','funny slogan mug','cottagecore wall art','teacher gift mug'];
+var ch='';
+for(var i=0;i<CHIPS.length;i++){
+  ch+='<button class="btn-chip" onclick="setSearch(\''+CHIPS[i]+'\')">'+CHIPS[i]+'</button>';
+}
+document.getElementById('search-chips').innerHTML=ch;
+function setSearch(t){document.getElementById('main-search').value=t;doSearch();}
+
+// Helpers
+function now(){return new Date().toLocaleString('en-GB',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});}
+function kenc(k){return encodeURIComponent(k);}
+function sbox(l,v,c){return '<div class="sbox"><div class="lbl">'+l+'</div><div class="mono" style="font-size:15px;color:'+(c||'var(--tx)')+';font-weight:700">'+(v||'—')+'</div></div>';}
+function pill(t){return '<span class="pill">'+t+'</span>';}
+
+function links(kw){
+  var k=kenc(kw);
+  return '<div class="link-row">'
+    +'<a class="link-btn etsy-uk" href="https://www.etsy.com/uk/search?q='+k+'" target="_blank">🛍 Etsy UK</a>'
+    +'<a class="link-btn etsy-us" href="https://www.etsy.com/search?q='+k+'" target="_blank">🛍 Etsy USA</a>'
+    +'<a class="link-btn pinterest" href="https://www.pinterest.co.uk/search/pins/?q='+k+'" target="_blank">📌 Pinterest</a>'
+    +'<a class="link-btn google" href="https://trends.google.com/trends/explore?q='+k+'&geo=GB" target="_blank">📈 Google Trends</a>'
+    +'<a class="link-btn tiktok" href="https://www.tiktok.com/search?q='+k+'" target="_blank">🎵 TikTok</a>'
+    +'<a class="link-btn ebay" href="https://www.ebay.co.uk/sch/i.html?_nkw='+k+'&LH_Sold=1" target="_blank">💰 eBay Sold</a>'
+    +'</div>';
+}
+
+function supplierLinks(kw){
+  var k=kenc(kw);
+  return '<div class="link-row">'
+    +'<a class="link-btn printify" href="https://printify.com/app/products?search='+k+'" target="_blank">Printify →</a>'
+    +'<a class="link-btn printful" href="https://www.printful.com/custom-products" target="_blank">Printful →</a>'
+    +'<a class="link-btn gelato" href="https://www.gelato.com/products" target="_blank">Gelato →</a>'
+    +'</div>';
+}
+
+function section(icon,title,content,delay){
+  return '<div class="result-section" style="animation-delay:'+( delay||0)+'s">'
+    +'<div class="section-header">'
+    +'<span class="title">'+icon+' '+title+'</span>'
+    +'<span class="ts"><span class="pulse"></span>Live · '+now()+'</span>'
+    +'</div>'
+    +'<div class="section-body">'+content+'</div>'
+    +'</div>';
+}
+
+function skeleton(){
+  return '<div class="result-section">'
+    +'<div class="section-header"><div class="skel" style="width:140px;margin:0"></div><div class="skel" style="width:80px;margin:0"></div></div>'
+    +'<div class="section-body"><div class="skel" style="width:90%"></div><div class="skel" style="width:70%"></div><div class="skel" style="width:80%"></div></div>'
+    +'</div>';
+}
+
+async function callAI(prompt){
+  var r=await fetch('/api/groq',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompt:prompt})});
+  var text=await r.text();
+  var d;
+  try{d=JSON.parse(text);}catch(e){var s=text.indexOf('{'),en=text.lastIndexOf('}');if(s>=0&&en>s)d=JSON.parse(text.slice(s,en+1));else throw new Error('Could not parse AI response');}
+  if(!r.ok)throw new Error((d&&d.error&&d.error.message)||'AI error');
+  return d;
+}
+
+async function callEtsy(path){
+  var r=await fetch('/api/etsy?path='+kenc(path));
+  if(!r.ok)throw new Error('Etsy '+r.status);
+  return r.json();
+}
+
+async function doSearch(){
+  // Get real date context first
+  var dateCtx = await getDateContext();
+  var datePrefix = dateCtx ? dateCtx.aiContext : 'TODAY IS MAY 2026. ';
+
+  var kw=document.getElementById('main-search').value.trim();
+  if(!kw)return;
+
+  var res=document.getElementById('results');
+
+  // Show skeletons immediately so it feels fast
+  res.innerHTML=skeleton()+skeleton()+skeleton()+skeleton();
+
+  // Pull Etsy data in background
+  var etsyListings=[],etsyTags=[],etsyPrices={};
+  try{
+    var er=await callEtsy('listings/active?keywords='+kw+'&limit=50&sort_on=score');
+    etsyListings=er.results||[];
+    var tm={};
+    etsyListings.forEach(function(l){(l.tags||[]).forEach(function(t){tm[t]=(tm[t]||0)+1;});});
+    etsyTags=Object.entries(tm).sort(function(a,b){return b[1]-a[1];}).map(function(e){return{tag:e[0],count:e[1]};});
+    var pp=etsyListings.map(function(l){return(l.price&&l.price.amount||0)/100;}).filter(function(p){return p>0;}).sort(function(a,b){return a-b;});
+    if(pp.length)etsyPrices={min:pp[0].toFixed(2),max:pp[pp.length-1].toFixed(2),avg:(pp.reduce(function(s,p){return s+p;},0)/pp.length).toFixed(2)};
+  }catch(e){}
+
+  var etsyCtx=etsyListings.length
+    ?etsyListings.length+' live Etsy listings found. Price range: £'+(etsyPrices.min||'?')+'-£'+(etsyPrices.max||'?')+', avg £'+(etsyPrices.avg||'?')+'. Top tags: '+etsyTags.slice(0,12).map(function(t){return t.tag;}).join(', ')+'. Top titles: '+etsyListings.slice(0,5).map(function(l){return'"'+l.title+'"';}).join(' | ')
+    :'No live Etsy data available.';
+
+  // Run all AI calls in parallel
+  var html='';
+  try{
+    var results=await Promise.allSettled([
+      // 1. Verdict + market reality
+      callAI(datePrefix+'UK Etsy POD seller research for "'+kw+'". Etsy data: '+etsyCtx+'. Return JSON: {"verdict":"BUY IN|WORTH TESTING|PROCEED WITH CAUTION|AVOID","score":8.2,"viralSpeed":"+340% in 72hrs","speedPct":85,"demandLevel":"High","competitionLevel":"Medium","saturationScore":3,"saturationLabel":"Wide Open","sweetSpotUK":"£14-18","sweetSpotUSA":"$18-24","reason":"specific reason for verdict","insight":"one key actionable insight","ukDemand":"High|Medium|Low","usaDemand":"High|Medium|Low","euDemand":"High|Medium|Low","ausDemand":"High|Medium|Low","pinterestTrend":"what is trending on pinterest for this","tiktokAngle":"viral tiktok angle for this product"}'),
+      // 2. Competitor intelligence
+      callAI(datePrefix+'Top 4 Etsy competitors for "'+kw+'" UK. Etsy data: '+etsyCtx+'. Return JSON: {"competitors":[{"shopName":"ShopName","estimatedMonthly":"£2,400","topProduct":"exact product name","pricePoint":"£14.99","reviewCount":847,"tags":["tag1","tag2","tag3"],"weakness":"what they do wrong","shopUrl":"https://www.etsy.com/uk/shop/ShopName"}],"marketGap":"specific underserved angle nobody is doing","topTags":["tag1","tag2","tag3","tag4","tag5"]}'),
+      // 3. Buyer language - real review phrases
+      callAI(datePrefix+'Real buyer language for "'+kw+'" on Etsy UK. What phrases appear in 5-star reviews? What do buyers say when they love it? Return JSON: {"reviewPhrases":[{"phrase":"exact phrase buyers use","emotion":"why this works","useIn":"title|tags|description"}],"buyerPersona":"who is buying this and why","giftContext":"gift occasion context","emotionalTrigger":"core emotional driver","titleHook":"irresistible listing title using buyer language","tagGems":["buyer-language-tag1","tag2","tag3","tag4","tag5"]}'),
+      // 4. Profit + suppliers
+      callAI(datePrefix+'Print-on-demand profit analysis for "'+kw+'" UK Etsy. Return JSON: {"bestPlatform":"Printify|Printful|Gelato","baseCostUK":"£3.50","recommendedPriceUK":"£14.99","recommendedPriceUSA":"$18.99","netProfitUK":"£8.20","marginPct":"72%","breakEven":4,"printifyBase":"£X","printfulBase":"£X","gelatoBase":"£X","bestVariant":"exact product variant name","marginTip":"specific tip to maximise margin"}'),
+      // 5. Timing + seasonal  — inject real date so AI doesn't hallucinate
+      callAI(datePrefix+'REAL UPCOMING EVENTS FROM OUR DATE API: '+(dateCtx&&dateCtx.upcomingEvents?dateCtx.upcomingEvents.slice(0,3).map(function(e){return e.name+' is in '+e.daysUntil+' days ('+e.date+') — '+e.listBy;}).join(' | '):'none')+'. Seasonal timing for "'+kw+'" UK Etsy seller. Return JSON: {"bestMonths":["December","November"],"listBy":"specific date to list by","peakWeeks":"e.g. first 2 weeks of November","upcomingEvent":{"name":"event name","date":"date","urgency":"High|Medium|Low","daysUntil":45},"yearRoundDemand":true,"seasonalSpike":"percentage spike during peak","calendarTip":"specific actionable timing tip","avoidMonths":["January","February"]}')
+    ]);
+
+    var verdict=results[0].status==='fulfilled'?results[0].value:{};
+    var comp=results[1].status==='fulfilled'?results[1].value:{};
+    var buyer=results[2].status==='fulfilled'?results[2].value:{};
+    var profit=results[3].status==='fulfilled'?results[3].value:{};
+    var timing=results[4].status==='fulfilled'?results[4].value:{};
+
+    // SECTION 1 — VERDICT
+    var vc={'BUY IN':'var(--gn)','WORTH TESTING':'var(--gd)','PROCEED WITH CAUTION':'var(--or)','AVOID':'var(--rd)'}[verdict.verdict]||'var(--gd)';
+    var sc=verdict.score||7;
+    var scClass=sc>=8?'score-high':sc>=6?'score-mid':'score-low';
+    var verdictHtml='<div class="verdict-big">'
+      +'<div><span class="verdict-badge" style="background:'+vc+'18;color:'+vc+';border:2px solid '+vc+'44">'+(verdict.verdict||'ANALYSING')+'</span>'
+      +'<div style="margin-top:10px;font-size:14px;color:var(--mu);max-width:420px;line-height:1.6">'+(verdict.reason||'')+'</div>'
+      +'<div style="margin-top:8px;font-size:13px;font-weight:600;color:var(--tx)">'+(verdict.insight||'')+'</div>'
+      +'</div>'
+      +'<div class="score-ring '+scClass+'" style="flex-shrink:0">'+sc+'</div>'
+      +'</div>';
+
+    // Speed meter
+    verdictHtml+='<div style="margin-bottom:16px"><div style="display:flex;justify-content:space-between;margin-bottom:4px"><span class="lbl" style="margin:0">Viral Speed</span><span class="mono" style="color:var(--ol);font-size:12px">'+(verdict.viralSpeed||'Calculating...')+'</span></div>'
+      +'<div class="speed-bar"><div class="speed-fill" style="width:'+(verdict.speedPct||50)+'%;background:var(--ol)"></div></div></div>';
+
+    // Market stats
+    verdictHtml+='<div class="grid-auto" style="margin-bottom:16px">'
+      +sbox('Demand',verdict.demandLevel,verdict.demandLevel==='High'?'var(--ol)':'var(--gd)')
+      +sbox('Competition',verdict.competitionLevel,verdict.competitionLevel==='Low'?'var(--gn)':'var(--or)')
+      +sbox('Market',verdict.saturationLabel||'—','var(--bl)')
+      +sbox('UK Sweet Spot',verdict.sweetSpotUK,'var(--gd)')
+      +sbox('USA Sweet Spot',verdict.sweetSpotUSA,'var(--gd)')
+      +'</div>';
+
+    // Demand by market
+    verdictHtml+='<div style="margin-bottom:16px"><div class="lbl">Demand by Market</div><div style="display:flex;gap:8px;flex-wrap:wrap">';
+    var mkts=[['🇬🇧 UK',verdict.ukDemand],['🇺🇸 USA',verdict.usaDemand],['🇪🇺 EU',verdict.euDemand],['🇦🇺 AUS',verdict.ausDemand]];
+    mkts.forEach(function(m){
+      var mc=m[1]==='High'?'var(--ol)':m[1]==='Medium'?'var(--gd)':'var(--mu)';
+      verdictHtml+='<div style="padding:8px 14px;border-radius:8px;background:var(--p2);border:1px solid var(--b1);text-align:center"><div style="font-size:12px;color:var(--mu)">'+m[0]+'</div><div style="font-weight:700;font-size:13px;color:'+mc+'">'+(m[1]||'—')+'</div></div>';
+    });
+    verdictHtml+='</div></div>';
+
+    if(verdict.pinterestTrend)verdictHtml+='<div style="padding:10px 14px;background:var(--p2);border-radius:8px;margin-bottom:8px;font-size:13px"><span style="color:#e60023;font-weight:700">📌 Pinterest: </span>'+verdict.pinterestTrend+'</div>';
+    if(verdict.tiktokAngle)verdictHtml+='<div style="padding:10px 14px;background:var(--p2);border-radius:8px;margin-bottom:14px;font-size:13px"><span style="color:#000;font-weight:700">🎵 TikTok angle: </span>'+verdict.tiktokAngle+'</div>';
+
+    verdictHtml+=links(kw);
+    html+=section('⚡','Verdict + Market Reality',verdictHtml,0);
+
+    // SECTION 2 — COMPETITORS
+    var compHtml='';
+    if(etsyListings.length){
+      compHtml+='<div style="margin-bottom:14px"><span class="badge b-live">● '+etsyListings.length+' live listings found</span>';
+      if(etsyPrices.avg)compHtml+=' <span class="badge b-gold">Avg price: £'+etsyPrices.avg+'</span>';
+      compHtml+='</div>';
+    }
+    if(comp.marketGap){
+      compHtml+='<div style="padding:12px 14px;background:var(--olbg);border:1px solid var(--olbr);border-radius:9px;margin-bottom:14px">'
+        +'<div class="lbl" style="color:var(--ol)">💡 Market Gap — Nobody Is Doing This</div>'
+        +'<div style="font-size:14px;font-weight:600;line-height:1.6">'+comp.marketGap+'</div></div>';
+    }
+    (comp.competitors||[]).forEach(function(c){
+      compHtml+='<div class="comp-card">'
+        +'<div style="flex:1">'
+        +'<div style="font-weight:700;font-size:14px;margin-bottom:4px">'+c.shopName+'</div>'
+        +'<div style="font-size:12px;color:var(--mu);margin-bottom:6px">'+c.topProduct+' · '+c.pricePoint+'</div>'
+        +'<div style="font-size:12px;color:var(--rd);margin-bottom:6px">Weakness: '+c.weakness+'</div>'
+        +'<div>'+(c.tags||[]).map(function(t){return'<span style="display:inline-block;background:var(--p2);border:1px solid var(--b1);border-radius:20px;padding:2px 8px;font-size:10px;font-family:DM Mono,monospace;margin:2px">'+t+'</span>';}).join('')+'</div>'
+        +'</div>'
+        +'<div style="text-align:right;flex-shrink:0">'
+        +'<div style="font-weight:700;color:var(--ol);font-family:DM Mono,monospace;font-size:15px">'+c.estimatedMonthly+'<span style="font-size:10px;color:var(--mu);font-weight:400">/mo</span></div>'
+        +'<div style="font-size:11px;color:var(--mu);margin-bottom:6px">'+c.reviewCount+' reviews</div>'
+        +(c.shopUrl?'<a href="'+c.shopUrl+'" target="_blank" class="link-btn" style="font-size:11px">View Shop →</a>':'')
+        +'</div>'
+        +'</div>';
+    });
+    if(comp.topTags&&comp.topTags.length){
+      compHtml+='<div style="margin-top:12px"><div class="lbl">Top Tags Competitors Use</div>';
+      comp.topTags.forEach(function(t){compHtml+='<span style="display:inline-block;background:var(--p2);border:1px solid var(--b1);border-radius:20px;padding:3px 10px;font-size:11px;font-family:DM Mono,monospace;margin:2px">'+t+'</span>';});
+      compHtml+='</div>';
+    }
+    compHtml+='<div style="margin-top:12px"><a class="link-btn etsy-uk" href="https://www.etsy.com/uk/search?q='+kenc(kw)+'" target="_blank">🛍 Browse All Etsy UK Listings →</a></div>';
+    html+=section('🔍','Competitor Intelligence',compHtml,.1);
+
+    // SECTION 3 — BUYER LANGUAGE
+    var buyerHtml='';
+    if(buyer.buyerPersona)buyerHtml+='<div style="padding:12px 14px;background:var(--p2);border-radius:9px;margin-bottom:14px;font-size:13px;line-height:1.6"><strong>Who\'s buying:</strong> '+buyer.buyerPersona+'</div>';
+    if(buyer.emotionalTrigger)buyerHtml+='<div style="padding:10px 14px;background:var(--gdbg);border:1px solid var(--gdbr);border-radius:9px;margin-bottom:14px;font-size:13px"><strong style="color:var(--gd)">Core emotion: </strong>'+buyer.emotionalTrigger+'</div>';
+    (buyer.reviewPhrases||[]).forEach(function(p){
+      buyerHtml+='<div class="review-quote">"'+p.phrase+'"'
+        +'<div style="margin-top:5px;font-size:11px;font-style:normal;color:var(--mu)">'+p.emotion+' · Use in: <strong>'+p.useIn+'</strong>'
+        +'<a href="https://www.etsy.com/uk/search?q='+kenc(p.phrase)+'" target="_blank" style="margin-left:8px;color:var(--ol);font-weight:600;text-decoration:none">See listings with this phrase →</a>'
+        +'</div></div>';
+    });
+    if(buyer.titleHook){
+      buyerHtml+='<div style="margin-top:14px;padding:14px;background:var(--olbg);border:1.5px solid var(--olbr);border-radius:9px">'
+        +'<div class="lbl" style="color:var(--ol)">✍️ Suggested Title Hook</div>'
+        +'<div style="font-size:15px;font-weight:700;line-height:1.5">'+buyer.titleHook+'</div></div>';
+    }
+    if(buyer.tagGems&&buyer.tagGems.length){
+      buyerHtml+='<div style="margin-top:12px"><div class="lbl">Buyer Language Tags</div>';
+      buyer.tagGems.forEach(function(t){buyerHtml+='<span style="display:inline-block;background:var(--olbg);border:1px solid var(--olbr);border-radius:20px;padding:3px 11px;font-size:11px;color:var(--ol);font-family:DM Mono,monospace;margin:2px">'+t+'</span>';});
+      buyerHtml+='</div>';
+    }
+    if(!buyer.reviewPhrases || !buyer.reviewPhrases.length){
+      buyerHtml='<div style="padding:12px;background:var(--p2);border-radius:8px;font-size:13px;color:var(--mu);margin-bottom:12px">AI is analysing buyer language patterns for this niche. The link below takes you directly to real Etsy reviews.</div>';
+    }
+    buyerHtml+='<div style="margin-top:12px"><a class="link-btn etsy-uk" href="https://www.etsy.com/uk/search?q='+kenc(kw)+'&explicit=1" target="_blank">🛍 Read Real Reviews on Etsy →</a></div>';
+    html+=section('💬','What Buyers Actually Say',buyerHtml,.2);
+
+    // SECTION 4 — PROFIT
+    // ALWAYS use real date API for upcoming event — never trust AI dates
+    if(dateCtx && dateCtx.upcomingEvents && dateCtx.upcomingEvents.length){
+      var nextEvent = dateCtx.upcomingEvents[0];
+      // Always override with real date — AI dates are unreliable
+      timing.upcomingEvent = {
+        name: nextEvent.name,
+        date: nextEvent.date,
+        daysUntil: nextEvent.daysUntil,
+        urgency: nextEvent.daysUntil <= 14 ? 'High' : nextEvent.daysUntil <= 42 ? 'Medium' : 'Low'
+      };
+      timing.listBy = nextEvent.listBy;
+    }
+    var profitHtml='<div class="grid-auto" style="margin-bottom:16px">'
+      +sbox('Best Platform',profit.bestPlatform,'var(--bl)')
+      +sbox('Base Cost',profit.baseCostUK,'var(--mu)')
+      +sbox('UK Sell Price',profit.recommendedPriceUK,'var(--gd)')
+      +sbox('USA Price',profit.recommendedPriceUSA,'var(--gd)')
+      +sbox('Net Profit UK',profit.netProfitUK,'var(--ol)')
+      +sbox('Margin',profit.marginPct,'var(--ol)')
+      +sbox('Break Even',(profit.breakEven||'—')+( profit.breakEven?' sales':''),'var(--mu)')
+      +'</div>';
+    profitHtml+='<div class="grid-auto" style="margin-bottom:14px">'
+      +sbox('Printify',profit.printifyBase||'—','var(--gn)')
+      +sbox('Printful',profit.printfulBase||'—','var(--bl)')
+      +sbox('Gelato',profit.gelatoBase||'—','var(--gd)')
+      +'</div>';
+    if(profit.bestVariant)profitHtml+='<div style="padding:10px 14px;background:var(--p2);border-radius:8px;margin-bottom:12px;font-size:13px"><strong>Best variant: </strong>'+profit.bestVariant+'</div>';
+    if(profit.marginTip)profitHtml+='<div style="padding:10px 14px;background:var(--olbg);border:1px solid var(--olbr);border-radius:8px;margin-bottom:14px;font-size:13px;color:var(--ol)"><strong>💡 Margin tip: </strong>'+profit.marginTip+'</div>';
+    profitHtml+=supplierLinks(kw);
+    html+=section('💰','Profit & Suppliers',profitHtml,.3);
+
+    // SECTION 5 — TIMING
+    var timingHtml='';
+    if(timing.upcomingEvent&&timing.upcomingEvent.name){
+      var uc=timing.upcomingEvent.urgency==='High'?'var(--rd)':timing.upcomingEvent.urgency==='Medium'?'var(--or)':'var(--gd)';
+      timingHtml+='<div style="padding:14px;background:var(--rdbg);border:2px solid var(--rdbr);border-radius:10px;margin-bottom:16px">'
+        +'<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">'
+        +'<div><div class="lbl" style="color:var(--rd);margin-bottom:4px">🚨 Upcoming Event</div>'
+        +'<div style="font-weight:700;font-size:16px">'+timing.upcomingEvent.name+'</div>'
+        +'<div style="font-size:13px;color:var(--mu);margin-top:3px">'+timing.upcomingEvent.date+'</div></div>'
+        +'<div style="text-align:right"><div style="font-size:28px;font-weight:800;font-family:DM Mono,monospace;color:'+uc+'">'+timing.upcomingEvent.daysUntil+'</div>'
+        +'<div style="font-size:11px;color:var(--mu)">days away</div></div>'
+        +'</div></div>';
+    }
+    timingHtml+='<div class="grid-auto" style="margin-bottom:14px">'
+      +sbox('List By',timing.listBy||'—','var(--rd)')
+      +sbox('Peak Weeks',timing.peakWeeks||'—','var(--ol)')
+      +sbox('Seasonal Spike',timing.seasonalSpike||'—','var(--gn)')
+      +sbox('Year Round',timing.yearRoundDemand?'Yes':'Seasonal',timing.yearRoundDemand?'var(--gn)':'var(--or)')
+      +'</div>';
+    if(timing.bestMonths&&timing.bestMonths.length){
+      timingHtml+='<div style="margin-bottom:12px"><div class="lbl">Best Months to Sell</div>';
+      timing.bestMonths.forEach(function(m){timingHtml+='<span style="display:inline-block;background:var(--olbg);border:1px solid var(--olbr);border-radius:20px;padding:4px 12px;font-size:12px;font-weight:600;color:var(--ol);margin:3px">'+m+'</span>';});
+      timingHtml+='</div>';
+    }
+    if(timing.avoidMonths&&timing.avoidMonths.length){
+      timingHtml+='<div style="margin-bottom:12px"><div class="lbl" style="color:var(--rd)">Avoid Listing In</div>';
+      timing.avoidMonths.forEach(function(m){timingHtml+='<span style="display:inline-block;background:var(--rdbg);border:1px solid var(--rdbr);border-radius:20px;padding:4px 12px;font-size:12px;font-weight:600;color:var(--rd);margin:3px">'+m+'</span>';});
+      timingHtml+='</div>';
+    }
+    if(timing.calendarTip)timingHtml+='<div style="padding:10px 14px;background:var(--gdbg);border:1px solid var(--gdbr);border-radius:8px;font-size:13px;color:var(--gd)"><strong>💡 </strong>'+timing.calendarTip+'</div>';
+    html+=section('📅','Timing & Seasonal Calendar',timingHtml,.4);
+
+    // SECTION 5b — VELOCITY HISTORY (if data exists)
+    var velocityData = await getVelocity(kw);
+    if(velocityData && velocityData.velocity && velocityData.velocity.dataPoints >= 2){
+      var vel = velocityData.velocity;
+      var velColor = vel.change > 200 ? 'var(--rd)' : vel.change > 50 ? 'var(--or)' : vel.change > 0 ? 'var(--gd)' : 'var(--bl)';
+      var velHtml = '<div class="grid-auto" style="margin-bottom:16px">'
+        +'<div class="sbox"><div class="lbl">Listing Count</div><div class="mono" style="font-size:20px;color:var(--tx);font-weight:700">'+vel.currentCount+'</div></div>'
+        +'<div class="sbox"><div class="lbl">'+vel.daysTracked+'-Day Change</div><div class="mono" style="font-size:20px;color:'+velColor+';font-weight:700">'+vel.changePct+'</div></div>'
+        +'<div class="sbox"><div class="lbl">Daily Growth</div><div class="mono" style="font-size:15px;color:'+velColor+';font-weight:700">'+vel.dailyGrowthRate+'</div></div>'
+        +'<div class="sbox"><div class="lbl">Status</div><div style="font-size:13px;color:'+velColor+';font-weight:700">'+vel.label+'</div></div>'
+        +'</div>';
+      // Mini chart
+      var snaps = velocityData.snapshots || [];
+      if(snaps.length >= 2){
+        var maxCount = Math.max.apply(null, snaps.map(function(s){return s.listingCount;}));
+        velHtml += '<div style="display:flex;align-items:flex-end;gap:2px;height:40px;margin-bottom:8px">';
+        snaps.forEach(function(s){
+          var h = Math.max(3, Math.round((s.listingCount/maxCount)*40));
+          var c = s.listingCount === vel.currentCount ? 'var(--ol)' : 'var(--p3)';
+          velHtml += '<div style="flex:1;height:'+h+'px;background:'+c+';border-radius:2px 2px 0 0" title="'+s.date+': '+s.listingCount+' listings"></div>';
+        });
+        velHtml += '</div>';
+        velHtml += '<div style="font-size:10px;color:var(--mu2)">'+snaps[0].date+' → '+snaps[snaps.length-1].date+'</div>';
+      }
+      velHtml += '<p style="font-size:12px;color:var(--mu);margin-top:8px;font-style:italic">Based on '+vel.dataPoints+' data points collected since first search</p>';
+      html += section('📈', 'Listing Velocity — '+vel.daysTracked+' Day Trend', velHtml, 0.45);
+    }
+
+    // SECTION 6 — WRITE LISTING
+    var writeHtml='<p style="font-size:14px;color:var(--mu);margin-bottom:16px">Ready to list? Take your research straight into the listing writer — pre-filled with everything we found.</p>'
+      +'<div style="display:flex;gap:10px;flex-wrap:wrap">'
+      +'<button class="btn-olive" onclick="window.location.href=\'listing-generator.html?kw='+kenc(kw)+'\'">✍️ Write Winning Listing →</button>'
+      +'<button class="btn-ghost" onclick="window.location.href=\'listing-auditor.html\'">🔎 Audit Existing Listing</button>'
+      +'</div>';
+    html+=section('✍️','Ready to List',writeHtml,.5);
+
+  }catch(e){
+    html='<div class="card-red"><strong>Search failed:</strong> '+e.message+'</div>';
+  }
+
+  res.innerHTML=html;
+}
+</script>
+
+<footer style="margin-top:48px;padding:20px 24px;border-top:1px solid var(--b1);background:var(--p2)">
+  <div style="max-width:1200px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">
+    <div style="font-size:11px;color:var(--mu2);line-height:1.6">
+      The term "Etsy" is a trademark of Etsy, Inc. This application uses the Etsy API but is not endorsed or certified by Etsy, Inc.
+    </div>
+    <div style="font-size:11px;color:var(--mu2)">
+      © 2026 Olive Edge · <a href="mailto:support@oliveedge.app" style="color:var(--mu);text-decoration:none">support@oliveedge.app</a>
+    </div>
+  </div>
+</footer>
+</body>
+</html>
