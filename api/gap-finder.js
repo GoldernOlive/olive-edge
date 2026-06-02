@@ -9,31 +9,14 @@ const SB_KEY = process.env.SUPABASE_KEY || 'sb_publishable_r4lLwwInTT76wXjP-Cha4
 
 // Seed terms — broad POD categories we expand via autocomplete
 const SEEDS = [
-  // Mugs — most popular POD category
-  'personalised mug', 'funny mug', 'custom mug gift', 'novelty mug uk',
-  // Prints & wall art
-  'personalised print gift', 'wall art print uk', 'home decor print',
-  // Totes & bags
-  'personalised tote bag', 'funny tote bag gift',
-  // Clothing
-  'funny t shirt gift uk', 'novelty t shirt',
-  // Gifts by recipient
-  'gift for dog lover', 'gift for cat lover', 'gift for teacher',
-  'gift for nurse', 'gift for mum', 'gift for dad', 'gift for grandma',
-  'gift for best friend', 'gift for sister', 'gift for boyfriend',
-  // Gifts by occasion  
-  'fathers day gift', 'mothers day gift', 'birthday gift personalised',
-  'graduation gift uk', 'new baby gift personalised',
-  // Aesthetics & trends
-  'cottagecore gift', 'dark academia print', 'botanical print gift',
-  'witchy gift uk', 'mushroom gift', 'frog gift',
-  // Hobbies & occupations
-  'bookish gift', 'reading gift', 'yoga gift', 'gym gift',
-  'gardening gift', 'baking gift', 'hiking gift',
-  'accountant gift', 'lawyer gift', 'engineer gift',
-  // Pets by breed
-  'labrador gift', 'golden retriever gift', 'cockapoo gift',
-  'dachshund gift', 'french bulldog gift', 'cat gift personalised'
+  'personalised mug gift uk', 'funny mug gift', 'novelty mug uk',
+  'personalised print gift uk', 'wall art print uk',
+  'personalised tote bag uk', 'funny t shirt gift uk',
+  'gift for dog lover uk', 'gift for cat lover uk', 'gift for teacher uk',
+  'gift for nurse uk', 'gift for dad uk', 'gift for mum uk',
+  'fathers day gift uk', 'graduation gift uk',
+  'cottagecore print uk', 'botanical print gift',
+  'bookish gift uk', 'labrador gift uk', 'cockapoo gift uk'
 ];
 
 // Full design intelligence database
@@ -85,7 +68,7 @@ async function etsyCount(kw) {
     const ETSY_KEY = process.env.ETSY_API_KEY || 'vqtvuckq3kqmsnklxmxbhd36';
     const ETSY_SECRET = process.env.ETSY_SHARED_SECRET || '';
     const header = ETSY_SECRET ? `${ETSY_KEY}:${ETSY_SECRET}` : ETSY_KEY;
-    const url = `https://openapi.etsy.com/v3/application/listings/active?keywords=${encodeURIComponent(kw)}&limit=25&sort_on=score`;
+    const url = `https://openapi.etsy.com/v3/application/listings/active?keywords=${encodeURIComponent(kw)}&limit=10&sort_on=score`;
     const r = await fetch(url, {
       headers: { 'x-api-key': header, 'Accept': 'application/json' },
       signal: AbortSignal.timeout(8000)
@@ -311,7 +294,7 @@ export default async function handler(req, res) {
       if (scoreDiff !== 0) return scoreDiff;
       return a[1].googlePosition - b[1].googlePosition;
     })
-    .slice(0, 40)
+    .slice(0, 25)
     .map(([kw, meta]) => ({ kw, ...meta }));
 
   // Step 4: Get Etsy counts for all keywords in batches
@@ -320,7 +303,7 @@ export default async function handler(req, res) {
     const batch = topKeywords.slice(i, i + 5);
     const batchResults = await Promise.allSettled(batch.map(k => etsyCount(k.kw)));
     etsyResults.push(...batchResults);
-    if (i + 5 < topKeywords.length) await new Promise(r => setTimeout(r, 400));
+    if (i + 5 < topKeywords.length) await new Promise(r => setTimeout(r, 200));
   }
 
   // Step 5: Score everything and build gap opportunities
