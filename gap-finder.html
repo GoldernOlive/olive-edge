@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Gap Finder — Olive Edge</title>
+<link rel="stylesheet" href="css/style.css"/>
+<style>
+.gf-hero{padding:28px 0 20px;border-bottom:1px solid var(--b1);margin-bottom:24px}
+.gap-score{font-size:48px;font-weight:800;font-family:DM Mono,monospace;line-height:1}
+.gap-bar{height:8px;background:var(--p3);border-radius:4px;overflow:hidden;margin:4px 0 2px}
+.gap-fill{height:100%;border-radius:4px;transition:width .6s ease}
+.tier-head{display:flex;align-items:center;gap:10px;margin:24px 0 12px;padding-bottom:10px;border-bottom:2px solid var(--b1)}
+.tier-head h2{font-size:16px;font-weight:700;margin:0}
+.tier-badge{padding:4px 12px;border-radius:20px;font-size:12px;font-weight:700}
+.gcard{border:1px solid var(--b1);border-radius:12px;padding:18px;margin-bottom:12px;background:var(--w);transition:all .2s;cursor:pointer;position:relative}
+.gcard:hover{border-color:var(--ol);box-shadow:0 4px 16px rgba(107,142,35,.1);transform:translateY(-1px)}
+.gcard.tier-0{border-left:4px solid #dc2626}
+.gcard.tier-1{border-left:4px solid #ea580c}
+.gcard.tier-2{border-left:4px solid #ca8a04}
+.comp-dot{width:10px;height:10px;border-radius:50%;display:inline-block;margin-right:4px;flex-shrink:0}
+.signal-row{display:flex;align-items:center;gap:8px;margin-bottom:6px;font-size:12px}
+.signal-label{color:var(--mu);min-width:90px;flex-shrink:0}
+.signal-val{font-weight:700;color:var(--tx)}
+.tag{display:inline-block;background:var(--p2);border:1px solid var(--b1);border-radius:20px;padding:2px 9px;font-size:10px;font-family:DM Mono,monospace;margin:2px}
+.skel{background:linear-gradient(90deg,var(--p2) 25%,var(--p3) 50%,var(--p2) 75%);background-size:200% 100%;animation:shimmer 1.2s infinite;border-radius:6px;display:block;margin-bottom:8px}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+.stat-box{background:var(--p2);border:1px solid var(--b1);border-radius:10px;padding:12px 16px;text-align:center}
+.progress-ring{display:flex;align-items:center;justify-content:center;margin-bottom:4px}
+.window-badge{display:inline-block;padding:4px 10px;border-radius:8px;font-size:11px;font-weight:600;background:var(--p2);border:1px solid var(--b1);margin-top:6px}
+</style>
+</head>
+<body>
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="dashboard.html" class="nav-logo" style="text-decoration:none"><span class="sub">Golden Olive</span><span class="main">Olive <span>Edge</span></span></a>
+    <div class="nav-links">
+      <a href="dashboard.html" class="nav-link">🏠 Dashboard</a>
+      <a href="gap-finder.html" class="nav-link active">🎯 Gap Finder</a>
+      <a href="search.html" class="nav-link">🔍 Search</a>
+      <a href="listing-generator.html" class="nav-link">✍️ Listing Writer</a>
+    </div>
+    <div class="nav-user">
+      <span class="nav-email" id="nav-email"></span>
+      <button class="btn-ghost btn-sm" onclick="logout()">Log Out</button>
+    </div>
+  </div>
+</nav>
+
+<div class="page">
+  <div class="gf-hero">
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:16px">
+      <div>
+        <div class="serif" style="font-size:28px;font-weight:600;margin-bottom:6px">🎯 Gap Finder</div>
+        <div style="font-size:14px;color:var(--mu);max-width:580px;line-height:1.6">Finds products people are actively searching for but can't find on Etsy. High Google signal + low listing count = your opportunity window. Scans 40+ search signals automatically.</div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <button class="btn-ghost btn-sm" onclick="runGapFinder(true)">↻ Refresh Scan</button>
+        <span style="font-size:11px;color:var(--mu)" id="gf-ts">Loading...</span>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap" id="stats-row"></div>
+  </div>
+
+  <div id="gf-body">
+    <div>
+      <div style="border:1px solid var(--b1);border-radius:12px;padding:18px;margin-bottom:12px"><span class="skel" style="height:20px;width:50%"></span><span class="skel" style="height:14px;width:80%"></span><span class="skel" style="height:60px;width:100%"></span></div>
+      <div style="border:1px solid var(--b1);border-radius:12px;padding:18px;margin-bottom:12px"><span class="skel" style="height:20px;width:45%"></span><span class="skel" style="height:14px;width:75%"></span><span class="skel" style="height:60px;width:100%"></span></div>
+      <div style="border:1px solid var(--b1);border-radius:12px;padding:18px"><span class="skel" style="height:20px;width:55%"></span><span class="skel" style="height:14px;width:70%"></span><span class="skel" style="height:60px;width:100%"></span></div>
+    </div>
+  </div>
+</div>
+
+<footer style="margin-top:40px;padding:16px 24px;border-top:1px solid var(--b1);background:var(--p2)">
+  <div style="font-size:11px;color:var(--mu2)">The term "Etsy" is a trademark of Etsy, Inc. This application uses the Etsy API but is not endorsed or certified by Etsy, Inc. © 2026 Olive Edge</div>
+</footer>
+
+<script>
+function getSession(){return{token:localStorage.getItem('oe_token')||'',email:localStorage.getItem('oe_email')||''};}
+function logout(){localStorage.removeItem('oe_token');localStorage.removeItem('oe_email');localStorage.removeItem('oe_uid');window.location.href='index.html';}
+var S=getSession();
+if(!S.token){window.location.href='index.html';}
+else{var em=document.getElementById('nav-email');if(em)em.textContent=S.email;}
+
+function gapColour(score){
+  if(score>=80)return'#dc2626';
+  if(score>=65)return'#ea580c';
+  if(score>=50)return'#ca8a04';
+  if(score>=35)return'#16a34a';
+  return'#6b7280';
+}
+
+function gapGradient(score){
+  if(score>=80)return'linear-gradient(90deg,#dc2626,#ef4444)';
+  if(score>=65)return'linear-gradient(90deg,#ea580c,#f97316)';
+  if(score>=50)return'linear-gradient(90deg,#ca8a04,#eab308)';
+  if(score>=35)return'linear-gradient(90deg,#16a34a,#22c55e)';
+  return'linear-gradient(90deg,#6b7280,#9ca3af)';
+}
+
+function card(p, tierClass){
+  var gc=gapColour(p.gapScore);
+  var gg=gapGradient(p.gapScore);
+  var h='<div class="gcard '+tierClass+'" onclick="window.location.href=\'search.html?kw='+encodeURIComponent(p.kw)+'\'">';
+
+  // Header
+  h+='<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:16px;margin-bottom:12px">';
+  h+='<div style="flex:1">';
+  h+='<div style="font-weight:700;font-size:17px;margin-bottom:4px">'+p.kw+'</div>';
+  if(p.urgency)h+='<span style="font-size:12px;font-weight:700;color:'+p.urgency.colour+';background:'+p.urgency.colour+'18;padding:3px 10px;border-radius:20px">'+p.urgency.icon+' '+p.urgency.label+'</span>';
+  h+='</div>';
+
+  // Gap score circle
+  h+='<div style="text-align:center;flex-shrink:0">';
+  h+='<div class="gap-score" style="color:'+gc+'">'+p.gapScore+'</div>';
+  h+='<div style="font-size:9px;color:var(--mu2)">gap score / 100</div>';
+  h+='<div class="gap-bar" style="width:80px;margin:4px auto 0"><div class="gap-fill" style="width:'+p.gapScore+'%;background:'+gg+'"></div></div>';
+  h+='</div></div>';
+
+  // Insight
+  if(p.insight)h+='<div style="font-size:13px;color:var(--mu);line-height:1.5;margin-bottom:12px;padding:8px 12px;background:var(--p2);border-radius:8px">'+p.insight+'</div>';
+
+  // Signal breakdown
+  h+='<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;margin-bottom:12px">';
+
+  // Google signal
+  h+='<div style="padding:8px 10px;background:var(--p2);border-radius:8px;border:1px solid var(--b1)">';
+  h+='<div style="font-size:10px;color:var(--mu);font-weight:600;margin-bottom:2px">🔍 GOOGLE SIGNAL</div>';
+  h+='<div style="font-size:13px;font-weight:700">Position #'+p.googlePosition+'</div>';
+  h+='<div style="font-size:11px;color:var(--mu)">in '+p.googleAppearances+' search'+(p.googleAppearances>1?'es':'')+'</div></div>';
+
+  // Etsy supply
+  h+='<div style="padding:8px 10px;background:var(--p2);border-radius:8px;border:1px solid var(--b1)">';
+  h+='<div style="font-size:10px;color:var(--mu);font-weight:600;margin-bottom:2px">🛍 ETSY SUPPLY</div>';
+  h+='<div style="font-size:13px;font-weight:700;color:'+(p.competition?p.competition.colour:'var(--tx)')+'">'+( p.listingCount!==null?p.listingCount.toLocaleString()+' listings':'Checking...')+'</div>';
+  h+='<div style="font-size:11px;color:'+(p.competition?p.competition.colour:'var(--mu)')+';">'+(p.competition?p.competition.label:'')+'</div></div>';
+
+  // Avg price
+  if(p.avgPrice){
+    h+='<div style="padding:8px 10px;background:var(--p2);border-radius:8px;border:1px solid var(--b1)">';
+    h+='<div style="font-size:10px;color:var(--mu);font-weight:600;margin-bottom:2px">💷 AVG PRICE</div>';
+    h+='<div style="font-size:13px;font-weight:700">£'+p.avgPrice+'</div>';
+    h+='<div style="font-size:11px;color:var(--mu)">'+p.design.margin+' margin</div></div>';
+  }
+
+  // Supplier
+  h+='<div style="padding:8px 10px;background:var(--p2);border-radius:8px;border:1px solid var(--b1)">';
+  h+='<div style="font-size:10px;color:var(--mu);font-weight:600;margin-bottom:2px">🖨️ SUPPLIER</div>';
+  h+='<div style="font-size:13px;font-weight:700">'+p.design.supplier+'</div>';
+  h+='<div style="font-size:11px;color:var(--mu)">'+p.design.baseCost+' base · '+p.design.size+'</div></div>';
+
+  h+='</div>';
+
+  // Opportunity window
+  if(p.window){
+    var wc=p.gapScore>=75?'var(--rdbg)':p.gapScore>=55?'var(--gdbg)':'var(--p2)';
+    var wbc=p.gapScore>=75?'var(--rdbr)':p.gapScore>=55?'var(--gdbr)':'var(--b1)';
+    var wtc=p.gapScore>=75?'var(--rd)':p.gapScore>=55?'var(--gd)':'var(--mu)';
+    h+='<div style="padding:8px 12px;background:'+wc+';border:1px solid '+wbc+';border-radius:8px;font-size:12px;color:'+wtc+';font-weight:600;margin-bottom:10px">⏰ Window: '+p.window+'</div>';
+  }
+
+  // Real Etsy tags
+  if(p.topTags&&p.topTags.length){
+    h+='<div style="margin-bottom:10px">';
+    h+='<div style="font-size:10px;color:var(--mu);font-weight:600;margin-bottom:4px">✓ Real competitor tags:</div>';
+    p.topTags.slice(0,7).forEach(function(t){h+='<span class="tag">'+t+'</span>';});
+    h+='</div>';
+  }
+
+  // Top favourited
+  if(p.topFav&&p.topFav.length&&p.topFav[0]&&p.topFav[0].title){
+    h+='<div style="font-size:12px;color:var(--mu);padding:6px 10px;background:var(--p2);border-radius:6px;margin-bottom:10px">';
+    h+='<strong>Top listing: </strong>'+p.topFav[0].title;
+    if(p.topFav[0].num_favorers)h+=' <span style="color:var(--gd)">'+p.topFav[0].num_favorers+' ♡</span>';
+    h+='</div>';
+  }
+
+  // Reddit signal
+  if(p.redditBoost>0)h+='<div style="font-size:11px;color:#ff4500;margin-bottom:8px">💬 Reddit buyers discussing this niche (+'+p.redditBoost+' signal)</div>';
+
+  // Research button
+  h+='<button onclick="event.stopPropagation();window.location.href=\'search.html?kw='+encodeURIComponent(p.kw)+'\'" style="background:var(--ol);color:#fff;border:none;padding:8px 16px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;margin-top:4px">Full Research Brief →</button>';
+  h+='</div>';
+  return h;
+}
+
+function render(data){
+  var body=document.getElementById('gf-body');
+  var ts=document.getElementById('gf-ts');
+  var stats=document.getElementById('stats-row');
+
+  ts.textContent='Scanned '+(data.totalScanned||0)+' keywords · Updated: '+data.generatedAt+(data.fromCache?' · Cached':'');
+
+  // Stats row
+  var imm=data.tiers.immediate||[];
+  var wk=data.tiers.thisWeek||[];
+  stats.innerHTML=
+    '<div class="stat-box"><div style="font-size:22px;font-weight:800;color:#dc2626">'+imm.length+'</div><div style="font-size:11px;color:var(--mu)">List TODAY</div></div>'+
+    '<div class="stat-box"><div style="font-size:22px;font-weight:800;color:#ea580c">'+wk.length+'</div><div style="font-size:11px;color:var(--mu)">This Week</div></div>'+
+    '<div class="stat-box"><div style="font-size:22px;font-weight:800;color:var(--ol)">'+(data.tiers.monitor||[]).length+'</div><div style="font-size:11px;color:var(--mu)">Monitor</div></div>'+
+    '<div class="stat-box"><div style="font-size:22px;font-weight:800;color:var(--mu)">'+(data.totalScanned||0)+'</div><div style="font-size:11px;color:var(--mu)">Keywords Scanned</div></div>'+
+    '<div class="stat-box"><div style="font-size:22px;font-weight:800;color:#ff4500">'+(data.redditSignals||0)+'</div><div style="font-size:11px;color:var(--mu)">Reddit Signals</div></div>';
+
+  var html='';
+
+  // TIER 1: List TODAY
+  if(imm.length){
+    html+='<div class="tier-head"><h2>🚨 List TODAY — Highest Gap Score</h2><span class="tier-badge" style="background:#fee2e2;color:#dc2626">'+imm.length+' opportunities</span></div>';
+    html+='<p style="font-size:13px;color:var(--mu);margin-bottom:14px">These keywords have strong Google search demand but very few Etsy sellers. The window is open right now.</p>';
+    imm.forEach(function(p){html+=card(p,'tier-0');});
+  }
+
+  // TIER 2: This Week
+  if(wk.length){
+    html+='<div class="tier-head"><h2>⚡ List This Week — Good Gap Opportunity</h2><span class="tier-badge" style="background:#fff7ed;color:#ea580c">'+wk.length+' opportunities</span></div>';
+    html+='<p style="font-size:13px;color:var(--mu);margin-bottom:14px">Strong demand signal with manageable competition. A well-executed listing can rank within weeks.</p>';
+    wk.forEach(function(p){html+=card(p,'tier-1');});
+  }
+
+  // TIER 3: Monitor
+  var mon=data.tiers.monitor||[];
+  if(mon.length){
+    html+='<div class="tier-head"><h2>👀 Worth Testing — Monitor & Research</h2><span class="tier-badge" style="background:var(--p2);color:var(--mu)">'+mon.length+' to watch</span></div>';
+    html+='<p style="font-size:13px;color:var(--mu);margin-bottom:14px">These have demand but more competition. Worth listing with a strong differentiated design.</p>';
+    mon.forEach(function(p){html+=card(p,'tier-2');});
+  }
+
+  if(!imm.length&&!wk.length&&!mon.length){
+    html='<div class="card" style="text-align:center;padding:32px;color:var(--mu)"><div style="font-size:28px;margin-bottom:10px">🔄</div>Gap scan in progress — click Refresh Scan to run now</div>';
+  }
+
+  body.innerHTML=html;
+}
+
+async function runGapFinder(force){
+  document.getElementById('gf-ts').textContent='Scanning Google searches + Etsy data... (takes ~45 seconds first time)';
+  try{
+    var url='/api/gap-finder'+(force?'?refresh=true':'');
+    var r=await fetch(url);
+    if(!r.ok)throw new Error('API error '+r.status);
+    var data=await r.json();
+    render(data);
+  }catch(e){
+    document.getElementById('gf-ts').textContent='Error: '+e.message;
+    document.getElementById('gf-body').innerHTML='<div class="card" style="text-align:center;padding:32px"><div style="color:var(--rd);margin-bottom:8px">⚠️ '+e.message+'</div><button class="btn-olive" onclick="runGapFinder(true)" style="margin-top:8px">Try Again</button></div>';
+  }
+}
+
+document.addEventListener('DOMContentLoaded',function(){runGapFinder(false);});
+</script>
+</body>
+</html>
