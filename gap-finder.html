@@ -39,6 +39,7 @@
       <a href="gap-finder.html" class="nav-link active">🎯 Gap Finder</a>
       <a href="search.html" class="nav-link">🔍 Search</a>
       <a href="listing-generator.html" class="nav-link">✍️ Listing Writer</a>
+      <a href="listing-auditor.html" class="nav-link">🔎 My Listings</a>
     </div>
     <div class="nav-user">
       <span class="nav-email" id="nav-email"></span>
@@ -60,6 +61,16 @@
       </div>
     </div>
     <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap" id="stats-row"></div>
+  </div>
+
+  <div style="background:var(--p2);border:1px solid var(--b1);border-radius:10px;padding:14px 18px;margin-bottom:20px">
+    <div style="font-size:11px;font-weight:700;color:var(--mu);letter-spacing:.06em;margin-bottom:8px">📡 DATA SOURCES — WHERE THIS COMES FROM</div>
+    <div style="display:flex;gap:16px;flex-wrap:wrap;font-size:12px;color:var(--mu);line-height:1.6">
+      <div><strong style="color:var(--tx)">🔍 Google Autocomplete UK</strong><br>Real searches people type right now. Position #1 = highest volume.</div>
+      <div><strong style="color:var(--tx)">🛍 Etsy Live API</strong><br>Real listing counts, real prices, real tags from active Etsy listings.</div>
+      <div><strong style="color:var(--tx)">💬 Reddit r/EtsySellers</strong><br>What sellers report selling + what buyers ask for.</div>
+      <div><strong style="color:var(--tx)">📊 Gap Score</strong><br>Our algorithm: (Google demand signal) ÷ (Etsy supply) × Reddit boost. Higher = bigger opportunity window.</div>
+    </div>
   </div>
 
   <div id="gf-body">
