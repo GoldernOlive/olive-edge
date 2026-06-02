@@ -1,6 +1,10 @@
 {
-  "rewrites": [
-    { "source": "/api/etsy", "destination": "/api/etsy.js" },
-    { "source": "/api/groq", "destination": "/api/groq.js" }
-  ]
+  "functions": {
+    "api/gap-finder.js": {
+      "maxDuration": 60
+    },
+    "api/intelligence.js": {
+      "maxDuration": 60
+    }
+  }
 }
