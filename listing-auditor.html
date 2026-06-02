@@ -5,6 +5,24 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
 <title>Listing Auditor — Olive Edge</title>
 <link rel="stylesheet" href="css/style.css"/>
+<style>
+.nav-hamburger{display:none;background:none;border:none;cursor:pointer;padding:4px;color:var(--tx)}
+.nav-hamburger svg{display:block}
+@media(max-width:768px){
+  .nav-links{display:none;position:fixed;top:56px;left:0;right:0;background:var(--w);border-bottom:1px solid var(--b1);padding:12px 16px;flex-direction:column;gap:4px;z-index:200;box-shadow:0 4px 16px rgba(0,0,0,.1)}
+  .nav-links.open{display:flex}
+  .nav-link{padding:10px 12px;border-radius:8px;font-size:14px}
+  .nav-user .nav-email{display:none}
+  .nav-hamburger{display:block}
+  .nav-inner{flex-wrap:nowrap}
+  .page{padding:12px}
+  .grid-2,.grid-auto{grid-template-columns:1fr!important}
+  .gcard{padding:14px}
+  .gap-score{font-size:36px}
+  .stat{padding:8px 10px}
+  .stat div:first-child{font-size:18px}
+}
+</style>
 </head>
 <body>
 <nav class="nav">
@@ -65,6 +83,16 @@ var SB_URL='https://oktpizrevqehfrkcqphq.supabase.co';
 var SB_KEY='sb_publishable_r4lLwwInTT76wXjP-Cha4Q_T1yALqyt';
 function getSession(){return{token:localStorage.getItem('oe_token')||'',email:localStorage.getItem('oe_email')||'',userId:localStorage.getItem('oe_uid')||''};}
 function logout(){localStorage.removeItem('oe_token');localStorage.removeItem('oe_email');localStorage.removeItem('oe_uid');window.location.href='index.html';}
+function toggleMobileNav(){
+  var nl=document.querySelector('.nav-links');
+  nl.classList.toggle('open');
+}
+document.addEventListener('click',function(e){
+  if(!e.target.closest('.nav-links')&&!e.target.closest('.nav-hamburger')){
+    var nl=document.querySelector('.nav-links');
+    if(nl)nl.classList.remove('open');
+  }
+});
 var SESSION=getSession();
 if(!SESSION.token){window.location.href='index.html';}
 else{var em=document.getElementById('nav-email');if(em)em.textContent=SESSION.email;}
