@@ -93,7 +93,7 @@ async function getEtsyData(kw) {
     const ETSY_KEY = process.env.ETSY_API_KEY || 'vqtvuckq3kqmsnklxmxbhd36';
     const ETSY_SECRET = process.env.ETSY_SHARED_SECRET || '';
     const header = ETSY_SECRET ? `${ETSY_KEY}:${ETSY_SECRET}` : ETSY_KEY;
-    const url = `https://openapi.etsy.com/v3/application/listings/active?keywords=${encodeURIComponent(kw)}&limit=100&sort_on=score`;
+    const url = `https://openapi.etsy.com/v3/application/listings/active?keywords=${encodeURIComponent(kw)}&limit=100&sort_on=score&language=en&location=GB`;
     const r = await fetch(url, { headers: { 'x-api-key': header, 'Accept': 'application/json' } });
     if (!r.ok) return null;
     const data = await r.json();
