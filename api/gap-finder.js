@@ -134,27 +134,80 @@ async function redditBuyerDemand() {
 
 // Calculate gap score — the core algorithm
 // High score = people searching + few sellers = OPPORTUNITY
-function calcGapScore(googlePosition, etsyCount, redditMentions) {
+// Estimated competition per keyword type — used when Etsy API unavailable
+const ESTIMATED_COMPETITION = {
+  // Very high competition (saturated)
+  'personalised mug': 9, 'funny mug': 8, 'custom mug': 9, 'wall art print': 9,
+  'personalised gift': 9, 'birthday gift': 8, 'christmas gift': 9,
+  // Medium-high
+  'tote bag': 7, 'funny t shirt': 7, 'personalised tote': 7, 'baby gift': 7,
+  'wedding gift': 7, 'pet portrait': 6, 'digital planner': 6,
+  // Medium
+  'cottagecore': 5, 'botanical print': 5, 'wildflower': 5, 'motivational print': 5,
+  'mental health': 5, 'graduation gift': 5, 'teacher gift': 5,
+  // Low-medium  
+  'bookish gift': 4, 'reading gift': 4, 'yoga gift': 4, 'gym gift': 4,
+  'gardening gift': 4, 'baking gift': 4, 'nurse gift': 4,
+  // Low competition (specific niches)
+  'labrador gift': 3, 'cockapoo gift': 2, 'dachshund gift': 2, 'french bulldog gift': 3,
+  'accountant gift': 2, 'lawyer gift': 2, 'engineer gift': 2, 'hiking gift': 3,
+  'mushroom gift': 3, 'frog gift': 2, 'witchy gift': 3, 'dark academia': 3,
+  'cottagecore kitchen': 2, 'dog breed': 2, 'funny accountant': 2
+};
+
+function estimateCompetition(kw) {
+  const k = kw.toLowerCase();
+  // Check specific matches first
+  for (const [term, score] of Object.entries(ESTIMATED_COMPETITION)) {
+    if (k.includes(term)) return score;
+  }
+  // Generic estimates by product type
+  if (k.includes('personalised') && k.includes('mug')) return 9;
+  if (k.includes('mug')) return 7;
+  if (k.includes('print') || k.includes('wall art')) return 7;
+  if (k.includes('tote') || k.includes('bag')) return 6;
+  if (k.includes('shirt') || k.includes('tee')) return 7;
+  // Specific animal breeds = low comp
+  if (/labrador|cockapoo|dachshund|spaniel|poodle|schnauzer|border collie|shih tzu/.test(k)) return 2;
+  // Specific occupations = low comp
+  if (/accountant|solicitor|lawyer|engineer|pharmacist|dentist|architect|plumber/.test(k)) return 2;
+  // Specific hobbies = low-medium comp
+  if (/yoga|pilates|hiking|baking|sewing|knitting|cycling|running/.test(k)) return 3;
+  // Aesthetic niches = medium comp
+  if (/cottagecore|dark academia|botanical|wildflower|mushroom|frog|witchy/.test(k)) return 4;
+  return 5; // default medium
+}
+
+function calcGapScore(googlePosition, etsyCount, redditMentions, kw) {
   // Google signal: position 1 = strongest, position 8 = weakest
   const googleStrength = googlePosition ? Math.max(0, 10 - googlePosition) : 3;
 
-  // Etsy supply score: fewer listings = bigger gap
-  // Under 100 = massive gap, 100-500 = good gap, 500-2000 = moderate, 2000+ = saturated
-  const supplyScore = etsyCount === null ? 5
-    : etsyCount < 50 ? 10
-    : etsyCount < 100 ? 9
-    : etsyCount < 200 ? 8
-    : etsyCount < 500 ? 7
-    : etsyCount < 1000 ? 5
-    : etsyCount < 2000 ? 3
-    : etsyCount < 5000 ? 2
-    : 1;
+  // Use real Etsy count if available, otherwise estimate from keyword
+  let supplyScore;
+  if (etsyCount !== null && etsyCount !== undefined) {
+    supplyScore = etsyCount < 50 ? 10
+      : etsyCount < 100 ? 9
+      : etsyCount < 200 ? 8
+      : etsyCount < 500 ? 7
+      : etsyCount < 1000 ? 5
+      : etsyCount < 2000 ? 3
+      : etsyCount < 5000 ? 2
+      : 1;
+  } else {
+    // Use keyword-based estimate — ensures scores vary even without Etsy data
+    const estimated = kw ? estimateCompetition(kw) : 5;
+    supplyScore = 11 - estimated; // invert: low competition = high supply score
+  }
 
   // Reddit demand boost
   const redditBoost = Math.min(3, redditMentions || 0);
 
-  // Gap score = demand signal × supply gap + reddit boost
-  const rawScore = (googleStrength * supplyScore) + (redditBoost * 5);
+  // Keyword specificity bonus — more specific = less competition
+  const words = (kw || '').split(' ').length;
+  const specificityBonus = words >= 4 ? 3 : words >= 3 ? 1 : 0;
+
+  // Gap score = demand signal × supply gap + boosts
+  const rawScore = (googleStrength * supplyScore) + (redditBoost * 5) + specificityBonus;
   return Math.min(100, Math.round(rawScore * 1.2));
 }
 
@@ -166,8 +219,16 @@ function urgencyLabel(gapScore, etsyCount) {
   return { label: 'Monitor', colour: '#6b7280', icon: '👀' };
 }
 
-function competitionLabel(count) {
-  if (count === null) return { label: 'Unknown', colour: '#6b7280' };
+function competitionLabel(count, kw) {
+  if (count === null) {
+    // Use keyword estimate
+    const est = kw ? estimateCompetition(kw) : 5;
+    if (est <= 2) return { label: 'Very Low (est.)', colour: '#22c55e' };
+    if (est <= 3) return { label: 'Low (est.)', colour: '#84cc16' };
+    if (est <= 5) return { label: 'Medium (est.)', colour: '#ca8a04' };
+    if (est <= 7) return { label: 'High (est.)', colour: '#ea580c' };
+    return { label: 'Saturated (est.)', colour: '#dc2626' };
+  }
   if (count < 50) return { label: 'Virtually None', colour: '#16a34a' };
   if (count < 200) return { label: 'Very Low', colour: '#22c55e' };
   if (count < 500) return { label: 'Low', colour: '#84cc16' };
@@ -272,9 +333,9 @@ export default async function handler(req, res) {
       return item.kw.toLowerCase().includes(term) ? boost + Math.min(2, mentions) : boost;
     }, 0);
 
-    const gapScore = calcGapScore(item.googlePosition, count, redditBoost);
+    const gapScore = calcGapScore(item.googlePosition, count, redditBoost, item.kw);
     const urgency = urgencyLabel(gapScore, count);
-    const competition = competitionLabel(count);
+    const competition = competitionLabel(count, item.kw);
     const design = getDesignInfo(item.kw);
 
     // Window estimate — how long before this gets saturated
