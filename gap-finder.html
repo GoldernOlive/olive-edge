@@ -328,16 +328,81 @@ function render(data){
 }
 
 async function runGapFinder(force){
-  document.getElementById('gf-ts').textContent='Scanning Google searches + Etsy data... (takes ~45 seconds first time)';
+  var ts=document.getElementById('gf-ts');
+  var body=document.getElementById('gf-body');
+  ts.textContent='Loading...';
+
+  // Try cache first (instant)
   try{
-    var url='/api/gap-finder'+(force?'?refresh=true':'');
-    var r=await fetch(url);
-    if(!r.ok)throw new Error('API error '+r.status);
-    var data=await r.json();
-    render(data);
-  }catch(e){
-    document.getElementById('gf-ts').textContent='Error: '+e.message;
-    document.getElementById('gf-body').innerHTML='<div class="card" style="text-align:center;padding:32px"><div style="color:var(--rd);margin-bottom:8px">⚠️ '+e.message+'</div><button class="btn-olive" onclick="runGapFinder(true)" style="margin-top:8px">Try Again</button></div>';
+    var r=await fetch('/api/gap-finder',{signal:AbortSignal.timeout(8000)});
+    if(r.ok){
+      var data=await r.json();
+      if(data&&(data.tiers||data.all)){
+        render(data);
+        if(force){
+          // Trigger background refresh
+          ts.textContent='Refreshing in background...';
+          triggerRefresh();
+        }
+        return;
+      }
+    }
+  }catch(e){}
+
+  // No cache — show a message and trigger build
+  ts.textContent='Building gap scan... this takes 30-45 seconds';
+  body.innerHTML='<div style="text-align:center;padding:40px 20px">'
+    +'<div style="font-size:40px;margin-bottom:16px">🔍</div>'
+    +'<div style="font-weight:700;font-size:16px;margin-bottom:8px">Running Gap Scan</div>'
+    +'<div style="color:var(--mu);font-size:13px;margin-bottom:20px">Querying Google Autocomplete UK for 40 seed terms,<br>then checking Etsy listing counts for each opportunity.</div>'
+    +'<div style="color:var(--mu2);font-size:12px;margin-bottom:20px">First scan takes ~30-45 seconds. Results are cached for 12 hours.</div>'
+    +'<div id="progress-msg" style="color:var(--ol);font-size:13px;font-weight:600">Starting...</div>'
+    +'</div>';
+
+  triggerRefresh();
+}
+
+var refreshAttempts=0;
+async function triggerRefresh(){
+  refreshAttempts=0;
+  // Kick off the rebuild
+  fetch('/api/gap-finder?refresh=true').catch(function(){});
+  // Poll for results every 5 seconds
+  pollForResults();
+}
+
+async function pollForResults(){
+  refreshAttempts++;
+  var prog=document.getElementById('progress-msg');
+  if(prog){
+    var msgs=['Querying Google Autocomplete UK...','Expanding seed terms...','Checking Etsy listing counts...','Calculating gap scores...','Ranking opportunities...','Almost done...'];
+    prog.textContent=msgs[Math.min(refreshAttempts-1,msgs.length-1)];
+  }
+
+  try{
+    var r=await fetch('/api/gap-finder',{signal:AbortSignal.timeout(6000)});
+    if(r.ok){
+      var data=await r.json();
+      if(data&&data.tiers&&(data.tiers.immediate||data.tiers.thisWeek||data.tiers.monitor)){
+        var hasData=(data.tiers.immediate&&data.tiers.immediate.length>0)
+          ||(data.tiers.thisWeek&&data.tiers.thisWeek.length>0)
+          ||(data.tiers.monitor&&data.tiers.monitor.length>0);
+        if(hasData){
+          render(data);
+          return;
+        }
+      }
+    }
+  }catch(e){}
+
+  if(refreshAttempts<12){
+    setTimeout(pollForResults,5000);
+  }else{
+    document.getElementById('gf-ts').textContent='Scan taking longer than expected — try Refresh Scan';
+    document.getElementById('gf-body').innerHTML='<div class="card" style="text-align:center;padding:32px">'
+      +'<div style="font-size:28px;margin-bottom:10px">⏱️</div>'
+      +'<div style="color:var(--mu);margin-bottom:12px">The scan is taking longer than expected.<br>This usually means the server is busy.</div>'
+      +'<button class="btn-olive" onclick="runGapFinder(true)">Try Again</button></div>';
   }
 }
 
