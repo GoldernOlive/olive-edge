@@ -7,29 +7,37 @@
 <link rel="stylesheet" href="css/style.css"/>
 <style>
 .feed-hero{padding:24px 0 16px;border-bottom:1px solid var(--b1);margin-bottom:20px}
-.live-dot{width:8px;height:8px;border-radius:50%;background:var(--gn);display:inline-block}
+.live-dot{width:8px;height:8px;border-radius:50%;background:var(--gn);display:inline-block;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
 .feed-tabs{display:flex;border:1.5px solid var(--b1);border-radius:10px;overflow:hidden;margin-bottom:20px}
-.feed-tab{flex:1;padding:10px 6px;border:none;background:transparent;font-family:Jost,sans-serif;font-size:12px;font-weight:600;cursor:pointer;color:var(--mu);border-right:1px solid var(--b1)}
+.feed-tab{flex:1;padding:10px 6px;border:none;background:transparent;font-family:Jost,sans-serif;font-size:12px;font-weight:600;cursor:pointer;color:var(--mu);border-right:1px solid var(--b1);transition:all .15s}
 .feed-tab:last-child{border-right:none}
 .feed-tab.active{background:var(--ol);color:#fff}
-.pcard{border:1px solid var(--b1);border-radius:12px;padding:18px;margin-bottom:12px;background:var(--w);transition:border-color .2s}
-.pcard:hover{border-color:var(--ol);cursor:pointer}
+.feed-tab:hover:not(.active){background:var(--p2)}
+.pcard{border:1px solid var(--b1);border-radius:12px;padding:18px;margin-bottom:12px;background:var(--w);transition:all .2s;position:relative}
+.pcard:hover{border-color:var(--ol);box-shadow:0 4px 16px rgba(107,142,35,.1);transform:translateY(-1px);cursor:pointer}
 .pcard.urgent{border-left:4px solid var(--rd)}
 .pcard.lowcomp{border-left:4px solid #16a34a}
 .comp{display:inline-block;padding:2px 9px;border-radius:20px;font-size:11px;font-weight:700}
 .comp-low{background:#dcfce7;color:#16a34a}
 .comp-med{background:#fef9c3;color:#ca8a04}
 .comp-high{background:#fee2e2;color:#dc2626}
-.swatch{width:20px;height:20px;border-radius:50%;border:2px solid rgba(0,0,0,.08);display:inline-block;cursor:pointer;transition:transform .15s;vertical-align:middle}
-.swatch:hover{transform:scale(1.2)}
-.chip{display:inline-block;background:var(--p2);border:1px solid var(--b1);border-radius:20px;padding:3px 10px;font-size:11px;font-family:DM Mono,monospace;margin:2px}
-.chip.real{background:var(--olbg);border-color:var(--olbr);color:var(--ol)}
+.swatch{width:22px;height:22px;border-radius:50%;border:2px solid rgba(0,0,0,.08);display:inline-block;cursor:pointer;transition:transform .15s;vertical-align:middle}
+.swatch:hover{transform:scale(1.25)}
+.tag{display:inline-block;background:var(--p2);border:1px solid var(--b1);border-radius:20px;padding:3px 10px;font-size:10px;font-family:DM Mono,monospace;margin:2px}
+.tag.real{background:var(--olbg);border-color:var(--olbr);color:var(--ol)}
+.metric{display:inline-flex;align-items:center;gap:4px;background:var(--p2);border:1px solid var(--b1);border-radius:20px;padding:4px 10px;font-size:11px;margin:2px;white-space:nowrap}
 .urgent-bar{background:var(--rd);color:#fff;border-radius:10px;padding:14px 18px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px}
-.metric{display:inline-flex;align-items:center;gap:4px;background:var(--p2);border:1px solid var(--b1);border-radius:20px;padding:4px 10px;font-size:11px;margin:2px}
+.design-box{background:var(--p2);border-radius:8px;padding:12px 14px;margin:10px 0;border:1px solid var(--b1)}
+.source-badge{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:600;border:1px solid var(--b1);margin:2px}
+.src-google{background:#e8f0fe;color:#1967d2;border-color:#1967d244}
+.src-etsy{background:#fef0e8;color:#e06429;border-color:#e0642944}
+.src-reddit{background:#fff0e8;color:#ff4500;border-color:#ff450044}
+.src-core{background:var(--olbg);color:var(--ol);border-color:var(--olbr)}
 .skel{background:linear-gradient(90deg,var(--p2) 25%,var(--p3) 50%,var(--p2) 75%);background-size:200% 100%;animation:shimmer 1.2s infinite;border-radius:6px;display:block;margin-bottom:8px}
 @keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
-.design-row{background:var(--p2);border-radius:8px;padding:10px 12px;margin:8px 0;font-size:12px}
-.phrase{font-style:italic;color:var(--gd);font-size:13px;margin-right:10px}
+.signal-bar{height:6px;background:var(--p3);border-radius:3px;overflow:hidden;margin-top:4px}
+.signal-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--gd),var(--ol))}
 </style>
 </head>
 <body>
@@ -52,11 +60,17 @@
 <div class="page">
   <div class="feed-hero">
     <div class="serif" style="font-size:26px;font-weight:600;margin-bottom:4px">Olive Edge Intelligence</div>
-    <div style="font-size:13px;color:var(--mu)">What to sell, when to list it, how to beat the competition — updated daily</div>
+    <div style="font-size:13px;color:var(--mu)">Real opportunities discovered from Google searches + Etsy data + Reddit trends — updated daily</div>
     <div style="display:flex;align-items:center;gap:10px;margin-top:8px;flex-wrap:wrap">
-      <span style="font-size:12px;color:var(--mu)"><span class="live-dot"></span> Live Etsy data</span>
+      <span style="font-size:12px;color:var(--mu)"><span class="live-dot"></span> Live</span>
       <span style="font-size:12px;color:var(--mu)" id="feed-ts">Loading...</span>
       <button class="btn-ghost btn-sm" onclick="runFeed(true)">↻ Refresh</button>
+    </div>
+    <div id="sources-row" style="margin-top:8px;display:none">
+      <span class="source-badge src-google">🔍 Google Autocomplete</span>
+      <span class="source-badge src-etsy">🛍 Etsy Live Data</span>
+      <span class="source-badge src-reddit">💬 Reddit r/EtsySellers</span>
+      <span class="source-badge src-core">⭐ Velocity DB</span>
     </div>
   </div>
 
@@ -71,10 +85,10 @@
   </div>
 
   <div id="feed-body">
-    <div id="sk">
-      <div style="border:1px solid var(--b1);border-radius:12px;padding:18px;margin-bottom:12px"><span class="skel" style="height:20px;width:50%"></span><span class="skel" style="height:13px;width:80%"></span><span class="skel" style="height:13px;width:65%"></span></div>
-      <div style="border:1px solid var(--b1);border-radius:12px;padding:18px;margin-bottom:12px"><span class="skel" style="height:20px;width:45%"></span><span class="skel" style="height:13px;width:75%"></span><span class="skel" style="height:13px;width:55%"></span></div>
-      <div style="border:1px solid var(--b1);border-radius:12px;padding:18px;margin-bottom:12px"><span class="skel" style="height:20px;width:55%"></span><span class="skel" style="height:13px;width:70%"></span><span class="skel" style="height:13px;width:60%"></span></div>
+    <div>
+      <div style="border:1px solid var(--b1);border-radius:12px;padding:18px;margin-bottom:12px"><span class="skel" style="height:20px;width:55%"></span><span class="skel" style="height:14px;width:80%"></span><span class="skel" style="height:14px;width:65%"></span><span class="skel" style="height:60px;width:100%"></span></div>
+      <div style="border:1px solid var(--b1);border-radius:12px;padding:18px;margin-bottom:12px"><span class="skel" style="height:20px;width:45%"></span><span class="skel" style="height:14px;width:75%"></span><span class="skel" style="height:14px;width:55%"></span><span class="skel" style="height:60px;width:100%"></span></div>
+      <div style="border:1px solid var(--b1);border-radius:12px;padding:18px"><span class="skel" style="height:20px;width:60%"></span><span class="skel" style="height:14px;width:70%"></span><span class="skel" style="height:14px;width:50%"></span><span class="skel" style="height:60px;width:100%"></span></div>
     </div>
   </div>
 </div>
@@ -84,182 +98,121 @@
 </footer>
 
 <script>
-function getSession(){return{token:localStorage.getItem('oe_token')||'',email:localStorage.getItem('oe_email')||'',userId:localStorage.getItem('oe_uid')||''};}
+function getSession(){return{token:localStorage.getItem('oe_token')||'',email:localStorage.getItem('oe_email')||''};}
 function logout(){localStorage.removeItem('oe_token');localStorage.removeItem('oe_email');localStorage.removeItem('oe_uid');window.location.href='index.html';}
-var SESSION=getSession();
-if(!SESSION.token){window.location.href='index.html';}
-else{var em=document.getElementById('nav-email');if(em)em.textContent=SESSION.email;}
+var S=getSession();
+if(!S.token){window.location.href='index.html';}
+else{var em=document.getElementById('nav-email');if(em)em.textContent=S.email;}
 
 var TABS={hot:[],rising:[],green:[],low:[],season:[]};
 var ACTIVE='hot';
 
-function ts(){return new Date().toLocaleString('en-GB',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});}
-
-// ── Hardcoded design intelligence as guaranteed fallback ──
-var DESIGN_DB={
-  'personalised mug':{why:'Top-selling POD product on Etsy UK — consistent high volume year-round',searches:'~45,000/mo',sales:'~8,000/mo across sellers',margin:'72%',trend:'Stable',urgency:'Always worth listing',colours:['#FFFFFF','#F5F0E8','#2C3E50','#87AE87','#E8D5B7'],colourNames:['White','Cream','Navy','Sage','Kraft'],font:'Handwritten Script',style:'Minimal personalised with name/date',size:'11oz ceramic mug',supplier:'Printify (£3.50 base)',phrases:['Best Mum Ever','Dog Mum','Cat Dad','Personalised for [Name]','Est. [Year]'],tags:['personalised mug','custom mug','gift for her','name mug','christmas gift','birthday gift','mug with name'],gap:'Photo upload mugs — buyers want their pet/family on the mug',buyer:'Gift buyers 25-45, buying for birthdays and Christmas',photo:'Lifestyle shot with coffee and cozy background'},
-  'wall art print':{why:'Massive evergreen market — home decor always sells',searches:'~38,000/mo',sales:'~6,000/mo',margin:'80%',trend:'Stable',urgency:'Year-round seller',colours:['#F5F0E8','#87AE87','#2C3E50','#DDD8C4','#8B7355'],colourNames:['Cream','Sage','Navy','Sand','Warm Brown'],font:'Delicate Serif or Script',style:'Botanical illustration or minimal typography',size:'A4, A3, 50x70cm',supplier:'Printify or Gelato (£2.80 base)',phrases:['She Believed She Could','Wild and Free','Home is Where the Heart Is','This is Us'],tags:['wall art print','home decor','printable wall art','living room art','bedroom decor','minimalist print','botanical print'],gap:'Room-specific collections — "bathroom prints", "kitchen prints"',buyer:'Home decorators 25-40, mostly female, self-purchase',photo:'Styled in a frame on a wall with soft furnishings'},
-  'tote bag':{why:'Eco gifting trend strong — sustainable gifts growing fast',searches:'~22,000/mo',sales:'~3,500/mo',margin:'70%',trend:'Rising',urgency:'Strong year-round with seasonal peaks',colours:['#F5DEB3','#FFFFFF','#87AE87','#2C3E50','#E8D5B7'],colourNames:['Natural Canvas','White','Sage','Navy','Kraft'],font:'Script or Bold Sans',style:'Bold slogan or botanical illustration',size:'Standard 38x42cm',supplier:'Printify (£4.20 base)',phrases:['She Believed She Could','Tote-ally Awesome','Bookish','Plant Lady'],tags:['tote bag','canvas tote','gift bag','reusable bag','personalised tote','book bag','grocery bag'],gap:'Personalised name totes — few sellers do custom names on totes',buyer:'Eco-conscious women 20-35, gift buyers',photo:'Person carrying bag in natural outdoor setting'},
-  'baby print':{why:'New parents always buying — constant demand, emotional purchase',searches:'~18,000/mo',sales:'~2,800/mo',margin:'82%',trend:'Stable',urgency:'Year-round — new babies every day',colours:['#FFB6C1','#ADD8E6','#87AE87','#FFF5E4','#DDA0DD'],colourNames:['Pink','Blue','Sage','Peach','Lavender'],font:'Delicate Script or Rounded Sans',style:'Watercolour floral with name',size:'A4 or 8x10 inch',supplier:'Printify (£2.80 base)',phrases:['[Name] Est. [Year]','Little One','Our Greatest Adventure','Baby [Name]'],tags:['baby name print','nursery wall art','baby gift','new baby gift','nursery decor','personalised baby','baby shower gift'],gap:'Twin prints — few sellers target parents of twins',buyer:'New parents and gift-givers for baby showers',photo:'In nursery setting with soft toys'},
-  'father day mug':{why:"Father's Day 13 days away — PEAK DEMAND RIGHT NOW",searches:'~28,000/mo',sales:'~5,000/mo this month',margin:'72%',trend:'Spiking NOW',urgency:'LIST TODAY — 13 days left',colours:['#FFFFFF','#2C3E50','#8B4513','#87CEEB','#808080'],colourNames:['White','Navy','Brown','Sky Blue','Grey'],font:'Bold Sans-Serif',style:'Personalised with name or humour',size:'11oz or 15oz ceramic',supplier:'Printify (£3.50 base)',phrases:["Best Dad Ever","World's Best Dad","Dad Est. [Year]","Dog Dad","Promoted to Dad"],tags:["fathers day mug","dad mug","gift for dad","fathers day gift","personalised dad mug","best dad mug","daddy gift"],gap:'Hobby-specific dad mugs — golfer dad, gardener dad, gamer dad',buyer:'Children and partners buying for Father\'s Day',photo:'Gift wrap context — mug in a gift box with ribbon'},
-  'father day print':{why:"Father's Day urgent — prints are fast to make and list",searches:'~15,000/mo',sales:'~2,500/mo this month',margin:'82%',trend:'Spiking NOW',urgency:'LIST TODAY — only 13 days',colours:['#2C3E50','#F5F0E8','#8B7355','#87AE87','#C0B080'],colourNames:['Navy','Cream','Warm Brown','Sage','Gold'],font:'Bold Serif or Masculine Sans',style:'Typographic with name/date',size:'A4 or 8x10 inch',supplier:'Printify (£2.80 base)',phrases:["Dad of [Names]","Father Est. [Year]","The Man The Myth The Legend","Best Dad in the World"],tags:["fathers day print","dad print","gift for dad","fathers day gift","personalised dad gift","father daughter print"],gap:'Multi-child prints listing all kids names for dad',buyer:'Adult children buying for their father',photo:'Framed on wall in home office setting'},
-  'pet portrait':{why:'Pet owners are passionate buyers — high spend, emotional purchase',searches:'~19,000/mo',sales:'~2,200/mo',margin:'75%',trend:'Rising',urgency:'Strong opportunity — growing niche',colours:['#F5F0E8','#87AE87','#DDD8C4','#2C3E50','#E8D5B7'],colourNames:['Cream','Sage','Sand','Navy','Kraft'],font:'Script or Serif',style:'Watercolour pet illustration',size:'A4, A3, 30x40cm',supplier:'Printify (£2.80 base)',phrases:['[Pet Name] The Good Boy','In Loving Memory','Best Cat Ever','Our Family'],tags:['custom pet portrait','pet portrait','dog portrait','cat portrait','personalised pet gift','pet memorial','animal art'],gap:'Pet memorial prints — tribute to pets who have passed, highly emotional',buyer:'Pet owners 25-45, buying as gifts or for themselves',photo:'Framed portrait next to the actual pet'},
-  'wedding gift':{why:'Wedding season ongoing — high value emotional purchase',searches:'~24,000/mo',sales:'~3,200/mo',margin:'75%',trend:'Stable',urgency:'Wedding season April-September',colours:['#FFFFFF','#C0C0C0','#F5F0E8','#C0B080','#DDD8C4'],colourNames:['White','Silver','Ivory','Gold','Sand'],font:'Elegant Script',style:'Romantic minimal typography',size:'A4 or 50x70cm',supplier:'Printify (£2.80 base)',phrases:['Mr & Mrs [Name]','Est. [Year]','Our Adventure Begins','Forever and Always'],tags:['wedding gift','personalised wedding gift','wedding print','mr and mrs gift','wedding keepsake','couple gift','anniversary gift'],gap:'Wedding vow prints — actual vows on a print, very personal',buyer:'Wedding guests and family buying gifts',photo:'Styled with flowers and wedding rings'},
-  'motivational print':{why:'Year-round demand, easy to make, no personalisation needed',searches:'~16,000/mo',sales:'~2,000/mo',margin:'82%',trend:'Stable',urgency:'Good steady seller',colours:['#000000','#FFFFFF','#F5F0E8','#87AE87','#2C3E50'],colourNames:['Black','White','Cream','Sage','Navy'],font:'Bold Sans-Serif or Brush Script',style:'Bold typography on minimal background',size:'A4, A3, 50x70cm',supplier:'Printify (£2.80 base)',phrases:["She Believed She Could","Do What You Love","Make it Happen","Rise and Grind","Be the Change"],tags:['motivational print','inspirational print','office decor','quote print','wall art','positive print','bedroom decor'],gap:'Gym and fitness quotes specifically for home gym walls',buyer:'Women 25-35, self-purchase for home or office',photo:'In home office or bedroom setting in a frame'},
-  'cottagecore print':{why:'Pinterest-driven aesthetic — strong organic discovery',searches:'~14,000/mo',sales:'~1,800/mo',margin:'82%',trend:'Rising',urgency:'Trending aesthetic — capitalise now',colours:['#87AE87','#F5F0E8','#DDA0DD','#8FBC8F','#F5DEB3'],colourNames:['Sage','Cream','Lavender','Forest','Wheat'],font:'Delicate Serif or Hand-drawn',style:'Botanical illustration with pressed flowers',size:'A4, A3',supplier:'Printify (£2.80 base)',phrases:['Wild Flowers','Gather Here','Into the Wild','Bloom Where You Are Planted'],tags:['cottagecore print','botanical print','wildflower print','cottage decor','nature print','pressed flower art','vintage botanical'],gap:'Seasonal botanical prints — spring flowers, autumn leaves as a collection',buyer:'Aesthetic-driven women 18-30, discovered via Pinterest',photo:'Flat lay with dried flowers and vintage props'},
-  'funny t-shirt':{why:'Gift market huge — funny shirts always sell',searches:'~31,000/mo',sales:'~4,500/mo',margin:'65%',trend:'Stable',urgency:'Year-round gifting',colours:['#FFFFFF','#000000','#808080','#87AE87','#F5DEB3'],colourNames:['White','Black','Heather Grey','Sage','Natural'],font:'Bold Sans-Serif or Brush Script',style:'Humour slogan with simple illustration',size:'Unisex XS-3XL',supplier:'Printify (£7.50 base)',phrases:["But First Coffee","I Can't Adult Today","Dog Mum","Plant Lady","Introvert"],tags:['funny t-shirt','slogan tee','gift for her','graphic tee','humour shirt','personalised t-shirt','novelty gift'],gap:'Occupation-specific humour — nurse humour, teacher humour, accountant humour',buyer:'Gift buyers, self-purchasers, mainly women 20-35',photo:'Flat lay on natural background with props matching the slogan'},
-  'personalised keyring':{why:'Low base cost, high margins, impulse gift purchase',searches:'~12,000/mo',sales:'~2,500/mo',margin:'68%',trend:'Stable',urgency:'Consistent everyday seller',colours:['#C0C0C0','#FFD700','#CD7F32','#FFFFFF','#000000'],colourNames:['Silver','Gold','Bronze','White','Black'],font:'Script or Clean Sans',style:'Engraved minimal text',size:'Standard round or rectangle',supplier:'Printify (£2.50 base)',phrases:['[Name]','Est. [Year]','You Are My Sunshine','Forever in My Heart'],tags:['personalised keyring','custom keyring','name keyring','gift for her','initial keyring','engraved keyring','stocking filler'],gap:'Photo keyrings — with pet or family photo, few sellers do this well',buyer:'Gift buyers for birthdays and Christmas, stocking fillers',photo:'Close-up macro shot showing the text clearly'},
-  'digital planner':{why:'Zero production cost — 100% profit after Etsy fees',searches:'~21,000/mo',sales:'~3,000/mo',margin:'95%',trend:'Rising',urgency:'Growing digital product market',colours:['#FFFFFF','#F5F0E8','#2C3E50','#87AE87','#DDA0DD'],colourNames:['White','Cream','Navy','Sage','Pink'],font:'Clean Sans-Serif',style:'Minimal clean layout with tabs',size:'A4 or Letter PDF/GoodNotes',supplier:'Self-supply — no print cost',phrases:['2026 Digital Planner','Daily Planner','Goal Tracker','Habit Tracker'],tags:['digital planner','digital download','printable planner','goodnotes planner','pdf planner','2026 planner','productivity planner'],gap:'Niche planners — wedding planner, business planner, fitness tracker',buyer:'Organised women 20-40, students and professionals',photo:'Mockup on iPad with stylus in aesthetic setting'},
-  'wildflower print':{why:'Botanical trend strong on Pinterest — aesthetic buyers',searches:'~11,000/mo',sales:'~1,600/mo',margin:'82%',trend:'Rising',urgency:'Spring/Summer peak right now',colours:['#87AE87','#DDA0DD','#F5F0E8','#FFB347','#FFFFFF'],colourNames:['Sage','Lavender','Cream','Peach','White'],font:'Delicate Script',style:'Wildflower botanical illustration',size:'A4, A3, 50x70cm',supplier:'Printify (£2.80 base)',phrases:['Wildflower','She is a Wildflower','Bloom','In the Garden'],tags:['wildflower print','botanical print','flower wall art','garden print','nature art','cottagecore','spring decor'],gap:'County-specific wildflower prints — "Yorkshire Wildflowers", "Sussex Meadow"',buyer:'Nature lovers, gardeners, aesthetic home decor fans',photo:'Natural setting with real flowers as props'},
-  'mental health gift':{why:'Growing awareness culture — thoughtful gift market expanding',searches:'~9,000/mo',sales:'~1,200/mo',margin:'72%',trend:'Rising',urgency:'Rising trend — enter while competition is medium',colours:['#DDA0DD','#98FB98','#ADD8E6','#FFB6C1','#F5F0E8'],colourNames:['Lavender','Mint','Sky Blue','Blush','Cream'],font:'Gentle Rounded Script',style:'Soft uplifting typography',size:'Mug, A4 print, or tote',supplier:'Printify',phrases:["You've Got This","It's OK Not to Be OK","Take it One Day at a Time","Be Kind to Your Mind"],tags:['mental health gift','wellbeing gift','self care gift','anxiety gift','motivational gift','kindness gift','positive gift'],gap:'Specific condition gifts — anxiety, depression, ADHD awareness products',buyer:'Caring friends and family buying for loved ones',photo:'Soft flat lay with calming props — crystals, flowers, candles'}
-};
-
-async function callAI(prompt){
-  try{
-    var r=await fetch('/api/groq',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompt:prompt})});
-    if(!r.ok)return null;
-    var txt=await r.text();
-    try{return JSON.parse(txt);}catch(e){
-      var s=txt.indexOf('{'),en=txt.lastIndexOf('}');
-      if(s>=0&&en>s)return JSON.parse(txt.slice(s,en+1));
-      return null;
-    }
-  }catch(e){return null;}
+function srcBadge(src){
+  var map={google:'<span class="source-badge src-google">🔍 Google</span>',etsy_auto:'<span class="source-badge src-etsy">🛍 Etsy Search</span>',reddit:'<span class="source-badge src-reddit">💬 Reddit</span>',core:'<span class="source-badge src-core">⭐ Core</span>'};
+  return map[src]||'';
 }
 
-async function etsyFetch(kw){
-  try{
-    var r=await fetch('/api/etsy?path='+encodeURIComponent('listings/active?keywords='+kw+'&limit=100&sort_on=score'));
-    if(!r.ok)return null;
-    var d=await r.json();
-    var L=d.results||[];
-    var e=d._enriched||{};
-    var prices=L.map(function(l){return(l.price&&l.price.amount||0)/(l.price&&l.price.divisor||100);}).filter(function(p){return p>0;}).sort(function(a,b){return a-b;});
-    var tm={};L.forEach(function(l){(l.tags||[]).forEach(function(t){tm[t]=(tm[t]||0)+1;});});
-    var tags=Object.entries(tm).sort(function(a,b){return b[1]-a[1];}).slice(0,8).map(function(x){return x[0];});
-    var topFav=[...L].sort(function(a,b){return(b.num_favorers||0)-(a.num_favorers||0);}).slice(0,3);
-    return{
-      count:L.length,
-      avgPrice:prices.length?(prices.reduce(function(s,p){return s+p;},0)/prices.length).toFixed(2):null,
-      minPrice:prices.length?prices[0].toFixed(2):null,
-      maxPrice:prices.length?prices[prices.length-1].toFixed(2):null,
-      sweetSpot:prices.length?'£'+prices[Math.floor(prices.length*.2)].toFixed(2)+'-£'+prices[Math.floor(prices.length*.8)].toFixed(2):null,
-      tags:tags,
-      score:e.competitionScore||5,
-      label:e.saturationLabel||'Unknown',
-      topFav:topFav
-    };
-  }catch(e){return null;}
-}
+function card(p){
+  var isU=p.isUrgent;
+  var isL=p.competitionScore<=3;
+  var cc=p.competitionScore<=3?'comp-low':p.competitionScore<=6?'comp-med':'comp-high';
+  var scoreWidth=Math.min(100,Math.round((p.opportunityScore/40)*100));
 
-// Categories with proven Etsy-searchable keywords
-var CATS=[
-  {kw:'personalised mug',dbKey:'personalised mug',cat:'Mugs',season:false,tab:['hot','green']},
-  {kw:'wall art print',dbKey:'wall art print',cat:'Wall Art',season:false,tab:['hot','green']},
-  {kw:'tote bag canvas',dbKey:'tote bag',cat:'Totes',season:false,tab:['hot','rising']},
-  {kw:'baby name print',dbKey:'baby print',cat:'Baby',season:false,tab:['green']},
-  {kw:'fathers day mug personalised',dbKey:'father day mug',cat:'Seasonal',season:true,tab:['season','hot']},
-  {kw:'fathers day gift print',dbKey:'father day print',cat:'Seasonal',season:true,tab:['season']},
-  {kw:'custom pet portrait print',dbKey:'pet portrait',cat:'Pet Art',season:false,tab:['rising','low']},
-  {kw:'personalised wedding gift',dbKey:'wedding gift',cat:'Wedding',season:false,tab:['green']},
-  {kw:'motivational wall print',dbKey:'motivational print',cat:'Prints',season:false,tab:['green','low']},
-  {kw:'cottagecore print',dbKey:'cottagecore print',cat:'Botanical',season:false,tab:['rising']},
-  {kw:'funny t shirt gift',dbKey:'funny t-shirt',cat:'Clothing',season:false,tab:['hot']},
-  {kw:'personalised keyring gift',dbKey:'personalised keyring',cat:'Accessories',season:false,tab:['low']},
-  {kw:'digital planner download',dbKey:'digital planner',cat:'Digital',season:false,tab:['rising','low']},
-  {kw:'wildflower botanical print',dbKey:'wildflower print',cat:'Botanical',season:false,tab:['rising']},
-  {kw:'mental health awareness mug',dbKey:'mental health gift',cat:'Gifts',season:false,tab:['rising','low']}
-];
+  var h='<div class="pcard'+(isU?' urgent':isL?' lowcomp':'')+'" onclick="window.location.href=\'search.html?kw='+encodeURIComponent(p.kw)+'\'">';
 
-function buildCard(p){
-  var db=DESIGN_DB[p.dbKey]||{};
-  var isUrgent=db.urgency&&db.urgency.toLowerCase().indexOf('today')>=0;
-  var isLow=p.score<=3;
-  var cc=p.score<=3?'comp-low':p.score<=6?'comp-med':'comp-high';
-  var cl=p.score<=3?'Low':p.score<=6?'Medium':'High';
-  var why=p.count>0?(p.count+' live Etsy listings · '+db.why):(db.why||'Strong Etsy market');
+  // Header
+  h+='<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:8px">';
+  h+='<div style="flex:1">';
+  h+='<div style="font-weight:700;font-size:16px;margin-bottom:5px">'+p.kw+'</div>';
+  h+='<div style="display:flex;gap:5px;flex-wrap:wrap;align-items:center">';
+  h+='<span class="comp '+cc+'">'+p.competition+' Competition</span>';
+  h+='<span style="font-size:11px;background:var(--p2);padding:2px 8px;border-radius:10px;border:1px solid var(--b1);color:var(--mu)">'+p.category+'</span>';
+  h+='<span style="font-size:11px;color:'+(p.trend==='Rising'||p.trend==='Emerging'?'var(--gn)':p.trend==='Stable'?'var(--mu)':'var(--gd)')+';font-weight:600">'+p.trend+'</span>';
+  if(isU)h+='<span style="font-size:11px;color:var(--rd);font-weight:700;background:var(--rdbg);padding:2px 8px;border-radius:10px">⚡ URGENT</span>';
+  h+='</div>';
 
-  var h='<div class="pcard'+(isUrgent?' urgent':isLow?' lowcomp':'')+'" onclick="window.location.href=\'search.html?kw='+encodeURIComponent(p.kw)+'\'">';
+  // Signal sources
+  h+='<div style="margin-top:5px">';
+  (p.sources||[]).forEach(function(s){h+=srcBadge(s);});
+  h+='</div>';
+  h+='</div>';
 
-  // Title + competition + Research button
-  h+='<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:10px">';
-  h+='<div style="flex:1"><div style="font-weight:700;font-size:16px;margin-bottom:5px">'+p.kw+'</div>';
-  h+='<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">';
-  h+='<span class="comp '+cc+'">'+cl+' Competition</span>';
-  h+='<span style="font-size:11px;background:var(--p2);padding:2px 8px;border-radius:10px;border:1px solid var(--b1);color:var(--mu)">'+p.cat+'</span>';
-  if(db.trend)h+='<span style="font-size:11px;color:'+( db.trend.indexOf('Spiking')>=0?'var(--rd)':db.trend.indexOf('Rising')>=0?'var(--gn)':'var(--mu)')+';font-weight:600">'+db.trend+'</span>';
-  if(isUrgent)h+='<span style="font-size:11px;color:var(--rd);font-weight:700;background:var(--rdbg);padding:2px 8px;border-radius:10px">⚡ URGENT</span>';
+  // Opportunity score + Research button
+  h+='<div style="text-align:center;flex-shrink:0">';
+  h+='<div style="font-size:22px;font-weight:800;font-family:DM Mono,monospace;color:var(--ol);line-height:1">'+p.opportunityScore+'</div>';
+  h+='<div style="font-size:9px;color:var(--mu2);margin-bottom:6px">score</div>';
+  h+='<button onclick="event.stopPropagation();window.location.href=\'search.html?kw='+encodeURIComponent(p.kw)+'\'" style="background:var(--ol);color:#fff;border:none;padding:7px 12px;border-radius:7px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap">Research →</button>';
   h+='</div></div>';
-  h+='<button onclick="event.stopPropagation();window.location.href=\'search.html?kw='+encodeURIComponent(p.kw)+'\'" style="background:var(--ol);color:#fff;border:none;padding:8px 14px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;flex-shrink:0">Full Research →</button>';
-  h+='</div>';
 
-  // Why + urgency
-  h+='<div style="font-size:13px;color:var(--mu);line-height:1.5;margin-bottom:10px">'+why+'</div>';
-  if(db.urgency)h+='<div style="font-size:12px;font-weight:700;color:'+(isUrgent?'var(--rd)':'var(--ol)')+';margin-bottom:10px">⏰ '+db.urgency+'</div>';
+  // Signal strength bar
+  h+='<div style="margin-bottom:10px"><div style="font-size:10px;color:var(--mu2);margin-bottom:2px">Signal strength</div>';
+  h+='<div class="signal-bar"><div class="signal-fill" style="width:'+scoreWidth+'%"></div></div></div>';
 
-  // Real Etsy metrics
+  // Seasonal event
+  if(p.seasonalEvent){
+    var ev=p.seasonalEvent;
+    h+='<div style="padding:8px 12px;background:var(--rdbg);border:1px solid var(--rdbr);border-radius:8px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center">';
+    h+='<div><div style="font-weight:700;font-size:13px;color:var(--rd)">🚨 '+ev.name+'</div><div style="font-size:12px;color:var(--mu)">'+ev.listBy+'</div></div>';
+    h+='<div style="font-size:24px;font-weight:800;font-family:DM Mono,monospace;color:var(--rd)">'+ev.daysUntil+'<div style="font-size:10px;font-weight:400">days</div></div></div>';
+  }
+
+  // Real market metrics
   h+='<div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:10px">';
-  if(p.count)h+='<span class="metric">📋 <strong>'+p.count+'</strong> listings</span>';
+  if(p.listingCount)h+='<span class="metric">📋 <strong>'+p.listingCount.toLocaleString()+'</strong> live listings</span>';
   if(p.avgPrice)h+='<span class="metric">💷 Avg <strong>£'+p.avgPrice+'</strong></span>';
-  if(p.sweetSpot)h+='<span class="metric">🎯 <strong>'+p.sweetSpot+'</strong></span>';
-  if(db.searches)h+='<span class="metric">🔍 <strong>'+db.searches+'</strong></span>';
-  if(db.sales)h+='<span class="metric">💰 <strong>'+db.sales+'</strong></span>';
-  if(db.margin)h+='<span class="metric">📈 <strong>'+db.margin+'</strong> margin</span>';
-  if(db.supplier)h+='<span class="metric">🖨️ <strong>'+db.supplier+'</strong></span>';
+  if(p.sweetSpot)h+='<span class="metric">🎯 Sweet spot <strong>'+p.sweetSpot+'</strong></span>';
+  if(p.totalFavs)h+='<span class="metric">♡ <strong>'+p.totalFavs.toLocaleString()+'</strong> total favs</span>';
+  if(p.margin)h+='<span class="metric">📈 <strong>'+p.margin+'</strong> margin</span>';
+  if(p.supplier)h+='<span class="metric">🖨️ <strong>'+p.supplier+'</strong></span>';
   h+='</div>';
 
-  // Design intelligence
-  h+='<div class="design-row">';
-  h+='<div style="font-size:10px;font-weight:700;color:var(--mu);letter-spacing:.06em;margin-bottom:8px">DESIGN INTELLIGENCE</div>';
+  // Design intelligence box
+  h+='<div class="design-box">';
+  h+='<div style="font-size:10px;font-weight:700;color:var(--mu);letter-spacing:.07em;margin-bottom:8px">🎨 DESIGN INTELLIGENCE</div>';
 
-  // Colours
-  if(db.colours&&db.colours.length){
-    h+='<div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">';
-    h+='<span style="font-size:11px;color:var(--mu);min-width:80px">Top colours:</span>';
-    db.colours.forEach(function(c,i){
-      h+='<span class="swatch" style="background:'+c+'" title="'+( db.colourNames&&db.colourNames[i]||c)+'" onclick="event.stopPropagation();if(navigator.clipboard)navigator.clipboard.writeText(\''+c+'\')"></span>';
+  // Colours with swatches
+  if(p.colours&&p.colours.length){
+    h+='<div style="display:flex;align-items:center;gap:5px;margin-bottom:7px;flex-wrap:wrap">';
+    h+='<span style="font-size:11px;color:var(--mu);min-width:90px">Top colours:</span>';
+    p.colours.forEach(function(c,i){
+      var name=(p.colourNames&&p.colourNames[i])||c;
+      h+='<span class="swatch" style="background:'+c+'" title="'+name+' '+c+'" onclick="event.stopPropagation();copyHex(\''+c+'\',\''+name+'\')"></span>';
     });
-    if(db.colourNames)h+='<span style="font-size:11px;color:var(--mu2)">'+db.colourNames.join(' · ')+'</span>';
+    if(p.colourNames)h+='<span style="font-size:11px;color:var(--mu2)">'+p.colourNames.join(' · ')+'</span>';
     h+='</div>';
   }
 
-  // Font, style, size
-  h+='<div style="margin-bottom:6px">';
-  if(db.font)h+='<span class="chip">✏️ '+db.font+'</span>';
-  if(db.style)h+='<span class="chip">🎨 '+db.style+'</span>';
-  if(db.size)h+='<span class="chip">📐 '+db.size+'</span>';
-  h+='</div>';
+  // Font + style + size in one row
+  var designRow='';
+  if(p.font)designRow+='<span style="font-size:11px;background:var(--w);border:1px solid var(--b1);border-radius:20px;padding:3px 9px;margin:2px;display:inline-block">✏️ '+p.font+'</span>';
+  if(p.style)designRow+='<span style="font-size:11px;background:var(--w);border:1px solid var(--b1);border-radius:20px;padding:3px 9px;margin:2px;display:inline-block">🎨 '+p.style+'</span>';
+  if(p.size)designRow+='<span style="font-size:11px;background:var(--w);border:1px solid var(--b1);border-radius:20px;padding:3px 9px;margin:2px;display:inline-block">📐 '+p.size+'</span>';
+  if(designRow)h+='<div style="margin-bottom:7px">'+designRow+'</div>';
 
-  // Top phrases
-  if(db.phrases&&db.phrases.length){
-    h+='<div style="margin-bottom:6px"><span style="font-size:11px;color:var(--mu)">Top phrases: </span>';
-    db.phrases.forEach(function(ph){h+='<span class="phrase">"'+ph+'"</span>';});
-    h+='</div>';
-  }
-
-  // Buyer profile + gap
-  if(db.buyer)h+='<div style="font-size:12px;color:var(--mu);margin-bottom:4px">👤 '+db.buyer+'</div>';
-  if(db.gap)h+='<div style="font-size:12px;color:var(--ol);font-weight:600;margin-bottom:4px">💡 Gap: '+db.gap+'</div>';
-  if(db.photo)h+='<div style="font-size:12px;color:var(--mu)">📸 '+db.photo+'</div>';
+  // Buyer + photo
+  if(p.buyer)h+='<div style="font-size:12px;color:var(--mu);margin-bottom:4px">👤 <strong>Who buys:</strong> '+p.buyer+'</div>';
+  if(p.photo)h+='<div style="font-size:12px;color:var(--mu)">📸 <strong>Photo tip:</strong> '+p.photo+'</div>';
   h+='</div>';
 
   // Real Etsy tags
-  var allTags=(p.tags&&p.tags.length?p.tags:db.tags)||[];
-  if(allTags.length){
+  if(p.topTags&&p.topTags.length){
     h+='<div style="margin-top:8px">';
-    h+='<span style="font-size:11px;color:var(--mu)">Top tags'+(p.tags&&p.tags.length?' (real Etsy data):':':')+' </span>';
-    allTags.slice(0,7).forEach(function(t){h+='<span class="chip'+(p.tags&&p.tags.length?' real':'')+'">'+t+'</span>';});
+    h+='<div style="font-size:10px;color:var(--mu);font-weight:600;margin-bottom:4px">✓ REAL ETSY TAGS — from live competitor listings</div>';
+    p.topTags.slice(0,8).forEach(function(t){h+='<span class="tag real">'+t+'</span>';});
     h+='</div>';
   }
 
   // Top favourited listings
   if(p.topFav&&p.topFav.length){
-    h+='<div style="margin-top:10px"><div style="font-size:11px;color:var(--mu);margin-bottom:5px">Most favourited right now:</div>';
+    h+='<div style="margin-top:8px;padding:8px 10px;background:var(--p2);border-radius:8px">';
+    h+='<div style="font-size:10px;color:var(--mu);font-weight:600;margin-bottom:5px">🏆 TOP FAVOURITED RIGHT NOW</div>';
     p.topFav.slice(0,2).forEach(function(l){
-      h+='<div style="font-size:12px;padding:5px 0;border-bottom:1px solid var(--b1)">';
-      h+='<span style="font-weight:600">'+l.title+'</span>';
-      if(l.num_favorers)h+=' <span style="color:var(--gd);font-size:11px">'+l.num_favorers+' ♡</span>';
-      if(l.url)h+=' <a href="'+l.url+'" target="_blank" onclick="event.stopPropagation()" style="font-size:11px;color:var(--ol)">View →</a>';
+      if(!l.title)return;
+      h+='<div style="font-size:12px;padding:3px 0;display:flex;justify-content:space-between;align-items:center">';
+      h+='<span style="color:var(--tx);flex:1;margin-right:8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+l.title+'</span>';
+      var favs=l.num_favorers||0;
+      h+='<span style="color:var(--gd);font-size:11px;flex-shrink:0">'+favs+' ♡</span>';
+      if(l.url)h+='<a href="'+l.url+'" target="_blank" onclick="event.stopPropagation()" style="font-size:10px;color:var(--ol);margin-left:6px;flex-shrink:0">View →</a>';
       h+='</div>';
     });
     h+='</div>';
@@ -267,6 +220,18 @@ function buildCard(p){
 
   h+='</div>';
   return h;
+}
+
+function copyHex(hex,name){
+  if(navigator.clipboard){
+    navigator.clipboard.writeText(hex).then(function(){
+      var n=document.createElement('div');
+      n.style.cssText='position:fixed;bottom:20px;right:20px;background:var(--ol);color:#fff;padding:8px 16px;border-radius:8px;font-size:13px;z-index:9999;font-family:Jost,sans-serif';
+      n.textContent='Copied '+name+' ('+hex+')';
+      document.body.appendChild(n);
+      setTimeout(function(){document.body.removeChild(n);},2000);
+    });
+  }
 }
 
 function showTab(t){
@@ -282,92 +247,50 @@ function renderTab(t){
   var items=TABS[t]||[];
   var body=document.getElementById('feed-body');
   if(!items.length){
-    body.innerHTML='<div class="card" style="text-align:center;padding:32px;color:var(--mu)"><div style="font-size:28px;margin-bottom:10px">⏳</div>Loading data for this tab...</div>';
+    body.innerHTML='<div class="card" style="text-align:center;padding:32px;color:var(--mu)">No data yet — try refreshing</div>';
     return;
   }
   var labels={
-    hot:'Products with the highest search volumes and sales on Etsy UK right now',
-    rising:'Trending upward fast — early mover advantage before competition grows',
-    green:'Consistent high sellers every month — reliable income year-round',
-    low:'Good demand but low competition — easiest to rank and win',
-    season:'List these this week — seasonal events approaching fast'
+    hot:'Highest opportunity score — triangulated from Google searches, Etsy live data and Reddit trends',
+    rising:'Trending upward now — early mover advantage before competition catches up',
+    green:'Consistent high sellers every month — proven demand, reliable income',
+    low:'Good real demand but low competition — easiest to rank and win right now',
+    season:'List these urgently — seasonal events approaching in the next few weeks'
   };
-  var h='<p style="font-size:13px;color:var(--mu);margin-bottom:6px">'+labels[t]+'</p>';
-  h+='<p style="font-size:11px;color:var(--mu2);margin-bottom:14px">Click any product for the full intelligence brief • Colour swatches are clickable to copy hex</p>';
-  items.forEach(function(p){h+=buildCard(p);});
-  h+='<div style="text-align:center;padding:20px;font-size:13px;color:var(--mu)">Click any product card for complete SEO, financial and competitor intelligence</div>';
+  var h='<p style="font-size:13px;color:var(--mu);line-height:1.6;margin-bottom:6px">'+labels[t]+'</p>';
+  h+='<p style="font-size:11px;color:var(--mu2);margin-bottom:14px">Click any card for the full 10-section intelligence brief → colours, SEO, financials, competitive analysis</p>';
+  items.forEach(function(p){h+=card(p);});
   body.innerHTML=h;
 }
 
 async function runFeed(force){
-  var ckey='oe_dash_v3_'+new Date().toDateString();
-  if(!force){
-    var cached=localStorage.getItem(ckey);
-    if(cached){
-      try{
-        var d=JSON.parse(cached);
-        TABS=d.tabs;
-        document.getElementById('feed-ts').textContent='Updated: '+d.ts;
-        if(d.urgent)document.getElementById('urgent-bar').innerHTML=d.urgent;
-        renderTab(ACTIVE);
-        return;
-      }catch(e){}
+  var body=document.getElementById('feed-body');
+  document.getElementById('feed-ts').textContent='Discovering opportunities from real market data...';
+
+  try{
+    var url='/api/intelligence'+(force?'?refresh=true':'');
+    var r=await fetch(url);
+    if(!r.ok)throw new Error('API error '+r.status);
+    var data=await r.json();
+
+    TABS=data.tabs||{hot:[],rising:[],green:[],low:[],season:[]};
+
+    // Urgent banner
+    var uev=(data.upcomingEvents||[]).find(function(e){return e.daysUntil<=21;});
+    if(uev){
+      document.getElementById('urgent-bar').innerHTML='<div class="urgent-bar"><div><div style="font-weight:700;font-size:15px">🚨 '+uev.name+' — '+uev.daysUntil+' Days Away</div><div style="font-size:12px;opacity:.9;margin-top:2px">'+uev.listBy+'</div></div><button onclick="showTab(\'season\')" style="background:#fff;color:var(--rd);border:none;padding:6px 14px;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer">See Seasonal →</button></div>';
     }
+
+    var cacheLabel=data.fromCache?' · Cached (refreshes daily)':' · Live';
+    document.getElementById('feed-ts').textContent='Updated: '+(data.generatedAt||'Now')+cacheLabel;
+    document.getElementById('sources-row').style.display='block';
+    renderTab(ACTIVE);
+
+  }catch(e){
+    console.error('Feed error:',e);
+    document.getElementById('feed-ts').textContent='Error loading — '+e.message;
+    body.innerHTML='<div class="card" style="text-align:center;padding:32px"><div style="font-size:28px;margin-bottom:12px">⚠️</div><div style="color:var(--rd);margin-bottom:8px">Could not load intelligence feed</div><p style="color:var(--mu);font-size:13px">'+e.message+'</p><button class="btn-olive" onclick="runFeed(true)" style="margin-top:12px">Try Again</button></div>';
   }
-
-  document.getElementById('feed-ts').textContent='Fetching real Etsy data for '+CATS.length+' categories...';
-
-  // Get date context
-  var dc={upcomingEvents:[]};
-  try{var dr=await fetch('/api/date');dc=await dr.json();}catch(e){}
-
-  // Urgent banner
-  var urgentHtml='';
-  var uev=(dc.upcomingEvents||[]).find(function(e){return e.daysUntil<=21;});
-  if(uev){
-    urgentHtml='<div class="urgent-bar"><div><div style="font-weight:700;font-size:15px">🚨 '+uev.name+' — '+uev.daysUntil+' Days Away</div><div style="font-size:12px;opacity:.9;margin-top:2px">'+uev.listBy+'</div></div><button onclick="showTab(\'season\')" style="background:#fff;color:var(--rd);border:none;padding:6px 14px;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer">See Seasonal →</button></div>';
-    document.getElementById('urgent-bar').innerHTML=urgentHtml;
-  }
-
-  // Fetch Etsy data for all categories
-  var etsyAll=await Promise.allSettled(CATS.map(function(c){return etsyFetch(c.kw);}));
-
-  // Build enriched products
-  var allProducts=CATS.map(function(c,i){
-    var e=etsyAll[i].status==='fulfilled'&&etsyAll[i].value?etsyAll[i].value:{count:0,score:5,label:'Unknown',tags:[]};
-    return{
-      kw:c.kw,dbKey:c.dbKey,cat:c.cat,season:c.season,tab:c.tab,
-      count:e.count,avgPrice:e.avgPrice,minPrice:e.minPrice,maxPrice:e.maxPrice,
-      sweetSpot:e.sweetSpot,tags:e.tags,score:e.score,label:e.label,
-      topFav:e.topFav||[]
-    };
-  });
-
-  // Build tabs
-  function getTab(tabName,sortFn,filterFn){
-    var list=allProducts.filter(function(p){return p.tab.indexOf(tabName)>=0;});
-    if(filterFn)list=list.filter(filterFn);
-    if(sortFn)list=list.sort(sortFn);
-    return list;
-  }
-
-  TABS={
-    hot:getTab('hot',function(a,b){return b.count-a.count;}),
-    rising:getTab('rising',function(a,b){return a.score-b.score;}),
-    green:getTab('green',function(a,b){return b.count-a.count;}),
-    low:getTab('low',function(a,b){return a.score-b.score;},function(p){return p.score<=4||p.count<300;}),
-    season:getTab('season',function(a,b){return a.score-b.score;})
-  };
-
-  // Fallback: if any tab is empty use hot
-  ['rising','green','low','season'].forEach(function(t){
-    if(!TABS[t]||!TABS[t].length)TABS[t]=TABS.hot.slice(0,4);
-  });
-
-  var saveData={tabs:TABS,ts:ts(),urgent:urgentHtml};
-  try{localStorage.setItem(ckey,JSON.stringify(saveData));}catch(e){}
-  document.getElementById('feed-ts').textContent='Updated: '+ts()+' · Real Etsy data';
-  renderTab(ACTIVE);
 }
 
 document.addEventListener('DOMContentLoaded',function(){runFeed(false);});
