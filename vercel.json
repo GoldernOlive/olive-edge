@@ -5,6 +5,12 @@
     },
     "api/intelligence.js": {
       "maxDuration": 60
+    },
+    "api/cron/daily-supply.js": {
+      "maxDuration": 60
     }
-  }
+  },
+  "crons": [
+    { "path": "/api/cron/daily-supply", "schedule": "0 6 * * *" }
+  ]
 }
