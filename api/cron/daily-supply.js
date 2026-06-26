@@ -22,7 +22,7 @@ export default async function handler(req, res) {
     }
 
     // --- env var sanity check (returns clearly if any are missing) --------
-    const required = ['SUPABASE_URL', 'SUPABASE_SERVICE_ROLE_KEY', 'ETSY_API_KEY'];
+    const required = ['SUPABASE_URL', 'SUPABASE_SERVICE_ROLE_KEY', 'ETSY_API_KEY', 'ETSY_SHARED_SECRET'];
     const missing = required.filter(k => !process.env[k]);
     if (missing.length) {
       return res.status(500).json({ error: 'missing_env_vars', missing });
@@ -96,7 +96,7 @@ export default async function handler(req, res) {
 async function fetchSupply(keyword) {
   const url = `https://openapi.etsy.com/v3/application/listings/active`
     + `?keywords=${encodeURIComponent(keyword)}&limit=${TOP_N}&sort_on=score`;
-  const r = await fetch(url, { headers: { 'x-api-key': process.env.ETSY_API_KEY } });
+  const r = await fetch(url, { headers: { 'x-api-key': `${process.env.ETSY_API_KEY}:${process.env.ETSY_SHARED_SECRET}` } });
   if (!r.ok) throw new Error(`etsy ${r.status}`);
   const data = await r.json();
 
