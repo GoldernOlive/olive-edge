@@ -6,19 +6,13 @@
     "api/intelligence.js": {
       "maxDuration": 60
     },
-    "api/cron/daily-supply.js": {
-      "maxDuration": 60
-    },
-    "api/cron/weekly-discovery.js": {
-      "maxDuration": 300
-    },
-    "api/cron/weekly-seasonality.js": {
+    "api/cron/run.js": {
       "maxDuration": 300
     }
   },
   "crons": [
-    { "path": "/api/cron/daily-supply",       "schedule": "0 6 * * *"  },
-    { "path": "/api/cron/weekly-discovery",   "schedule": "0 7 * * 1"  },
-    { "path": "/api/cron/weekly-seasonality", "schedule": "15 7 * * 1" }
+    { "path": "/api/cron/run?job=daily",       "schedule": "0 6 * * *"  },
+    { "path": "/api/cron/run?job=discovery",   "schedule": "0 7 * * 1"  },
+    { "path": "/api/cron/run?job=seasonality", "schedule": "15 7 * * 1" }
   ]
 }
