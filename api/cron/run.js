@@ -334,16 +334,41 @@ async function recomputeScore(supabase, nicheId, today) {
     .eq('niche_id', nicheId).order('snapshot_week', { ascending: false }).limit(1);
   const demand = demandRows && demandRows[0];
 
+  const { data: seasRows } = await supabase
+    .from('niche_seasonality').select('*')
+    .eq('niche_id', nicheId).limit(1);
+  const seas = seasRows && seasRows[0];
+
   const competition = clamp(
     Math.log10((latest.total_listings || 0) + 1) / Math.log10(SAT_CAP), 0, 1);
 
   let gap_score = null, urgency = 'pending', validated = false;
+  let classification = seas?.classification ?? null;
+  let weeks_to_peak = null;
+
   if (demand && typeof demand.demand_score === 'number') {
     const demandNorm = demand.demand_score / 100;
-    gap_score = Math.round(100 * demandNorm * (1 - competition));
-    urgency = gap_score >= 90 ? 'critical' : gap_score >= 70 ? 'high'
-            : gap_score >= 40 ? 'moderate' : 'low';
+    const base_gap = Math.round(100 * demandNorm * (1 - competition));
     validated = demandNorm > 0.6 && (latest.avg_favorers || 0) > VALIDATION_THRESHOLD;
+
+    if (seas?.classification === 'seasonal' && Array.isArray(seas.peak_months) && seas.peak_months.length) {
+      const lead = seas.lead_time_weeks ?? 7;
+      weeks_to_peak = calcWeeksToPeak(seas.peak_months, today);
+
+      if (weeks_to_peak === 0)             urgency = 'peaking_now';
+      else if (weeks_to_peak <= lead)      urgency = 'list_now';
+      else if (weeks_to_peak <= lead + 8)  urgency = 'prepare';
+      else                                 urgency = 'dormant';
+
+      gap_score = (urgency === 'peaking_now' || urgency === 'list_now' || urgency === 'prepare')
+        ? base_gap
+        : Math.round(base_gap * 0.4);
+    } else {
+      // evergreen or no seasonality data yet — urgency bands unchanged
+      gap_score = base_gap;
+      urgency = gap_score >= 90 ? 'critical' : gap_score >= 70 ? 'high'
+              : gap_score >= 40 ? 'moderate' : 'low';
+    }
   }
 
   const trajectory =
@@ -359,8 +384,38 @@ async function recomputeScore(supabase, nicheId, today) {
     urgency,
     trajectory,
     validated,
+    classification,
+    weeks_to_peak,
     updated_at: new Date().toISOString(),
   }, { onConflict: 'niche_id' });
+}
+
+// Returns whole weeks from today until the start of the nearest upcoming peak month.
+// 0 means we are currently inside a peak month (peaking_now).
+// Once a peak month fully passes, targets next year's occurrence so the value
+// cycles back up to ~52 and counts down again over the following year.
+function calcWeeksToPeak(peakMonths, today) {
+  const d = new Date(today);
+  const year = d.getUTCFullYear();
+  const todayMs = Date.UTC(year, d.getUTCMonth(), d.getUTCDate());
+
+  let minWeeks = Infinity;
+  for (const m of peakMonths) {
+    const monthStartMs = Date.UTC(year, m - 1, 1); // first of month m this year
+    const monthEndMs   = Date.UTC(year, m,     1); // first of month m+1 (exclusive)
+
+    let weeks;
+    if (todayMs >= monthStartMs && todayMs < monthEndMs) {
+      weeks = 0; // inside this peak month right now
+    } else if (todayMs < monthStartMs) {
+      weeks = Math.floor((monthStartMs - todayMs) / (7 * 24 * 60 * 60 * 1000));
+    } else {
+      // month fully passed this year — target next year
+      weeks = Math.floor((Date.UTC(year + 1, m - 1, 1) - todayMs) / (7 * 24 * 60 * 60 * 1000));
+    }
+    if (weeks < minWeeks) minWeeks = weeks;
+  }
+  return minWeeks === Infinity ? null : minWeeks;
 }
 
 // ─── seasonality helpers ──────────────────────────────────────────────────
