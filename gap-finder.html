@@ -73,9 +73,18 @@
     <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap" id="stats-row"></div>
   </div>
 
-  <div style="background:var(--p2);border:1px solid var(--b1);border-radius:10px;padding:12px 16px;margin-bottom:20px;font-size:12px;color:var(--mu)">
+  <div style="background:var(--p2);border:1px solid var(--b1);border-radius:10px;padding:12px 16px;margin-bottom:12px;font-size:12px;color:var(--mu)">
     <strong style="color:var(--tx)">How it works:</strong>
-    Each niche is tracked weekly — blending Google autocomplete depth, Reddit buyer mentions, and Etsy favourite counts into a demand signal, then weighing that against listing volume and how strongly the top sellers are established. Gap Score = demand vs beatable competition.
+    Each niche is tracked weekly — blending Google autocomplete depth, Reddit buyer mentions, and Etsy favourite counts into a demand signal, then weighing that against listing volume and how strongly the top sellers are established.
+    Gap score = how much buyer interest is left once competition is accounted for. A niche can have high interest but a low gap if it's crowded — that's why the two numbers differ.
+  </div>
+
+  <div style="display:flex;gap:14px;flex-wrap:wrap;align-items:center;font-size:12px;padding:9px 14px;background:var(--p2);border:1px solid var(--b1);border-radius:9px;margin-bottom:20px">
+    <span style="font-size:11px;font-weight:700;color:var(--mu)">GAP SCORE:</span>
+    <span><span style="color:#16a34a;font-size:15px">●</span> Strong Opportunities 25+</span>
+    <span><span style="color:#ca8a04;font-size:15px">●</span> Worth testing 15–24</span>
+    <span><span style="color:#6b7280;font-size:15px">●</span> Monitor 8–14</span>
+    <span><span style="color:#b45309;font-size:15px">●</span> Skip below 8</span>
   </div>
 
   <div id="gf-body"></div>
@@ -264,111 +273,85 @@ function sbGet(path) {
   });
 }
 
-// ── Signal helpers ─────────────────────────────────────────────────────────
+// ── Band helpers ───────────────────────────────────────────────────────────
 
+var BAND = {
+  1: { col: '#16a34a', label: 'Strong'  },
+  2: { col: '#ca8a04', label: 'Testing' },
+  3: { col: '#6b7280', label: 'Monitor' },
+  4: { col: '#b45309', label: 'Skip'    },
+};
+
+function tierOf(n) {
+  // Seasonal urgent override → Strong regardless of gap_score
+  if (n.classification === 'seasonal' &&
+      (n.urgency === 'peaking_now' || n.urgency === 'list_now')) return 1;
+  var s = n.gap_score;
+  if (s === null || s === undefined) return 4;
+  if (s >= 25) return 1;
+  if (s >= 15) return 2;
+  if (s >= 8)  return 3;
+  return 4;
+}
+
+// Low < 0.35 / Medium 0.35–0.60 / High ≥ 0.60
 function compTier(comp) {
   if (comp === null || comp === undefined) return { l: '—', c: 'var(--mu)' };
-  if (comp < 0.40) return { l: 'Low',    c: '#16a34a' };
-  if (comp < 0.55) return { l: 'Medium', c: '#ca8a04' };
+  if (comp < 0.35) return { l: 'Low',    c: '#16a34a' };
+  if (comp < 0.60) return { l: 'Medium', c: '#ca8a04' };
   return              { l: 'High',   c: '#dc2626' };
 }
 
-function scoreColor(pctRank) {
-  if (pctRank <= 0.25) return '#16a34a';
-  if (pctRank <= 0.75) return '#ca8a04';
-  return '#6b7280';
-}
-
-function scoreGrad(pctRank) {
-  if (pctRank <= 0.25) return 'linear-gradient(90deg,#16a34a,#22c55e)';
-  if (pctRank <= 0.75) return 'linear-gradient(90deg,#ca8a04,#eab308)';
-  return 'linear-gradient(90deg,#6b7280,#9ca3af)';
-}
-
 // ── Verdict ────────────────────────────────────────────────────────────────
-function verdict(n, pctRank) {
-  var comp    = n.competition;
-  var cls     = n.classification;
-  var urgency = n.urgency;
-  var weeks   = n.weeks_to_peak;
+function verdict(n) {
+  var cls = n.classification, urgency = n.urgency, weeks = n.weeks_to_peak;
+  var comp = n.competition, band = tierOf(n);
 
-  // Seasonal urgency always takes priority over rank
   if (cls === 'seasonal') {
     if (urgency === 'peaking_now')
       return "Seasonal — you're in the peak window right now. List immediately.";
     if (urgency === 'list_now')
       return "Seasonal — peak is weeks away. List now so your listing has time to rank.";
     if (urgency === 'prepare') {
-      var wStr = (weeks !== null && weeks !== undefined) ? ' (' + weeks + ' weeks away)' : '';
-      return 'Seasonal — peak is approaching' + wStr + '. Time to design and get ready.';
+      var w = (weeks != null) ? ' (' + weeks + ' weeks away)' : '';
+      return 'Seasonal — peak is approaching' + w + '. Time to design and get ready.';
     }
     if (urgency === 'dormant')
       return 'Seasonal — quiet period right now. Peak is months away; watch and plan.';
   }
 
-  // No gap data yet
   if (n.gap_score === null || n.gap_score === undefined) return null;
 
-  // Top ~25%: genuine opportunity
-  if (pctRank <= 0.25) {
-    if (comp !== null && comp <= 0.42)
-      return 'Strong opportunity — real buyer interest and the competition is beatable.';
-    return 'Beatable market — good demand and the current leaders are not strongly established.';
+  if (band === 1) {
+    return (comp !== null && comp <= 0.42)
+      ? "Strong opportunity — real buyer interest and the competition is beatable."
+      : "Beatable market — good demand and the current leaders aren't strongly established.";
   }
-
-  // Middle ~50%: worth testing
-  if (pctRank <= 0.75) {
-    if (comp !== null && comp <= 0.50)
-      return 'Worth testing — moderate demand with manageable competition.';
-    return 'Competitive but not locked — a well-differentiated listing could carve out a position.';
+  if (band === 2) {
+    return (comp !== null && comp <= 0.50)
+      ? "Worth testing — moderate demand with manageable competition."
+      : "Competitive but not locked — a well-differentiated listing could carve out a position.";
   }
-
-  // Bottom ~25%: crowded / low signal
-  return 'Crowded and competitive — difficult to break in without a strong point of difference.';
-}
-
-// ── Assign percentile ranks and tiers ──────────────────────────────────────
-function assignRanks(niches) {
-  var ranked = niches
-    .filter(function(n) { return n.gap_score !== null && n.gap_score !== undefined; })
-    .slice()
-    .sort(function(a, b) { return b.gap_score - a.gap_score; });
-
-  var total = ranked.length || 1;
-  ranked.forEach(function(n, i) { n._pctRank = i / total; });
-  niches.forEach(function(n) {
-    if (n.gap_score === null || n.gap_score === undefined) n._pctRank = 1.0;
-  });
-
-  niches.forEach(function(n) {
-    if (n.classification === 'seasonal') {
-      if (n.urgency === 'peaking_now' || n.urgency === 'list_now') n._tier = 1;
-      else if (n.urgency === 'prepare')                            n._tier = 2;
-      else                                                         n._tier = 3;
-    } else {
-      if      (n._pctRank <= 0.25) n._tier = 1;
-      else if (n._pctRank <= 0.75) n._tier = 2;
-      else                         n._tier = 3;
-    }
-  });
+  if (band === 3)
+    return "Crowded — possible only with a genuinely strong point of difference.";
+  return "Not worth it right now — heavy competition and the demand doesn't justify the fight.";
 }
 
 // ── Card ───────────────────────────────────────────────────────────────────
-function buildNicheCard(n, maxScore) {
-  var score      = n.gap_score;
-  var pct        = n._pctRank;
-  var col        = scoreColor(pct);
-  var grad       = scoreGrad(pct);
-  var vtext      = verdict(n, pct);
-  var ct         = compTier(n.competition);
-  var kenc       = encodeURIComponent(n.keyword);
-  var barPct     = (score !== null && maxScore > 0) ? Math.round(score / maxScore * 100) : 0;
-  var borderCol  = pct <= 0.25 ? '#16a34a' : pct <= 0.75 ? '#ca8a04' : '#9ca3af';
+function buildNicheCard(n) {
+  var score  = n.gap_score;
+  var band   = tierOf(n);
+  var bm     = BAND[band];
+  var col    = bm.col;
+  var vtext  = verdict(n);
+  var ct     = compTier(n.competition);
+  var kenc   = encodeURIComponent(n.keyword);
+  var barPct = (score !== null && score !== undefined) ? Math.min(100, Math.round(score / 35 * 100)) : 0;
 
-  var h = '<div class="gcard" style="border-left:4px solid ' + borderCol + '">';
+  var h = '<div class="gcard" style="border-left:4px solid ' + col + '">';
 
-  // Keyword + verdict
-  h += '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:12px">';
+  // ── Keyword + verdict (left) + gap score badge (right) ──
+  h += '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:14px">';
   h += '<div style="flex:1">';
   h += '<div style="font-weight:700;font-size:17px;margin-bottom:8px">' + n.keyword + '</div>';
   if (vtext) {
@@ -378,12 +361,12 @@ function buildNicheCard(n, maxScore) {
   }
   h += '</div>';
 
-  // Gap score
+  // Gap score badge
   h += '<div style="text-align:center;flex-shrink:0;min-width:72px">';
   if (score !== null && score !== undefined) {
     h += '<div class="gap-score" style="color:' + col + '">' + score + '</div>';
-    h += '<div style="font-size:9px;color:var(--mu2);margin-bottom:3px">gap score</div>';
-    h += '<div class="gap-bar" style="width:70px;margin:0 auto"><div class="gap-fill" style="width:' + barPct + '%;background:' + grad + '"></div></div>';
+    h += '<div style="font-size:9px;font-weight:700;color:' + col + ';letter-spacing:.04em;white-space:nowrap;margin-bottom:3px">' + bm.label + '</div>';
+    h += '<div class="gap-bar" style="width:70px;margin:0 auto"><div class="gap-fill" style="width:' + barPct + '%;background:' + col + '"></div></div>';
   } else {
     h += '<div style="font-size:26px;color:var(--mu)">—</div>';
     h += '<div style="font-size:9px;color:var(--mu2)">gap score</div>';
@@ -391,32 +374,48 @@ function buildNicheCard(n, maxScore) {
   h += '</div>';
   h += '</div>';
 
-  // Supporting stats
-  h += '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;margin-bottom:14px">';
+  // ── At-a-glance bars: WANTED + CROWDED ──
+  var demandVal = (n.demand_score != null) ? Math.round(n.demand_score) : null;
+  var compPct   = (n.competition  != null) ? Math.min(100, Math.round(n.competition * 100)) : null;
 
-  h += statBox('INTEREST',
-    n.demand_score !== null && n.demand_score !== undefined
-      ? Math.round(n.demand_score) + '<span style="font-size:11px;font-weight:400;color:var(--mu)">&thinsp;/&thinsp;100</span>'
-      : null);
+  h += '<div style="margin-bottom:14px">';
+
+  // Wanted bar
+  h += '<div style="display:flex;align-items:center;gap:8px;margin-bottom:7px">';
+  h += '<span style="font-size:10px;font-weight:700;color:var(--mu);width:54px;flex-shrink:0">WANTED</span>';
+  h += '<div style="flex:1;height:9px;background:var(--p3);border-radius:5px;overflow:hidden">';
+  if (demandVal !== null) h += '<div style="width:' + demandVal + '%;height:100%;background:#16a34a;border-radius:5px"></div>';
+  h += '</div>';
+  if (demandVal !== null)
+    h += '<span style="font-size:11px;font-weight:700;min-width:52px;text-align:right">' + demandVal + '/100</span>';
+  else
+    h += '<span style="font-size:11px;color:var(--mu);font-style:italic;min-width:52px;text-align:right">Gathering…</span>';
+  h += '</div>';
+
+  // Crowded bar
+  h += '<div style="display:flex;align-items:center;gap:8px">';
+  h += '<span style="font-size:10px;font-weight:700;color:var(--mu);width:54px;flex-shrink:0">CROWDED</span>';
+  h += '<div style="flex:1;height:9px;background:var(--p3);border-radius:5px;overflow:hidden">';
+  if (compPct !== null) h += '<div style="width:' + compPct + '%;height:100%;background:#ea580c;border-radius:5px"></div>';
+  h += '</div>';
+  h += '<span style="font-size:11px;font-weight:700;color:' + ct.c + ';min-width:52px;text-align:right">'
+     + (compPct !== null ? ct.l : '—') + '</span>';
+  h += '</div>';
+
+  h += '</div>';
+
+  // ── Supporting stats: listings + avg price ──
+  h += '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;margin-bottom:14px">';
 
   h += statBox('LISTINGS ON ETSY',
-    n.total_listings !== null && n.total_listings !== undefined
-      ? Number(n.total_listings).toLocaleString()
-      : null);
+    n.total_listings != null ? Number(n.total_listings).toLocaleString() : null);
 
   h += statBox('TOP SELLERS AVG PRICE',
-    n.avg_price !== null && n.avg_price !== undefined
-      ? '£' + parseFloat(n.avg_price).toFixed(2)
-      : null);
-
-  h += '<div style="padding:8px 10px;background:var(--p2);border-radius:8px;border:1px solid var(--b1)">';
-  h += '<div style="font-size:10px;color:var(--mu);font-weight:600;margin-bottom:3px">COMPETITION</div>';
-  h += '<div style="font-weight:700;font-size:15px;color:' + ct.c + '">' + ct.l + '</div>';
-  h += '</div>';
+    n.avg_price != null ? '£' + parseFloat(n.avg_price).toFixed(2) : null);
 
   h += '</div>';
 
-  // Verify links
+  // ── Verify links ──
   h += '<div style="margin-bottom:12px">';
   h += '<div style="font-size:11px;color:var(--mu);font-weight:600;margin-bottom:5px">Verify this opportunity:</div>';
   h += '<a class="lnk" href="https://www.etsy.com/uk/search?q=' + kenc + '" target="_blank">Etsy UK</a>';
@@ -426,7 +425,7 @@ function buildNicheCard(n, maxScore) {
   h += '<a class="lnk" href="https://www.ebay.co.uk/sch/i.html?_nkw=' + kenc + '&LH_Sold=1&LH_Complete=1" target="_blank">eBay Sold</a>';
   h += '</div>';
 
-  // Action buttons
+  // ── Action buttons ──
   h += '<div style="display:flex;gap:8px;flex-wrap:wrap">';
   h += '<button onclick="window.location.href=\'search.html?kw=' + kenc + '\'" class="btn-olive" style="font-size:12px">Full Intelligence Brief →</button>';
   h += '<button onclick="window.location.href=\'listing-generator.html?kw=' + kenc + '\'" class="btn-ghost" style="font-size:12px">Write Listing →</button>';
@@ -450,47 +449,51 @@ function statBox(label, value) {
 
 // ── Render ─────────────────────────────────────────────────────────────────
 function renderNiches(niches) {
-  assignRanks(niches);
+  function byScore(a, b) { return ((b.gap_score || 0) - (a.gap_score || 0)); }
 
-  var maxScore = 0;
-  niches.forEach(function(n) {
-    if (n.gap_score !== null && n.gap_score !== undefined && n.gap_score > maxScore) maxScore = n.gap_score;
-  });
-  if (maxScore === 0) maxScore = 1;
-
-  var tier1 = niches.filter(function(n) { return n._tier === 1; });
-  var tier2 = niches.filter(function(n) { return n._tier === 2; });
-  var tier3 = niches.filter(function(n) { return n._tier === 3; });
+  var t1 = niches.filter(function(n) { return tierOf(n) === 1; }).sort(byScore);
+  var t2 = niches.filter(function(n) { return tierOf(n) === 2; }).sort(byScore);
+  var t3 = niches.filter(function(n) { return tierOf(n) === 3; }).sort(byScore);
+  var t4 = niches.filter(function(n) { return tierOf(n) === 4; }).sort(byScore);
 
   var sr = document.getElementById('stats-row');
   sr.style.display = 'flex';
   sr.innerHTML =
-    '<div class="stat"><div style="font-size:22px;font-weight:800;color:#16a34a">'  + tier1.length + '</div><div style="font-size:11px;color:var(--mu)">Top opportunities</div></div>' +
-    '<div class="stat"><div style="font-size:22px;font-weight:800;color:#ca8a04">'  + tier2.length + '</div><div style="font-size:11px;color:var(--mu)">Worth testing</div></div>'     +
-    '<div class="stat"><div style="font-size:22px;font-weight:800;color:var(--mu)">' + tier3.length + '</div><div style="font-size:11px;color:var(--mu)">Monitor</div></div>'           +
-    '<div class="stat"><div style="font-size:22px;font-weight:800;color:var(--tx)">' + niches.length + '</div><div style="font-size:11px;color:var(--mu)">Niches tracked</div></div>';
+    '<div class="stat"><div style="font-size:22px;font-weight:800;color:#16a34a">' + t1.length + '</div><div style="font-size:11px;color:var(--mu)">Strong</div></div>' +
+    '<div class="stat"><div style="font-size:22px;font-weight:800;color:#ca8a04">' + t2.length + '</div><div style="font-size:11px;color:var(--mu)">Worth testing</div></div>' +
+    '<div class="stat"><div style="font-size:22px;font-weight:800;color:#6b7280">' + t3.length + '</div><div style="font-size:11px;color:var(--mu)">Monitor</div></div>' +
+    '<div class="stat"><div style="font-size:22px;font-weight:800;color:#b45309">' + t4.length + '</div><div style="font-size:11px;color:var(--mu)">Skip</div></div>';
 
   var h = '';
 
-  if (tier1.length) {
-    h += '<div class="tier-head"><h2 style="font-size:16px;font-weight:700;margin:0">Top Opportunities</h2>';
-    h += '<span style="padding:3px 10px;border-radius:20px;font-size:12px;font-weight:700;background:#dcfce7;color:#16a34a">' + tier1.length + ' niches</span></div>';
-    h += '<p style="font-size:13px;color:var(--mu);margin-bottom:14px">Best-ranked gaps in the current dataset — real demand with beatable or light competition.</p>';
-    tier1.forEach(function(n) { h += buildNicheCard(n, maxScore); });
+  if (t1.length) {
+    h += '<div class="tier-head"><h2 style="font-size:16px;font-weight:700;margin:0">Strong Opportunities</h2>';
+    h += '<span style="padding:3px 10px;border-radius:20px;font-size:12px;font-weight:700;background:#dcfce7;color:#16a34a">' + t1.length + ' niches</span></div>';
+    h += '<p style="font-size:13px;color:var(--mu);margin-bottom:14px">Gap score ≥ 25 — real demand with beatable or light competition.</p>';
+    t1.forEach(function(n) { h += buildNicheCard(n); });
   }
 
-  if (tier2.length) {
+  if (t2.length) {
     h += '<div class="tier-head"><h2 style="font-size:16px;font-weight:700;margin:0">Worth Testing</h2>';
-    h += '<span style="padding:3px 10px;border-radius:20px;font-size:12px;font-weight:700;background:#fef9c3;color:#ca8a04">' + tier2.length + ' niches</span></div>';
-    h += '<p style="font-size:13px;color:var(--mu);margin-bottom:14px">Moderate gaps — a well-optimised listing can carve out a position.</p>';
-    tier2.forEach(function(n) { h += buildNicheCard(n, maxScore); });
+    h += '<span style="padding:3px 10px;border-radius:20px;font-size:12px;font-weight:700;background:#fef9c3;color:#ca8a04">' + t2.length + ' niches</span></div>';
+    h += '<p style="font-size:13px;color:var(--mu);margin-bottom:14px">Gap score 15–24 — moderate gaps, a well-optimised listing can carve out a position.</p>';
+    t2.forEach(function(n) { h += buildNicheCard(n); });
   }
 
-  if (tier3.length) {
+  if (t3.length) {
     h += '<div class="tier-head"><h2 style="font-size:16px;font-weight:700;margin:0">Monitor</h2>';
-    h += '<span style="padding:3px 10px;border-radius:20px;font-size:12px;font-weight:700;background:var(--p2);color:var(--mu)">' + tier3.length + ' niches</span></div>';
-    h += '<p style="font-size:13px;color:var(--mu);margin-bottom:14px">Lower-scoring niches in the current dataset — harder to break in, or early-stage seasonal.</p>';
-    tier3.forEach(function(n) { h += buildNicheCard(n, maxScore); });
+    h += '<span style="padding:3px 10px;border-radius:20px;font-size:12px;font-weight:700;background:var(--p2);color:var(--mu)">' + t3.length + ' niches</span></div>';
+    h += '<p style="font-size:13px;color:var(--mu);margin-bottom:14px">Gap score 8–14 — crowded right now, watch for the balance to shift.</p>';
+    t3.forEach(function(n) { h += buildNicheCard(n); });
+  }
+
+  if (t4.length) {
+    h += '<div style="opacity:0.85">';
+    h += '<div class="tier-head"><h2 style="font-size:16px;font-weight:700;margin:0;color:#b45309">Skip — not worth it right now</h2>';
+    h += '<span style="padding:3px 10px;border-radius:20px;font-size:12px;font-weight:700;background:#fef3c7;color:#b45309">' + t4.length + ' niches</span></div>';
+    h += '<p style="font-size:13px;color:var(--mu);margin-bottom:14px">Gap score below 8 — heavy competition and the demand signal doesn\'t justify the fight at this time.</p>';
+    t4.forEach(function(n) { h += buildNicheCard(n); });
+    h += '</div>';
   }
 
   if (!h) {
