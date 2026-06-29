@@ -273,6 +273,16 @@ function sbGet(path) {
   });
 }
 
+// ── Utility ────────────────────────────────────────────────────────────────
+function escapeHtml(s) {
+  return String(s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 // ── Band helpers ───────────────────────────────────────────────────────────
 
 var BAND = {
@@ -337,6 +347,114 @@ function verdict(n) {
   return "Not worth it right now — heavy competition and the demand doesn't justify the fight.";
 }
 
+// ── Winners panel ──────────────────────────────────────────────────────────
+function winnersPanel(n) {
+  var SYM = { GBP: '£', USD: '$', EUR: '€' };
+
+  var UNCLEAR = '<div style="padding:9px 12px;background:var(--p2);border-radius:8px;border:1px solid var(--b1);font-size:12px;color:var(--mu)">'
+    + 'Winners are unclear for this search — the term spans several different products, '
+    + 'so there\'s no single market to benchmark yet. Use the verify links to look manually.'
+    + '</div>';
+
+  var open = '<details style="margin-top:12px">'
+    + '<summary style="font-size:11px;font-weight:700;color:var(--mu);cursor:pointer;'
+    + 'list-style:none;display:block;padding:4px 0;user-select:none">'
+    + '&#9658; What\'s winning right now</summary>'
+    + '<div style="padding-top:8px">';
+  var close = '</div></details>';
+
+  var listings = n.top_listings;
+  if (!listings || !listings.length)
+    return open + '<div style="font-size:12px;color:var(--mu);font-style:italic">No listing data yet.</div>' + close;
+
+  // 1. Dominant currency — prefer GBP if present, else most common
+  var currCount = {};
+  listings.forEach(function(l) {
+    var c = l.currency_code || 'USD';
+    currCount[c] = (currCount[c] || 0) + 1;
+  });
+  var dominant = currCount['GBP']
+    ? 'GBP'
+    : Object.keys(currCount).reduce(function(a, b) { return currCount[b] > currCount[a] ? b : a; });
+  var sym = SYM[dominant] || dominant;
+
+  // 2. Filter to dominant currency, sort by num_favorers desc
+  var survivors = listings
+    .filter(function(l) { return (l.currency_code || 'USD') === dominant; })
+    .slice()
+    .sort(function(a, b) { return (b.num_favorers || 0) - (a.num_favorers || 0); });
+
+  // 3. Clarity gate: need ≥3 survivors AND ≥3 with num_favorers ≥5
+  var trackedCount = survivors.filter(function(l) { return (l.num_favorers || 0) >= 5; }).length;
+  if (survivors.length < 3 || trackedCount < 3)
+    return open + UNCLEAR + close;
+
+  // 4. Median price — drop price ≤ 0 first
+  var validPrices = survivors
+    .map(function(l) { return l.price || 0; })
+    .filter(function(p) { return p > 0; })
+    .slice()
+    .sort(function(a, b) { return a - b; });
+
+  if (!validPrices.length)
+    return open + UNCLEAR + close;
+
+  var mid = Math.floor(validPrices.length / 2);
+  var median = validPrices.length % 2 === 0
+    ? Math.round((validPrices[mid - 1] + validPrices[mid]) / 2)
+    : Math.round(validPrices[mid]);
+
+  // 5. Tag tally over all survivors
+  var tagCount = {};
+  survivors.forEach(function(l) {
+    if (Array.isArray(l.tags)) l.tags.forEach(function(t) {
+      var k = String(t).toLowerCase().trim();
+      if (k) tagCount[k] = (tagCount[k] || 0) + 1;
+    });
+  });
+  var topTags = Object.keys(tagCount)
+    .sort(function(a, b) { return tagCount[b] - tagCount[a]; })
+    .slice(0, 6);
+
+  // 6. Render
+  var h = open;
+
+  survivors.slice(0, 4).forEach(function(l) {
+    var raw   = l.title || '';
+    var title = escapeHtml(raw.length > 70 ? raw.slice(0, 69) + '…' : raw || '—');
+    var price = l.price != null && l.price > 0 ? sym + parseFloat(l.price).toFixed(2) : '—';
+    var favs  = l.num_favorers != null ? '♡ ' + Number(l.num_favorers).toLocaleString() : '';
+
+    h += '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;'
+       + 'padding:7px 0;border-bottom:1px solid var(--b1)">';
+    h += '<div style="flex:1;min-width:0">';
+    h += '<div style="font-size:12px;color:var(--tx);margin-bottom:2px">' + title + '</div>';
+    h += '<div style="font-size:11px;color:var(--mu)">' + favs + '</div>';
+    h += '</div>';
+    h += '<div style="text-align:right;flex-shrink:0">';
+    h += '<div style="font-size:13px;font-weight:700">' + price + '</div>';
+    if (l.url) h += '<a href="' + escapeHtml(l.url) + '" target="_blank" class="lnk" style="font-size:10px;padding:2px 7px;margin-top:2px">View →</a>';
+    h += '</div></div>';
+  });
+
+  // Price to beat
+  h += '<div style="margin-top:10px;padding:8px 12px;background:var(--p2);border-radius:8px;border:1px solid var(--b1)">';
+  h += '<span style="font-size:11px;font-weight:700;color:var(--mu)">PRICE TO BEAT &nbsp;</span>';
+  h += '<span style="font-size:13px;color:var(--tx)">Most winners sit around <strong>' + sym + median + '</strong>.</span>';
+  h += '</div>';
+
+  // Look & feel
+  if (topTags.length) {
+    h += '<div style="margin-top:8px">';
+    h += '<div style="font-size:11px;font-weight:700;color:var(--mu);margin-bottom:5px">LOOK &amp; FEEL</div>';
+    topTags.forEach(function(t) { h += '<span class="tag">' + escapeHtml(t) + '</span>'; });
+    h += '</div>';
+  }
+
+  h += close;
+  return h;
+}
+
 // ── Card ───────────────────────────────────────────────────────────────────
 function buildNicheCard(n) {
   var score  = n.gap_score;
@@ -353,7 +471,7 @@ function buildNicheCard(n) {
   // ── Keyword + verdict (left) + gap score badge (right) ──
   h += '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:14px">';
   h += '<div style="flex:1">';
-  h += '<div style="font-weight:700;font-size:17px;margin-bottom:8px">' + n.keyword + '</div>';
+  h += '<div style="font-weight:700;font-size:17px;margin-bottom:8px">' + escapeHtml(n.keyword) + '</div>';
   if (vtext) {
     h += '<div style="font-size:13px;line-height:1.55;color:var(--tx);padding:8px 12px;background:var(--p2);border-left:3px solid ' + col + ';border-radius:0 8px 8px 0">' + vtext + '</div>';
   } else {
@@ -425,8 +543,11 @@ function buildNicheCard(n) {
   h += '<a class="lnk" href="https://www.ebay.co.uk/sch/i.html?_nkw=' + kenc + '&LH_Sold=1&LH_Complete=1" target="_blank">eBay Sold</a>';
   h += '</div>';
 
+  // ── Winners panel ──
+  h += winnersPanel(n);
+
   // ── Action buttons ──
-  h += '<div style="display:flex;gap:8px;flex-wrap:wrap">';
+  h += '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">';
   h += '<button onclick="window.location.href=\'search.html?kw=' + kenc + '\'" class="btn-olive" style="font-size:12px">Full Intelligence Brief →</button>';
   h += '<button onclick="window.location.href=\'listing-generator.html?kw=' + kenc + '\'" class="btn-ghost" style="font-size:12px">Write Listing →</button>';
   h += '</div>';
@@ -527,7 +648,7 @@ async function loadNiches() {
     fill.style.width = '60%';
 
     var supplyRows = await sbGet(
-      'niche_supply_snapshots?select=niche_id,total_listings,avg_price,avg_favorers' +
+      'niche_supply_snapshots?select=niche_id,total_listings,avg_price,avg_favorers,top_listings_detail' +
       '&order=snapshot_date.desc&limit=500'
     );
 
@@ -552,9 +673,10 @@ async function loadNiches() {
           classification: s.classification,
           weeks_to_peak:  s.weeks_to_peak,
           niche_id:       s.niche_id,
-          total_listings: sup.total_listings != null ? sup.total_listings : null,
-          avg_price:      sup.avg_price      != null ? sup.avg_price      : null,
-          avg_favorers:   sup.avg_favorers   != null ? sup.avg_favorers   : null,
+          total_listings: sup.total_listings        != null ? sup.total_listings        : null,
+          avg_price:      sup.avg_price             != null ? sup.avg_price             : null,
+          avg_favorers:   sup.avg_favorers          != null ? sup.avg_favorers          : null,
+          top_listings:   Array.isArray(sup.top_listings_detail) ? sup.top_listings_detail : null,
         };
       })
       .filter(function(n) { return !!n.keyword; });
