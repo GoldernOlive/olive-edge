@@ -293,9 +293,6 @@ async function runSeasonality(req, res) {
             updated_at: new Date().toISOString(),
           }, { onConflict: 'niche_id' });
 
-          // demand_score drives gap_score in the daily fusion step:
-          //   evergreen → use the sustained floor; seasonal → use the peak potential
-          const demand_score = classification === 'evergreen' ? evergreen_floor : peak_value;
           const recentAvg = avg(weekly.slice(-4).map(w => w.value));
           const priorAvg  = avg(weekly.slice(-8, -4).map(w => w.value));
           const trend_direction = recentAvg - priorAvg;
@@ -303,7 +300,6 @@ async function runSeasonality(req, res) {
           await supabase.from('niche_demand_snapshots').upsert({
             niche_id: niche.id,
             snapshot_week: snapshotWeek,
-            demand_score,
             trend_direction,
           }, { onConflict: 'niche_id,snapshot_week' });
 
@@ -398,6 +394,36 @@ async function recomputeScore(supabase, nicheId, today) {
     .eq('niche_id', nicheId).limit(1);
   const seas = seasRows && seasRows[0];
 
+  // Blended demand_score: favourites 45% + autocomplete 35% + reddit 20%.
+  // Reweights proportionally when weekly signals are not yet available.
+  const avgFav   = latest.avg_favorers ?? 0;
+  const fav_norm = Math.min(100, Math.round(Math.log10(avgFav + 1) / Math.log10(201) * 100));
+  const ac = demand?.autocomplete_signal ?? null;
+  const rd = demand?.reddit_signal       ?? null;
+
+  let demand_score;
+  if (ac !== null && rd !== null) {
+    demand_score = Math.round(0.45 * fav_norm + 0.35 * ac + 0.20 * rd);
+  } else if (ac !== null) {
+    demand_score = Math.round(0.5625 * fav_norm + 0.4375 * ac);  // 45/(45+35) : 35/(45+35)
+  } else if (rd !== null) {
+    demand_score = Math.round(0.6923 * fav_norm + 0.3077 * rd);  // 45/(45+20) : 20/(45+20)
+  } else {
+    demand_score = fav_norm;                                       // favourites only
+  }
+
+  // Write demand_score to the current week's snapshot row (touching only this column)
+  const todayD  = new Date(today);
+  const mondayD = new Date(Date.UTC(
+    todayD.getUTCFullYear(), todayD.getUTCMonth(),
+    todayD.getUTCDate() - ((todayD.getUTCDay() + 6) % 7)
+  ));
+  await supabase.from('niche_demand_snapshots').upsert({
+    niche_id:      nicheId,
+    snapshot_week: mondayD.toISOString().slice(0, 10),
+    demand_score,
+  }, { onConflict: 'niche_id,snapshot_week' });
+
   const competition = clamp(
     Math.log10((latest.total_listings || 0) + 1) / Math.log10(SAT_CAP), 0, 1);
 
@@ -405,29 +431,26 @@ async function recomputeScore(supabase, nicheId, today) {
   let classification = seas?.classification ?? null;
   let weeks_to_peak = null;
 
-  if (demand && typeof demand.demand_score === 'number') {
-    const demandNorm = demand.demand_score / 100;
-    const base_gap = Math.round(100 * demandNorm * (1 - competition));
-    validated = demandNorm > 0.6 && (latest.avg_favorers || 0) > VALIDATION_THRESHOLD;
+  const demandNorm = demand_score / 100;
+  const base_gap   = Math.round(100 * demandNorm * (1 - competition));
+  validated = demandNorm > 0.6 && avgFav > VALIDATION_THRESHOLD;
 
-    if (seas?.classification === 'seasonal' && Array.isArray(seas.peak_months) && seas.peak_months.length) {
-      const lead = seas.lead_time_weeks ?? 7;
-      weeks_to_peak = calcWeeksToPeak(seas.peak_months, today);
+  if (seas?.classification === 'seasonal' && Array.isArray(seas.peak_months) && seas.peak_months.length) {
+    const lead = seas.lead_time_weeks ?? 7;
+    weeks_to_peak = calcWeeksToPeak(seas.peak_months, today);
 
-      if (weeks_to_peak === 0)             urgency = 'peaking_now';
-      else if (weeks_to_peak <= lead)      urgency = 'list_now';
-      else if (weeks_to_peak <= lead + 8)  urgency = 'prepare';
-      else                                 urgency = 'dormant';
+    if (weeks_to_peak === 0)             urgency = 'peaking_now';
+    else if (weeks_to_peak <= lead)      urgency = 'list_now';
+    else if (weeks_to_peak <= lead + 8)  urgency = 'prepare';
+    else                                 urgency = 'dormant';
 
-      gap_score = (urgency === 'peaking_now' || urgency === 'list_now' || urgency === 'prepare')
-        ? base_gap
-        : Math.round(base_gap * 0.4);
-    } else {
-      // evergreen or no seasonality data yet — urgency bands unchanged
-      gap_score = base_gap;
-      urgency = gap_score >= 90 ? 'critical' : gap_score >= 70 ? 'high'
-              : gap_score >= 40 ? 'moderate' : 'low';
-    }
+    gap_score = (urgency === 'peaking_now' || urgency === 'list_now' || urgency === 'prepare')
+      ? base_gap
+      : Math.round(base_gap * 0.4);
+  } else {
+    gap_score = base_gap;
+    urgency = gap_score >= 90 ? 'critical' : gap_score >= 70 ? 'high'
+            : gap_score >= 40 ? 'moderate' : 'low';
   }
 
   const trajectory =
@@ -438,7 +461,7 @@ async function recomputeScore(supabase, nicheId, today) {
   await supabase.from('niche_scores').upsert({
     niche_id: nicheId,
     gap_score,
-    demand_score: demand ? demand.demand_score : null,
+    demand_score,
     competition,
     urgency,
     trajectory,
