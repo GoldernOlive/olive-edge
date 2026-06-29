@@ -155,8 +155,9 @@ async function runDiscovery(req, res) {
     }
 
     // Step 5: Promote top N into niches (skip keywords already in niches, active or not)
-    const { data: existingNiches } = await supabase.from('niches').select('keyword');
+    const { data: existingNiches } = await supabase.from('niches').select('id, keyword, is_active');
     const tracked = new Set((existingNiches || []).map(n => n.keyword.toLowerCase()));
+    const activeNiches = (existingNiches || []).filter(n => n.is_active);
 
     const toPromote = candidates
       .filter(c => !tracked.has(c.kw.toLowerCase()))
@@ -179,12 +180,60 @@ async function runDiscovery(req, res) {
       }
     }
 
+    // Pass 2: compute and persist autocomplete + reddit signals for all active tracked niches.
+    // Runs after candidate processing — redditSignals and candidateMap are already in memory.
+    if (activeNiches.length) {
+      const nicheAutoResults = await Promise.allSettled(
+        activeNiches.map(n => googleAutocomplete(n.keyword))
+      );
+
+      const signalRows = activeNiches.map((niche, idx) => {
+        const suggestions = nicheAutoResults[idx].status === 'fulfilled'
+          ? nicheAutoResults[idx].value : [];
+        const depth = suggestions.length; // 0-8
+
+        // Depth contributes up to 70 pts (8 completions = keyword is actively searched)
+        let autocomplete_signal = Math.round(depth / 8 * 70);
+
+        // Position bonus (up to 30 pts) if keyword also appeared in seed-expansion this week
+        const mapKey = [...candidateMap.keys()].find(
+          k => k.toLowerCase() === niche.keyword.toLowerCase()
+        );
+        if (mapKey) {
+          const meta = candidateMap.get(mapKey);
+          autocomplete_signal = Math.min(100,
+            autocomplete_signal + Math.max(0, 10 - meta.googlePosition) * 3
+          );
+        }
+
+        // Reddit: each POD term in the keyword matched in this week's posts adds up to 20 pts
+        const redditBoost = Object.entries(redditSignals).reduce((boost, [term, mentions]) =>
+          niche.keyword.toLowerCase().includes(term)
+            ? boost + Math.min(2, mentions) : boost, 0
+        );
+        const reddit_signal = Math.min(100, Math.round(redditBoost * 20));
+
+        return {
+          niche_id:            niche.id,
+          snapshot_week:       discoveredWeek,
+          autocomplete_signal,
+          reddit_signal,
+        };
+      });
+
+      // Upsert ONLY the two signal columns — demand_score and trend_direction are untouched
+      await supabase.from('niche_demand_snapshots').upsert(signalRows, {
+        onConflict: 'niche_id,snapshot_week',
+      });
+    }
+
     return res.status(200).json({
       week: discoveredWeek,
       seedsExpanded: SEEDS.length,
       candidatesFound: candidateMap.size,
       aboveThreshold: candidates.length,
       promoted,
+      nicheSignalsWritten: activeNiches.length,
     });
   } catch (e) {
     return res.status(500).json({ error: e.message, stack: String(e.stack || '').split('\n').slice(0, 5) });
