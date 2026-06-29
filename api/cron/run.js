@@ -329,6 +329,7 @@ async function runSeasonality(req, res) {
 
 const DAILY_CHUNK = 4;
 const SAT_CAP = 1000000;
+const SAT_FAV = 1000;
 const TOP_N = 50;
 const VALIDATION_THRESHOLD = 5;
 
@@ -424,8 +425,9 @@ async function recomputeScore(supabase, nicheId, today) {
     demand_score,
   }, { onConflict: 'niche_id,snapshot_week' });
 
-  const competition = clamp(
-    Math.log10((latest.total_listings || 0) + 1) / Math.log10(SAT_CAP), 0, 1);
+  const crowd_norm     = clamp(Math.log10((latest.total_listings || 0) + 1) / Math.log10(SAT_CAP), 0, 1);
+  const incumbent_norm = clamp(Math.log10((avgFav || 0) + 1) / Math.log10(SAT_FAV + 1), 0, 1);
+  const competition    = 0.5 * crowd_norm + 0.5 * incumbent_norm;
 
   let gap_score = null, urgency = 'pending', validated = false;
   let classification = seas?.classification ?? null;
