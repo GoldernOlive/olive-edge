@@ -294,10 +294,11 @@ async function fetchSupply(keyword) {
   if (!r.ok) throw new Error(`etsy ${r.status}`);
   const data = await r.json();
 
-  const prices = (data.results || [])
+  const top10  = (data.results || []).slice(0, 10);
+  const prices = top10
     .map(l => l.price && l.price.amount / l.price.divisor)
     .filter(p => typeof p === 'number');
-  const favs = (data.results || []).map(l => l.num_favorers || 0);
+  const favs = top10.map(l => l.num_favorers || 0);
 
   return {
     total_listings: data.count ?? 0,
@@ -306,7 +307,16 @@ async function fetchSupply(keyword) {
     min_price:    prices.length ? Math.min(...prices) : null,
     max_price:    prices.length ? Math.max(...prices) : null,
     avg_favorers: avgRounded(favs),
-    top_listing_ids: (data.results || []).slice(0, 10).map(l => String(l.listing_id)),
+    top_listing_ids:    top10.map(l => String(l.listing_id)),
+    top_listings_detail: top10.map(l => ({
+      listing_id:    String(l.listing_id),
+      title:         l.title         ?? null,
+      price:         l.price ? l.price.amount / l.price.divisor : null,
+      currency_code: l.price?.currency_code ?? null,
+      num_favorers:  l.num_favorers  ?? 0,
+      url:           l.url           ?? null,
+      tags:          l.tags          ?? [],
+    })),
   };
 }
 
