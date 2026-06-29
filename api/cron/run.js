@@ -328,7 +328,7 @@ async function runSeasonality(req, res) {
 // ─── daily helpers ────────────────────────────────────────────────────────
 
 const DAILY_CHUNK = 4;
-const SAT_CAP = 10000;
+const SAT_CAP = 1000000;
 const TOP_N = 50;
 const VALIDATION_THRESHOLD = 5;
 
