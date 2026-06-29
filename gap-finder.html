@@ -21,6 +21,8 @@
 .progress-bar{height:6px;background:var(--p3);border-radius:3px;overflow:hidden;margin:8px 0}
 .progress-fill{height:100%;background:linear-gradient(90deg,var(--gd),var(--ol));border-radius:3px;transition:width .3s}
 .stat{background:var(--p2);border:1px solid var(--b1);border-radius:10px;padding:10px 14px;text-align:center}
+.stat-link{cursor:pointer}
+.stat-link:hover{border-color:var(--ol)}
 </style>
 <style>
 .nav-hamburger{display:none;background:none;border:none;cursor:pointer;padding:4px;color:var(--tx)}
@@ -116,7 +118,7 @@ var DESIGNS={
   mug:{font:'Handwritten Script',style:'Minimal personalised name/date',size:'11oz ceramic',supplier:'Printify',cost:'£3.50',margin:'72%',colours:['#FFFFFF','#F5F0E8','#2C3E50','#87AE87','#8B4513'],colourNames:['White','Cream','Navy','Sage','Brown'],phrases:['Best Mum Ever','Dog Dad','Est. [Year]','Cat Mum','Promoted to Grandma'],searches:'~45,000/mo'},
   print:{font:'Delicate Serif or Script',style:'Botanical illustration or bold typography',size:'A4/A3',supplier:'Printify',cost:'£2.80',margin:'82%',colours:['#F5F0E8','#87AE87','#2C3E50','#DDD8C4','#8B7355'],colourNames:['Cream','Sage','Navy','Sand','Brown'],phrases:['She Believed She Could','Wild and Free','Home is Where the Heart Is'],searches:'~38,000/mo'},
   tote:{font:'Script or Bold Sans',style:'Bold slogan or botanical',size:'38x42cm',supplier:'Printify',cost:'£4.20',margin:'70%',colours:['#F5DEB3','#FFFFFF','#87AE87','#2C3E50','#000000'],colourNames:['Natural Canvas','White','Sage','Navy','Black'],phrases:['Tote-ally Awesome','Book Lover','Plant Lady','Bookish'],searches:'~22,000/mo'},
-  shirt:{font:'Bold Sans or Brush',style:'Humour slogan',size:'Unisex XS-3XL',supplier:'Printify',cost:'£7.50',margin:'65%',colours:['#FFFFFF','#000000','#808080','#87AE87','#F5DEB3'],colourNames:['White','Black','Heather Grey','Sage','Natural'],phrases:["But First Coffee","I Cant Adult Today","Dog Mum","Plant Lady"],searches:'~31,000/mo'},
+  shirt:{font:'Bold Sans or Brush',style:'Humour slogan',size:'Unisex XS-3XL',supplier:'Printify',cost:'£7.50',margin:'65%',colours:['#FFFFFF','#000000','#808080','#87AE87','#F5DEB3'],colourNames:['White','Black','Heather Grey','Sage','Normal'],phrases:["But First Coffee","I Cant Adult Today","Dog Mum","Plant Lady"],searches:'~31,000/mo'},
   gift:{font:'Script or Sans',style:'Personalised with name/occasion',size:'Varies',supplier:'Printify',cost:'£3.50',margin:'72%',colours:['#FFFFFF','#F5F0E8','#87AE87','#2C3E50','#C0B080'],colourNames:['White','Cream','Sage','Navy','Gold'],phrases:['Made with Love','Best [Name] Ever','Est. [Year]'],searches:'~25,000/mo'},
   pet:{font:'Script or Serif',style:'Watercolour illustration',size:'A4/A3',supplier:'Printify',cost:'£2.80',margin:'75%',colours:['#F5F0E8','#87AE87','#DDD8C4','#2C3E50','#E8D5B7'],colourNames:['Cream','Sage','Sand','Navy','Kraft'],phrases:['[Pet Name] The Good Boy','Best Cat Ever','In Loving Memory'],searches:'~19,000/mo'},
   cottage:{font:'Delicate Serif or Hand-drawn',style:'Botanical pressed flowers aesthetic',size:'A4/A3',supplier:'Printify',cost:'£2.80',margin:'82%',colours:['#87AE87','#F5F0E8','#DDA0DD','#8FBC8F','#F5DEB3'],colourNames:['Sage','Cream','Lavender','Forest','Wheat'],phrases:['Wild Flowers','Gather Here','Bloom Where You Are Planted'],searches:'~14,000/mo'},
@@ -577,39 +579,57 @@ function renderNiches(niches) {
   var t3 = niches.filter(function(n) { return tierOf(n) === 3; }).sort(byScore);
   var t4 = niches.filter(function(n) { return tierOf(n) === 4; }).sort(byScore);
 
+  function statBox4(count, col, label, secId) {
+    var clickable = count > 0;
+    var cls   = 'stat' + (clickable ? ' stat-link' : '');
+    var click = clickable
+      ? ' onclick="document.getElementById(\'' + secId + '\').scrollIntoView({behavior:\'smooth\',block:\'start\'})"'
+      : '';
+    return '<div class="' + cls + '"' + click + '>'
+      + '<div style="font-size:22px;font-weight:800;color:' + col + '">' + count + '</div>'
+      + '<div style="font-size:11px;color:var(--mu)">' + label + '</div>'
+      + '</div>';
+  }
+
   var sr = document.getElementById('stats-row');
   sr.style.display = 'flex';
   sr.innerHTML =
-    '<div class="stat"><div style="font-size:22px;font-weight:800;color:#16a34a">' + t1.length + '</div><div style="font-size:11px;color:var(--mu)">Strong</div></div>' +
-    '<div class="stat"><div style="font-size:22px;font-weight:800;color:#ca8a04">' + t2.length + '</div><div style="font-size:11px;color:var(--mu)">Worth testing</div></div>' +
-    '<div class="stat"><div style="font-size:22px;font-weight:800;color:#6b7280">' + t3.length + '</div><div style="font-size:11px;color:var(--mu)">Monitor</div></div>' +
-    '<div class="stat"><div style="font-size:22px;font-weight:800;color:#b45309">' + t4.length + '</div><div style="font-size:11px;color:var(--mu)">Skip</div></div>';
+    statBox4(t1.length, '#16a34a', 'Strong',        'sec-strong')  +
+    statBox4(t2.length, '#ca8a04', 'Worth testing',  'sec-testing') +
+    statBox4(t3.length, '#6b7280', 'Monitor',        'sec-monitor') +
+    statBox4(t4.length, '#b45309', 'Skip',           'sec-skip');
 
   var h = '';
 
   if (t1.length) {
+    h += '<div id="sec-strong">';
     h += '<div class="tier-head"><h2 style="font-size:16px;font-weight:700;margin:0">Strong Opportunities</h2>';
     h += '<span style="padding:3px 10px;border-radius:20px;font-size:12px;font-weight:700;background:#dcfce7;color:#16a34a">' + t1.length + ' niches</span></div>';
     h += '<p style="font-size:13px;color:var(--mu);margin-bottom:14px">Gap score ≥ 25 — real demand with beatable or light competition.</p>';
     t1.forEach(function(n) { h += buildNicheCard(n); });
+    h += '</div>';
   }
 
   if (t2.length) {
+    h += '<div id="sec-testing">';
     h += '<div class="tier-head"><h2 style="font-size:16px;font-weight:700;margin:0">Worth Testing</h2>';
     h += '<span style="padding:3px 10px;border-radius:20px;font-size:12px;font-weight:700;background:#fef9c3;color:#ca8a04">' + t2.length + ' niches</span></div>';
     h += '<p style="font-size:13px;color:var(--mu);margin-bottom:14px">Gap score 15–24 — moderate gaps, a well-optimised listing can carve out a position.</p>';
     t2.forEach(function(n) { h += buildNicheCard(n); });
+    h += '</div>';
   }
 
   if (t3.length) {
+    h += '<div id="sec-monitor">';
     h += '<div class="tier-head"><h2 style="font-size:16px;font-weight:700;margin:0">Monitor</h2>';
     h += '<span style="padding:3px 10px;border-radius:20px;font-size:12px;font-weight:700;background:var(--p2);color:var(--mu)">' + t3.length + ' niches</span></div>';
     h += '<p style="font-size:13px;color:var(--mu);margin-bottom:14px">Gap score 8–14 — crowded right now, watch for the balance to shift.</p>';
     t3.forEach(function(n) { h += buildNicheCard(n); });
+    h += '</div>';
   }
 
   if (t4.length) {
-    h += '<div style="opacity:0.85">';
+    h += '<div id="sec-skip" style="opacity:0.85">';
     h += '<div class="tier-head"><h2 style="font-size:16px;font-weight:700;margin:0;color:#b45309">Skip — not worth it right now</h2>';
     h += '<span style="padding:3px 10px;border-radius:20px;font-size:12px;font-weight:700;background:#fef3c7;color:#b45309">' + t4.length + ' niches</span></div>';
     h += '<p style="font-size:13px;color:var(--mu);margin-bottom:14px">Gap score below 8 — heavy competition and the demand signal doesn\'t justify the fight at this time.</p>';
