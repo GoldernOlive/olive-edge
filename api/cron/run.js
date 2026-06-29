@@ -78,6 +78,31 @@ async function runDaily(req, res) {
       await recomputeScore(supabase, niche.id, today);
     }
 
+    // ── History snapshot — appended after score recompute, isolated try/catch ──
+    try {
+      const { data: scoreRows } = await supabase
+        .from('niche_scores')
+        .select('niche_id,gap_score,demand_score,competition,classification,urgency,trajectory')
+        .in('niche_id', niches.map(n => n.id));
+
+      if (scoreRows && scoreRows.length) {
+        await supabase.from('niche_scores_history').upsert(
+          scoreRows.map(r => ({
+            niche_id:       r.niche_id,
+            gap_score:      r.gap_score,
+            demand_score:   r.demand_score,
+            competition:    r.competition,
+            classification: r.classification,
+            urgency:        r.urgency,
+            trajectory:     r.trajectory,
+          })),
+          { onConflict: 'niche_id,snapshot_date' }
+        );
+      }
+    } catch (hErr) {
+      console.error('niche_scores_history insert failed (non-fatal):', hErr.message);
+    }
+
     return res.status(200).json({
       date: today, processed, failed, total: niches.length,
       ...(sampleError.length ? { sampleError } : {}),
