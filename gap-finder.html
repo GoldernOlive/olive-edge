@@ -349,6 +349,79 @@ function verdict(n) {
   return "Not worth it right now — heavy competition and the demand doesn't justify the fight.";
 }
 
+// ── Seasonal band ──────────────────────────────────────────────────────────
+function seasonalBand(niches) {
+  var actNow = niches.filter(function(n) {
+    return n.classification === 'seasonal' &&
+      (n.urgency === 'peaking_now' || n.urgency === 'list_now');
+  }).sort(function(a, b) {
+    // peaking_now before list_now
+    if (a.urgency === b.urgency) return 0;
+    return a.urgency === 'peaking_now' ? -1 : 1;
+  });
+
+  var prepare = niches.filter(function(n) {
+    return n.classification === 'seasonal' && n.urgency === 'prepare';
+  }).sort(function(a, b) {
+    // soonest first; null weeks sort last
+    var aw = a.weeks_to_peak != null ? a.weeks_to_peak : 999;
+    var bw = b.weeks_to_peak != null ? b.weeks_to_peak : 999;
+    return aw - bw;
+  });
+
+  if (!actNow.length && !prepare.length) return '';
+
+  var h = '<div style="margin-bottom:24px;border:1px solid var(--b1);border-radius:12px;overflow:hidden">';
+
+  if (actNow.length) {
+    h += '<div style="background:var(--p2);padding:12px 16px;'
+       + (prepare.length ? 'border-bottom:1px solid var(--b1)' : '') + '">';
+    h += '<div style="font-size:12px;font-weight:700;color:#dc2626;margin-bottom:8px">'
+       + '⚡ Act Now — seasonal windows closing</div>';
+    actNow.forEach(function(n, i) {
+      var isLast  = i === actNow.length - 1;
+      var timing  = n.urgency === 'peaking_now'
+        ? 'In peak window — list immediately'
+        : 'List now — peak is weeks away';
+      var kenc = encodeURIComponent(n.keyword);
+      h += '<div style="display:flex;justify-content:space-between;align-items:center;gap:12px;padding:6px 0'
+         + (isLast ? '' : ';border-bottom:1px solid var(--b1)') + '">';
+      h += '<div style="min-width:0">';
+      h += '<span style="font-weight:700;font-size:13px">' + escapeHtml(n.keyword) + '</span>'
+         + '<span style="font-size:11px;color:#dc2626;margin-left:8px">' + timing + '</span>';
+      h += '</div>';
+      h += '<button class="lnk" style="font-size:10px;padding:3px 8px;flex-shrink:0;cursor:pointer;color:#dc2626;border-color:#fca5a5" '
+         + 'onclick="var el=document.getElementById(\'card-' + kenc + '\');if(el)el.scrollIntoView({behavior:\'smooth\',block:\'start\'})">View →</button>';
+      h += '</div>';
+    });
+    h += '</div>';
+  }
+
+  if (prepare.length) {
+    h += '<div style="background:var(--p2);padding:12px 16px">';
+    h += '<div style="font-size:12px;font-weight:700;color:#ca8a04;margin-bottom:8px">'
+       + '🗓 Prepare — design these now for upcoming peaks</div>';
+    prepare.forEach(function(n, i) {
+      var isLast = i === prepare.length - 1;
+      var wStr   = n.weeks_to_peak != null ? ' (' + n.weeks_to_peak + ' weeks away)' : '';
+      var kenc   = encodeURIComponent(n.keyword);
+      h += '<div style="display:flex;justify-content:space-between;align-items:center;gap:12px;padding:6px 0'
+         + (isLast ? '' : ';border-bottom:1px solid var(--b1)') + '">';
+      h += '<div style="min-width:0">';
+      h += '<span style="font-weight:700;font-size:13px">' + escapeHtml(n.keyword) + '</span>'
+         + '<span style="font-size:11px;color:var(--mu);margin-left:8px">Peak approaching' + wStr + '</span>';
+      h += '</div>';
+      h += '<button class="lnk" style="font-size:10px;padding:3px 8px;flex-shrink:0;cursor:pointer" '
+         + 'onclick="var el=document.getElementById(\'card-' + kenc + '\');if(el)el.scrollIntoView({behavior:\'smooth\',block:\'start\'})">View →</button>';
+      h += '</div>';
+    });
+    h += '</div>';
+  }
+
+  h += '</div>';
+  return h;
+}
+
 // ── Winners panel ──────────────────────────────────────────────────────────
 function winnersPanel(n) {
   var SYM = { GBP: '£', USD: '$', EUR: '€' };
@@ -468,7 +541,7 @@ function buildNicheCard(n) {
   var kenc   = encodeURIComponent(n.keyword);
   var barPct = (score !== null && score !== undefined) ? Math.min(100, Math.round(score / 35 * 100)) : 0;
 
-  var h = '<div class="gcard" style="border-left:4px solid ' + col + '">';
+  var h = '<div id="card-' + kenc + '" class="gcard" style="border-left:4px solid ' + col + '">';
 
   // ── Keyword + verdict (left) + gap score badge (right) ──
   h += '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:14px">';
@@ -600,6 +673,7 @@ function renderNiches(niches) {
     statBox4(t4.length, '#b45309', 'Skip',           'sec-skip');
 
   var h = '';
+  h += seasonalBand(niches);
 
   if (t1.length) {
     h += '<div id="sec-strong">';
