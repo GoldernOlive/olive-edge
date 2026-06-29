@@ -13,9 +13,6 @@
 .tier-head{display:flex;align-items:center;gap:10px;margin:24px 0 12px;padding-bottom:10px;border-bottom:2px solid var(--b1)}
 .gcard{border:1px solid var(--b1);border-radius:12px;padding:18px;margin-bottom:12px;background:var(--w);transition:all .2s}
 .gcard:hover{border-color:var(--ol);box-shadow:0 4px 16px rgba(107,142,35,.1)}
-.gcard.t0{border-left:4px solid #dc2626}
-.gcard.t1{border-left:4px solid #ea580c}
-.gcard.t2{border-left:4px solid #ca8a04}
 .swatch{width:28px;height:28px;border-radius:7px;border:2px solid rgba(0,0,0,.08);cursor:pointer;transition:transform .15s;display:inline-block}
 .swatch:hover{transform:scale(1.15)}
 .tag{display:inline-block;background:var(--olbg);border:1px solid var(--olbr);border-radius:20px;padding:2px 9px;font-size:11px;font-family:DM Mono,monospace;color:var(--ol);margin:2px}
@@ -67,20 +64,18 @@
     <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px">
       <div>
         <div class="serif" style="font-size:26px;font-weight:600;margin-bottom:4px">🎯 Gap Finder</div>
-        <div style="font-size:13px;color:var(--mu);max-width:560px;line-height:1.6">Products people are searching for but can't find on Etsy. High Google signal + low listing count = your window to list first.</div>
+        <div style="font-size:13px;color:var(--mu);max-width:560px;line-height:1.6">Tracked POD niches ranked by opportunity — blending weekly demand signals with live Etsy supply and incumbent seller strength.</div>
       </div>
-      <button class="btn-olive" onclick="startScan()" id="scan-btn">↻ New Scan</button>
+      <button class="btn-olive" onclick="loadNiches()" id="scan-btn">↻ Refresh</button>
     </div>
-    <div style="margin-top:10px;font-size:11px;color:var(--mu2)" id="gf-ts">Ready to scan</div>
+    <div style="margin-top:10px;font-size:11px;color:var(--mu2)" id="gf-ts">Loading…</div>
     <div class="progress-bar" id="prog-bar" style="display:none"><div class="progress-fill" id="prog-fill" style="width:0%"></div></div>
-    <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap" id="stats-row" style="display:none"></div>
+    <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap" id="stats-row"></div>
   </div>
 
   <div style="background:var(--p2);border:1px solid var(--b1);border-radius:10px;padding:12px 16px;margin-bottom:20px;font-size:12px;color:var(--mu)">
     <strong style="color:var(--tx)">How it works:</strong>
-    Queries Google Autocomplete UK for 20 POD search terms → finds what buyers are actually searching →
-    checks how many Etsy listings exist for each →
-    ranks by Gap Score (demand ÷ supply). High score = few sellers, real demand = list now.
+    Each niche is tracked weekly — blending Google autocomplete depth, Reddit buyer mentions, and Etsy favourite counts into a demand signal, then weighing that against listing volume and how strongly the top sellers are established. Gap Score = demand vs beatable competition.
   </div>
 
   <div id="gf-body"></div>
@@ -107,7 +102,7 @@ var S=getSession();
 if(!S.token){window.location.href='index.html';}
 else{var em=document.getElementById('nav-email');if(em)em.textContent=S.email;}
 
-// ── Design intelligence database ──
+// ── Design intelligence database — kept for future stages ──────────────────
 var DESIGNS={
   mug:{font:'Handwritten Script',style:'Minimal personalised name/date',size:'11oz ceramic',supplier:'Printify',cost:'£3.50',margin:'72%',colours:['#FFFFFF','#F5F0E8','#2C3E50','#87AE87','#8B4513'],colourNames:['White','Cream','Navy','Sage','Brown'],phrases:['Best Mum Ever','Dog Dad','Est. [Year]','Cat Mum','Promoted to Grandma'],searches:'~45,000/mo'},
   print:{font:'Delicate Serif or Script',style:'Botanical illustration or bold typography',size:'A4/A3',supplier:'Printify',cost:'£2.80',margin:'82%',colours:['#F5F0E8','#87AE87','#2C3E50','#DDD8C4','#8B7355'],colourNames:['Cream','Sage','Navy','Sand','Brown'],phrases:['She Believed She Could','Wild and Free','Home is Where the Heart Is'],searches:'~38,000/mo'},
@@ -131,7 +126,6 @@ function getDesign(kw){
   return DESIGNS.gift;
 }
 
-// Competition estimate when Etsy data unavailable
 var COMP_EST={
   'personalised mug':9,'funny mug':8,'custom mug':9,'wall art':8,'personalised gift':9,
   'birthday gift':8,'christmas gift':9,'tote bag':7,'funny t shirt':7,'baby gift':7,
@@ -152,96 +146,53 @@ function estComp(kw){
   return 5;
 }
 
-function gapScore(googlePos,etsyCount,kw){
-  var gs=googlePos?Math.max(0,10-googlePos):3;
-  var ss;
-  if(etsyCount!==null&&etsyCount!==undefined){
-    ss=etsyCount<50?10:etsyCount<100?9:etsyCount<200?8:etsyCount<500?7:etsyCount<1000?5:etsyCount<2000?3:etsyCount<5000?2:1;
-  }else{
-    ss=11-estComp(kw);
-  }
-  var words=(kw||'').split(' ').length;
-  var spec=words>=4?3:words>=3?1:0;
-  return Math.min(100,Math.round((gs*ss+spec)*1.2));
-}
-
-function compLabel(count,kw){
-  var c=count!==null?count:null;
-  if(c===null){var e=estComp(kw);return e<=2?{l:'Very Low (est)',c:'#22c55e'}:e<=3?{l:'Low (est)',c:'#84cc16'}:e<=5?{l:'Medium (est)',c:'#ca8a04'}:e<=7?{l:'High (est)',c:'#ea580c'}:{l:'Saturated (est)',c:'#dc2626'};}
-  return c<50?{l:'Virtually None',c:'#16a34a'}:c<200?{l:'Very Low',c:'#22c55e'}:c<500?{l:'Low',c:'#84cc16'}:c<1000?{l:'Medium',c:'#ca8a04'}:c<5000?{l:'High',c:'#ea580c'}:{l:'Saturated',c:'#dc2626'};
-}
-
-function urgLabel(score){
-  return score>=80?{l:'LIST TODAY',c:'#dc2626',i:'🚨'}:score>=65?{l:'List this week',c:'#ea580c',i:'⚡'}:score>=50?{l:'Good opportunity',c:'#ca8a04',i:'✅'}:score>=35?{l:'Worth testing',c:'#16a34a',i:'🔍'}:{l:'Monitor',c:'#6b7280',i:'👀'};
-}
-
-function gc(s){return s>=80?'#dc2626':s>=65?'#ea580c':s>=50?'#ca8a04':s>=35?'#16a34a':'#6b7280';}
-function gg(s){return s>=80?'linear-gradient(90deg,#dc2626,#ef4444)':s>=65?'linear-gradient(90deg,#ea580c,#f97316)':s>=50?'linear-gradient(90deg,#ca8a04,#eab308)':s>=35?'linear-gradient(90deg,#16a34a,#22c55e)':'linear-gradient(90deg,#6b7280,#9ca3af)';}
-
-
-
-// ── POD Supplier Database — Organised by shipping capability ──
+// ── POD Supplier Database — kept for future stages ─────────────────────────
 var SUPPLIERS = {
   mug: [
-    // GLOBAL SHIPPERS
     { name:'Printify', region:'🌍 Global', dispatch:'3-5 days', ships:'Worldwide', cost:'£3.50', margin:'72%', rating:'★★★★★', tag:'GLOBAL', tagCol:'#2563eb', product:'White Ceramic Mug 11oz', bestFor:'Largest global print network. Ships to 200+ countries. Most Etsy sellers use this.', url:'https://printify.com/app/products/167/generic-brand/11-oz-ceramic-mug' },
     { name:'Gelato', region:'🌍 32 Countries Local Print', dispatch:'1-3 days', ships:'Worldwide', cost:'£3.80', margin:'70%', rating:'★★★★★', tag:'GLOBAL + FAST', tagCol:'#2563eb', product:'Mug 11oz', bestFor:'Prints IN your customer country. Fastest global dispatch. Carbon neutral.', url:'https://www.gelato.com/products/mugs' },
     { name:'Printful', region:'🌍 Global', dispatch:'3-5 days', ships:'Worldwide', cost:'£4.20', margin:'68%', rating:'★★★★☆', tag:'GLOBAL', tagCol:'#2563eb', product:'White Glossy Mug 11oz', bestFor:'Premium quality. Fulfilment centres in USA, EU, UK, Mexico, Japan, Australia.', url:'https://www.printful.com/custom/mugs' },
     { name:'Gooten', region:'🌍 Global', dispatch:'3-7 days', ships:'Worldwide', cost:'$4.25', margin:'67%', rating:'★★★★☆', tag:'GLOBAL', tagCol:'#2563eb', product:'11oz Ceramic Mug', bestFor:'Global network, competitive pricing, Etsy integration built in.', url:'https://www.gooten.com/products/' },
-    // UK & EUROPE
     { name:'Prodigi', region:'🇬🇧 UK Based', dispatch:'1-2 days UK', ships:'UK · EU · USA', cost:'£3.20', margin:'71%', rating:'★★★★★', tag:'UK BASED', tagCol:'#16a34a', product:'Ceramic Mug', bestFor:'UK-based team. Fastest UK dispatch. Premium quality print.', url:'https://www.prodigi.com/products/' },
     { name:'T-Pop', region:'🇫🇷 France Based', dispatch:'2-4 days EU', ships:'EU · UK · USA', cost:'€4.50', margin:'65%', rating:'★★★★☆', tag:'EU BASED', tagCol:'#16a34a', product:'Ceramic Mug', bestFor:'French eco POD. GOTS certified. Plastic-free packaging. EU fulfilment.', url:'https://www.t-pop.com/en/products/mugs' },
     { name:'Contrado', region:'🇬🇧 UK Based', dispatch:'1-3 days UK', ships:'UK · EU · USA', cost:'£6.50', margin:'60%', rating:'★★★★★', tag:'UK LUXURY', tagCol:'#7c3aed', product:'Bone China Mug', bestFor:'Luxury bone china. UK-made. Premium gift market. Higher price justified.', url:'https://www.contrado.co.uk/personalised-mugs' },
-    // FASTEST TURNAROUND
     { name:'SPOD (Spreadshirt)', region:'🇺🇸 USA · 🇩🇪 Germany', dispatch:'48 HOURS', ships:'USA · EU · UK', cost:'$3.80', margin:'69%', rating:'★★★★☆', tag:'48HR GUARANTEE', tagCol:'#dc2626', product:'Ceramic Mug 11oz', bestFor:'Industry-leading 48-hour production guarantee. Best for fast delivery listings.', url:'https://www.spod.com/products/mugs' },
     { name:'Teelaunch', region:'🇺🇸 USA · 🇬🇧 UK', dispatch:'2-3 days', ships:'USA · UK · Global', cost:'$3.95', margin:'68%', rating:'★★★★☆', tag:'FAST', tagCol:'#dc2626', product:'11oz Ceramic Mug', bestFor:'Very fast production. USA and UK fulfilment. Direct Etsy integration.', url:'https://teelaunch.com/products/' }
   ],
   print: [
-    // GLOBAL
     { name:'Printify', region:'🌍 Global', dispatch:'3-5 days', ships:'Worldwide', cost:'£2.80', margin:'82%', rating:'★★★★★', tag:'GLOBAL', tagCol:'#2563eb', product:'Poster A4/A3/50x70/70x100cm', bestFor:'Best value global POD prints. Huge size range. Most popular on Etsy.', url:'https://printify.com/app/products/posters' },
     { name:'Gelato', region:'🌍 32 Countries Local Print', dispatch:'1-2 days', ships:'Worldwide', cost:'£3.00', margin:'81%', rating:'★★★★★', tag:'GLOBAL + FAST', tagCol:'#2563eb', product:'Art Print (all sizes)', bestFor:'Printed locally in buyer country. Carbon neutral. No customs delays.', url:'https://www.gelato.com/products/art-prints' },
     { name:'Printful', region:'🌍 Global', dispatch:'3-5 days', ships:'Worldwide', cost:'£3.50', margin:'80%', rating:'★★★★☆', tag:'GLOBAL', tagCol:'#2563eb', product:'Enhanced Matte Poster', bestFor:'Premium matte finish. Consistent quality globally. Good for premium listings.', url:'https://www.printful.com/custom/posters' },
-    // UK & EUROPE
     { name:'Prodigi', region:'🇬🇧 UK Based', dispatch:'NEXT DAY UK', ships:'UK · EU · USA', cost:'£2.80', margin:'82%', rating:'★★★★★', tag:'UK BEST', tagCol:'#16a34a', product:'Fine Art Print (A5 to 100x140cm)', bestFor:'UK-based. Next day UK dispatch. Archival paper. Widest size range in UK.', url:'https://www.prodigi.com/products/prints/' },
     { name:'T-Pop', region:'🇫🇷 France Based', dispatch:'2-3 days EU', ships:'EU · UK · USA', cost:'€3.20', margin:'78%', rating:'★★★★☆', tag:'EU BASED', tagCol:'#16a34a', product:'Eco Poster Print', bestFor:'FSC paper. Plastic-free. Best for eco-positioning in EU market.', url:'https://www.t-pop.com/en/products/posters' },
     { name:'Contrado', region:'🇬🇧 UK Based', dispatch:'1-3 days UK', ships:'UK · EU · USA', cost:'£8.00', margin:'70%', rating:'★★★★★', tag:'UK LUXURY', tagCol:'#7c3aed', product:'Canvas Print / Framed Print', bestFor:'Luxury canvas and framed prints. UK-made. Premium home decor market.', url:'https://www.contrado.co.uk/canvas-prints' },
-    // FASTEST
     { name:'SPOD (Spreadshirt)', region:'🇺🇸 USA · 🇩🇪 Germany', dispatch:'48 HOURS', ships:'USA · EU · UK', cost:'$2.50', margin:'80%', rating:'★★★★☆', tag:'48HR GUARANTEE', tagCol:'#dc2626', product:'Photo Paper Poster', bestFor:'48-hour production guarantee. Best for USA and German buyers wanting speed.', url:'https://www.spod.com/products/posters' }
   ],
   tote: [
-    // GLOBAL
     { name:'Printify', region:'🌍 Global', dispatch:'3-5 days', ships:'Worldwide', cost:'£4.20', margin:'70%', rating:'★★★★★', tag:'GLOBAL', tagCol:'#2563eb', product:'Heavy Cotton Canvas Tote', bestFor:'Most popular POD tote on Etsy. Thick canvas, sharp print. Ships worldwide.', url:'https://printify.com/app/products/tote-bags' },
     { name:'Gelato', region:'🌍 32 Countries Local Print', dispatch:'1-3 days', ships:'Worldwide', cost:'£4.80', margin:'68%', rating:'★★★★☆', tag:'GLOBAL + FAST', tagCol:'#2563eb', product:'Tote Bag', bestFor:'Local production worldwide. Fastest global dispatch. Eco credentials.', url:'https://www.gelato.com/products/bags' },
     { name:'Printful', region:'🌍 Global', dispatch:'3-5 days', ships:'Worldwide', cost:'£6.50', margin:'65%', rating:'★★★★☆', tag:'GLOBAL', tagCol:'#2563eb', product:'Market Tote Bag', bestFor:'Premium quality. Reinforced handles. Multiple global fulfilment centres.', url:'https://www.printful.com/custom/bags/tote-bags' },
-    // UK & EUROPE
     { name:'T-Pop', region:'🇫🇷 France Based', dispatch:'2-4 days EU', ships:'EU · UK · USA', cost:'€5.50', margin:'67%', rating:'★★★★★', tag:'EU ORGANIC', tagCol:'#16a34a', product:'Organic Cotton Tote Bag', bestFor:'GOTS certified organic cotton. Plastic-free packaging. Best eco tote in EU.', url:'https://www.t-pop.com/en/products/bags' },
     { name:'Contrado', region:'🇬🇧 UK Based', dispatch:'1-3 days UK', ships:'UK · EU · USA', cost:'£9.00', margin:'62%', rating:'★★★★★', tag:'UK LUXURY', tagCol:'#7c3aed', product:'All-Over Print Tote', bestFor:'Full all-over print. Luxury finish. Stand out completely from standard totes.', url:'https://www.contrado.co.uk/personalised-tote-bags' },
-    // FASTEST
     { name:'SPOD (Spreadshirt)', region:'🇺🇸 USA · 🇩🇪 Germany', dispatch:'48 HOURS', ships:'USA · EU · UK', cost:'$5.50', margin:'65%', rating:'★★★★☆', tag:'48HR GUARANTEE', tagCol:'#dc2626', product:'Canvas Tote Bag', bestFor:'48-hour production. Perfect for sellers promising fast delivery.', url:'https://www.spod.com/products/bags' }
   ],
   shirt: [
-    // GLOBAL
     { name:'Printify', region:'🌍 Global', dispatch:'3-5 days', ships:'Worldwide', cost:'£7.50', margin:'65%', rating:'★★★★★', tag:'GLOBAL', tagCol:'#2563eb', product:'Bella+Canvas 3001 Unisex', bestFor:'Industry standard shirt. Buyers know the brand. Global network, best value.', url:'https://printify.com/app/products/t-shirts' },
     { name:'Gelato', region:'🌍 32 Countries Local Print', dispatch:'1-3 days', ships:'Worldwide', cost:'£7.80', margin:'64%', rating:'★★★★☆', tag:'GLOBAL + FAST', tagCol:'#2563eb', product:'Unisex Softstyle T-Shirt', bestFor:'Printed locally near buyer. Fastest global dispatch for clothing.', url:'https://www.gelato.com/products/t-shirts' },
     { name:'Printful', region:'🌍 Global', dispatch:'3-5 days', ships:'Worldwide', cost:'£8.20', margin:'63%', rating:'★★★★★', tag:'GLOBAL', tagCol:'#2563eb', product:'Bella+Canvas 3001', bestFor:'Best print quality globally. Accurate colours. Premium positioning.', url:'https://www.printful.com/custom/t-shirts' },
-    // UK & EUROPE
     { name:'T-Pop', region:'🇫🇷 France Based', dispatch:'2-4 days EU', ships:'EU · UK · USA', cost:'€9.00', margin:'60%', rating:'★★★★★', tag:'EU ORGANIC', tagCol:'#16a34a', product:'Stanley/Stella Organic Tee', bestFor:'GOTS + Fair Wear certified. Premium organic. Best eco clothing POD in Europe.', url:'https://www.t-pop.com/en/products/t-shirts' },
     { name:'Contrado', region:'🇬🇧 UK Based', dispatch:'2-4 days UK', ships:'UK · EU · USA', cost:'£12.00', margin:'58%', rating:'★★★★★', tag:'UK LUXURY', tagCol:'#7c3aed', product:'All-Over Print T-Shirt', bestFor:'All-over print. No white borders. Luxury UK-made positioning.', url:'https://www.contrado.co.uk/personalised-t-shirts' },
-    // FASTEST
     { name:'SPOD (Spreadshirt)', region:'🇺🇸 USA · 🇩🇪 Germany', dispatch:'48 HOURS', ships:'USA · EU · UK', cost:'$6.50', margin:'62%', rating:'★★★★☆', tag:'48HR GUARANTEE', tagCol:'#dc2626', product:'Spreadshirt Unisex Tee', bestFor:'48-hour production guaranteed. Best for fast dispatch listings.', url:'https://www.spod.com/products/shirts' },
     { name:'CustomCat', region:'🇺🇸 USA', dispatch:'2-3 days USA', ships:'USA · Canada · UK', cost:'$4.50', margin:'65%', rating:'★★★★☆', tag:'FAST USA', tagCol:'#dc2626', product:'Gildan Heavy Cotton Tee', bestFor:'Fastest and cheapest USA POD shirts. 2-3 day production in USA.', url:'https://customcat.com/products/' }
   ],
   gift: [
-    // GLOBAL
     { name:'Printify', region:'🌍 Global (200+ countries)', dispatch:'3-5 days', ships:'Worldwide', cost:'From £2.50', margin:'Up to 82%', rating:'★★★★★', tag:'GLOBAL', tagCol:'#2563eb', product:'900+ products', bestFor:'Widest catalogue. Best value. Ships to 200+ countries. Start here.', url:'https://printify.com/catalog' },
     { name:'Gelato', region:'🌍 32 Countries local print', dispatch:'1-3 days', ships:'Worldwide', cost:'From £2.80', margin:'Up to 81%', rating:'★★★★★', tag:'GLOBAL + FAST', tagCol:'#2563eb', product:'500+ products', bestFor:'Prints locally in 32 countries. Fastest global POD. Carbon neutral.', url:'https://www.gelato.com/products' },
     { name:'Printful', region:'🌍 Global', dispatch:'3-5 days', ships:'Worldwide', cost:'From £3.00', margin:'Up to 78%', rating:'★★★★☆', tag:'GLOBAL', tagCol:'#2563eb', product:'300+ products', bestFor:'Premium quality globally. Centres in USA, EU, UK, Japan, Australia, Mexico.', url:'https://www.printful.com/custom' },
     { name:'Gooten', region:'🌍 Global', dispatch:'3-7 days', ships:'Worldwide', cost:'From $3.00', margin:'Up to 70%', rating:'★★★★☆', tag:'GLOBAL', tagCol:'#2563eb', product:'150+ products', bestFor:'Global reach. Competitive pricing. Built-in Etsy integration.', url:'https://www.gooten.com' },
-    // UK & EUROPE
     { name:'Prodigi', region:'🇬🇧 UK Based', dispatch:'NEXT DAY UK', ships:'UK · EU · USA', cost:'From £2.80', margin:'Up to 82%', rating:'★★★★★', tag:'UK BASED', tagCol:'#16a34a', product:'Prints, canvas, frames, gifts', bestFor:'UK-based. Next day UK. Best for wall art. Art print specialists.', url:'https://www.prodigi.com' },
     { name:'T-Pop', region:'🇫🇷 France Based', dispatch:'2-4 days EU', ships:'EU · UK · USA', cost:'From £3.50', margin:'Up to 75%', rating:'★★★★☆', tag:'EU BASED', tagCol:'#16a34a', product:'Eco clothing and accessories', bestFor:'100% eco POD. Organic products. Recycled packaging. EU fulfilment.', url:'https://www.t-pop.com' },
     { name:'Contrado', region:'🇬🇧 UK Based', dispatch:'1-3 days UK', ships:'UK · EU · USA', cost:'From £5.00', margin:'Up to 65%', rating:'★★★★★', tag:'UK LUXURY', tagCol:'#7c3aed', product:'Premium POD (fabric, leather, luxury)', bestFor:'Luxury UK-made POD. All-over print. Premium home decor and gifts.', url:'https://www.contrado.co.uk' },
-    // FASTEST
     { name:'SPOD (Spreadshirt)', region:'🇺🇸 USA · 🇩🇪 Germany', dispatch:'48 HOURS', ships:'USA · EU · UK', cost:'From $2.50', margin:'Up to 70%', rating:'★★★★☆', tag:'48HR GUARANTEE', tagCol:'#dc2626', product:'Wide range', bestFor:'Fastest POD in the industry. 48-hour production guaranteed every order.', url:'https://www.spod.com' },
     { name:'CustomCat', region:'🇺🇸 USA', dispatch:'2-3 days USA', ships:'USA · Canada · UK', cost:'From $3.00', margin:'Up to 68%', rating:'★★★★☆', tag:'FAST USA', tagCol:'#dc2626', product:'500+ products', bestFor:'Cheapest and fastest USA POD. Great margins on USA orders.', url:'https://customcat.com' }
   ]
@@ -253,7 +204,7 @@ function getSuppliers(kw){
   if(k.includes('print')||k.includes('art')||k.includes('wall')||k.includes('poster'))return SUPPLIERS.print;
   if(k.includes('tote')||k.includes('bag'))return SUPPLIERS.tote;
   if(k.includes('shirt')||k.includes('tee'))return SUPPLIERS.shirt;
-  if(k.includes('keyring')||k.includes('keychain'))return SUPPLIERS.keyring;
+  if(k.includes('keyring')||k.includes('keychain'))return SUPPLIERS.gift;
   return SUPPLIERS.gift;
 }
 
@@ -292,112 +243,6 @@ function buildSupplierSection(kw){
   return h;
 }
 
-function buildCard(p){
-  var score=p.gapScore;
-  var col=gc(score);
-  var grad=gg(score);
-  var urg=urgLabel(score);
-  var comp=compLabel(p.listingCount,p.kw);
-  var design=getDesign(p.kw);
-  var kenc=encodeURIComponent(p.kw);
-  var tc=score>=80?'t0':score>=55?'t1':'t2';
-
-  var h='<div class="gcard '+tc+'">';
-
-  // Header row
-  h+='<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:10px">';
-  h+='<div style="flex:1">';
-  h+='<div style="font-weight:700;font-size:17px;margin-bottom:5px">'+p.kw+'</div>';
-  h+='<div style="display:flex;gap:5px;flex-wrap:wrap">';
-  h+='<span style="font-size:12px;font-weight:700;color:'+urg.c+';background:'+urg.c+'18;padding:3px 10px;border-radius:20px">'+urg.i+' '+urg.l+'</span>';
-  h+='<span style="font-size:11px;font-weight:700;color:'+comp.c+';background:'+comp.c+'18;padding:2px 9px;border-radius:20px">'+comp.l+' Competition</span>';
-  if(design)h+='<span style="font-size:11px;background:var(--p2);padding:2px 9px;border-radius:20px;border:1px solid var(--b1);color:var(--mu)">'+( p.kw.includes('mug')?'Mug':p.kw.includes('print')||p.kw.includes('art')?'Print':p.kw.includes('tote')?'Tote':p.kw.includes('shirt')?'T-Shirt':'Gift Product')+'</span>';
-  h+='</div></div>';
-
-  // Score
-  h+='<div style="text-align:center;flex-shrink:0">';
-  h+='<div class="gap-score" style="color:'+col+'">'+score+'</div>';
-  h+='<div style="font-size:9px;color:var(--mu2)">out of 100</div>';
-  h+='<div class="gap-bar" style="width:75px;margin:3px auto 0"><div class="gap-fill" style="width:'+score+'%;background:'+grad+'"></div></div>';
-  h+='</div></div>';
-
-  // Insight
-  var insight=p.listingCount!==null&&p.listingCount!==undefined
-    ?(p.listingCount<50?'Only '+p.listingCount+' sellers on Etsy — real Google searches pointing here. Move now.':p.listingCount<200?p.listingCount+' listings is low for this demand. Early mover advantage still open.':p.listingCount<500?p.listingCount+' listings — competitive but beatable with strong design.':p.listingCount.toLocaleString()+' listings — needs strong differentiation.')
-    :'Real Google search signal detected. Etsy data: '+comp.l.toLowerCase()+' competition estimated from keyword analysis.';
-  h+='<div style="font-size:13px;color:var(--mu);line-height:1.5;margin-bottom:12px;padding:8px 12px;background:var(--p2);border-left:3px solid '+col+';border-radius:0 8px 8px 0">'+insight+'</div>';
-
-  // Metrics grid
-  h+='<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin-bottom:14px">';
-  h+='<div style="padding:8px;background:var(--p2);border-radius:8px;border:1px solid var(--b1)"><div style="font-size:10px;color:var(--mu);font-weight:600">🔍 GOOGLE SIGNAL</div><div style="font-weight:700;font-size:14px">Position #'+p.googlePos+'</div><div style="font-size:11px;color:var(--mu)">Real UK searches</div></div>';
-  h+='<div style="padding:8px;background:var(--p2);border-radius:8px;border:1px solid var(--b1)"><div style="font-size:10px;color:var(--mu);font-weight:600">🛍 ETSY SUPPLY</div><div style="font-weight:700;font-size:14px;color:'+comp.c+'">'+(p.listingCount!==null&&p.listingCount!==undefined?p.listingCount.toLocaleString()+' listings':comp.l)+'</div><div style="font-size:11px;color:var(--mu)'+(p.listingCount===null?';font-style:italic':'')+'">'+( p.listingCount!==null?'Live Etsy count':'Estimated')+'</div></div>';
-  if(p.avgPrice)h+='<div style="padding:8px;background:var(--p2);border-radius:8px;border:1px solid var(--b1)"><div style="font-size:10px;color:var(--mu);font-weight:600">💷 AVG PRICE</div><div style="font-weight:700;font-size:14px;color:var(--gd)">£'+p.avgPrice+'</div><div style="font-size:11px;color:var(--mu)">Live Etsy data</div></div>';
-  h+='<div style="padding:8px;background:var(--p2);border-radius:8px;border:1px solid var(--b1)"><div style="font-size:10px;color:var(--mu);font-weight:600">🖨️ SUPPLIER</div><div style="font-weight:700;font-size:13px">'+design.supplier+'</div><div style="font-size:11px;color:var(--mu)">'+design.cost+' · '+design.margin+'</div></div>';
-  h+='<div style="padding:8px;background:var(--p2);border-radius:8px;border:1px solid var(--b1)"><div style="font-size:10px;color:var(--mu);font-weight:600">📊 SEARCHES</div><div style="font-weight:700;font-size:13px;color:var(--ol)">'+design.searches+'</div><div style="font-size:11px;color:var(--mu)">Est. UK/month</div></div>';
-  h+='<div style="padding:8px;background:var(--p2);border-radius:8px;border:1px solid var(--b1)"><div style="font-size:10px;color:var(--mu);font-weight:600">📐 SIZE</div><div style="font-weight:700;font-size:13px">'+design.size+'</div><div style="font-size:11px;color:var(--mu)">Best variant</div></div>';
-  h+='</div>';
-
-  // Design intelligence
-  h+='<div style="background:var(--p2);border:1px solid var(--b1);border-radius:10px;padding:12px 14px;margin-bottom:12px">';
-  h+='<div style="font-size:11px;font-weight:700;color:var(--mu);letter-spacing:.06em;margin-bottom:8px">🎨 DESIGN INTELLIGENCE</div>';
-  // Colours
-  h+='<div style="display:flex;align-items:center;gap:6px;margin-bottom:8px;flex-wrap:wrap">';
-  h+='<span style="font-size:11px;color:var(--mu);min-width:95px">Top 5 colours:</span>';
-  design.colours.forEach(function(c,i){
-    h+='<div style="text-align:center;cursor:pointer" title="'+design.colourNames[i]+' — click to copy" onclick="copyHex(\''+c+'\',\''+design.colourNames[i]+'\')">';
-    h+='<div class="swatch" style="background:'+c+'"></div>';
-    h+='<div style="font-size:9px;color:var(--mu2);font-family:DM Mono,monospace">'+c+'</div></div>';
-  });
-  h+='</div>';
-  // Font + Style
-  h+='<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">';
-  h+='<span style="padding:5px 10px;background:var(--w);border:1px solid var(--b1);border-radius:20px;font-size:12px">✏️ <strong>Font:</strong> '+design.font+'</span>';
-  h+='<span style="padding:5px 10px;background:var(--w);border:1px solid var(--b1);border-radius:20px;font-size:12px">🎨 <strong>Style:</strong> '+design.style+'</span>';
-  h+='</div>';
-  // Phrases
-  h+='<div style="font-size:11px;color:var(--mu);margin-bottom:4px">💬 Top phrases on bestsellers:</div>';
-  design.phrases.forEach(function(ph){h+='<span style="font-style:italic;color:var(--gd);font-size:13px;font-weight:600;margin-right:10px">"'+ph+'"</span>';});
-  h+='</div>';
-
-  // Real tags
-  if(p.topTags&&p.topTags.length){
-    h+='<div style="margin-bottom:12px"><div style="font-size:11px;color:var(--mu);font-weight:600;margin-bottom:4px">✓ Real competitor tags from Etsy:</div>';
-    p.topTags.slice(0,8).forEach(function(t){h+='<span class="tag">'+t+'</span>';});
-    h+='</div>';
-  }
-
-  // Top listing
-  if(p.topFav&&p.topFav[0]&&p.topFav[0].title){
-    h+='<div style="padding:8px 12px;background:var(--p2);border-radius:8px;margin-bottom:12px">';
-    h+='<div style="font-size:11px;color:var(--mu);font-weight:600;margin-bottom:4px">🏆 Top favourited listing right now:</div>';
-    h+='<div style="font-size:12px;display:flex;justify-content:space-between;align-items:center">';
-    h+='<span style="flex:1;margin-right:8px">'+p.topFav[0].title+'</span>';
-    if(p.topFav[0].num_favorers)h+='<span style="color:var(--gd);flex-shrink:0">'+p.topFav[0].num_favorers+' ♡</span>';
-    if(p.topFav[0].url)h+='<a href="'+p.topFav[0].url+'" target="_blank" style="color:var(--ol);font-size:11px;margin-left:8px;flex-shrink:0;text-decoration:none">View →</a>';
-    h+='</div></div>';
-  }
-
-  // Supplier section
-  h+=buildSupplierSection(p.kw);
-
-  // Live links
-  h+='<div style="margin-bottom:12px"><div style="font-size:11px;color:var(--mu);font-weight:600;margin-bottom:5px">🔗 Verify this opportunity:</div>';
-  h+='<a class="lnk" href="https://www.etsy.com/uk/search?q='+kenc+'" target="_blank">🛍 Etsy UK</a>';
-  h+='<a class="lnk" href="https://www.etsy.com/search?q='+kenc+'" target="_blank">🛍 Etsy USA</a>';
-  h+='<a class="lnk" href="https://trends.google.com/trends/explore?q='+kenc+'&geo=GB" target="_blank">📈 Google Trends</a>';
-  h+='<a class="lnk" href="https://www.pinterest.co.uk/search/pins/?q='+kenc+'" target="_blank">📌 Pinterest</a>';
-  h+='<a class="lnk" href="https://www.ebay.co.uk/sch/i.html?_nkw='+kenc+'&LH_Sold=1&LH_Complete=1" target="_blank">💰 eBay Sold</a>';
-  h+='</div>';
-
-  // Action buttons
-  h+='<div style="display:flex;gap:8px;flex-wrap:wrap">';
-  h+='<button onclick="window.location.href=\'search.html?kw='+kenc+'\'" class="btn-olive" style="font-size:12px">🔍 Full Intelligence Brief →</button>';
-  h+='<button onclick="window.location.href=\'listing-generator.html?kw='+kenc+'\'" class="btn-ghost" style="font-size:12px">✍️ Write Listing →</button>';
-  h+='</div>';
-  h+='</div>';
-  return h;
-}
-
 function copyHex(hex,name){
   if(navigator.clipboard)navigator.clipboard.writeText(hex).then(function(){
     var n=document.createElement('div');
@@ -406,161 +251,328 @@ function copyHex(hex,name){
   });
 }
 
-// Core scan — runs entirely in the browser, no server timeout
-var SCAN_SEEDS=[
-  'personalised mug gift uk','funny mug gift','novelty mug uk',
-  'personalised print gift uk','wall art print uk',
-  'personalised tote bag uk','funny t shirt gift uk',
-  'gift for dog lover uk','gift for cat lover uk','gift for teacher uk',
-  'gift for nurse uk','gift for dad uk','gift for mum uk',
-  'fathers day gift uk','graduation gift uk',
-  'cottagecore print uk','botanical print gift',
-  'bookish gift uk','labrador gift uk','cockapoo gift uk',
-  'dark academia print uk','mental health gift uk',
-  'mushroom gift uk','frog gift uk','witchy gift uk'
-];
+// ── Supabase ───────────────────────────────────────────────────────────────
+var SB_URL = 'https://oktpizrevqehfrkcqphq.supabase.co';
+var SB_KEY  = 'sb_publishable_r4lLwwInTT76wXjP-Cha4Q_T1yALqyt';
 
-var results=[];
-var scanning=false;
-
-function setProgress(pct,msg){
-  document.getElementById('gf-ts').textContent=msg;
-  var bar=document.getElementById('prog-bar');
-  var fill=document.getElementById('prog-fill');
-  bar.style.display='block';
-  fill.style.width=pct+'%';
+function sbGet(path) {
+  return fetch(SB_URL + '/rest/v1/' + path, {
+    headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY }
+  }).then(function(r) {
+    if (!r.ok) throw new Error('Supabase ' + r.status);
+    return r.json();
+  });
 }
 
-async function fetchEtsy(kw){
-  try{
-    var r=await fetch('/api/etsy?path='+encodeURIComponent('listings/active?keywords='+kw+'&limit=10&sort_on=score'),{signal:AbortSignal.timeout(6000)});
-    if(!r.ok)return null;
-    var d=await r.json();
-    var L=(d.results||[]).filter(function(l){return l.currency_code!=='EUR';});
-    var prices=L.map(function(l){return(l.price&&l.price.amount||0)/(l.price&&l.price.divisor||100);}).filter(function(p){return p>0;}).sort(function(a,b){return a-b;});
-    var tm={};L.forEach(function(l){(l.tags||[]).forEach(function(t){tm[t]=(tm[t]||0)+1;});});
-    var topTags=Object.entries(tm).sort(function(a,b){return b[1]-a[1];}).slice(0,8).map(function(e){return e[0];});
-    var topFav=[...L].sort(function(a,b){return(b.num_favorers||0)-(a.num_favorers||0);}).slice(0,1);
-    var avg=prices.length?(prices.reduce(function(s,p){return s+p;},0)/prices.length).toFixed(2):null;
-    var count=d.count||L.length;
-    return{count:count,avgPrice:avg,topTags:topTags,topFav:topFav};
-  }catch(e){return null;}
+// ── Signal helpers ─────────────────────────────────────────────────────────
+
+function compTier(comp) {
+  if (comp === null || comp === undefined) return { l: '—', c: 'var(--mu)' };
+  if (comp < 0.40) return { l: 'Low',    c: '#16a34a' };
+  if (comp < 0.55) return { l: 'Medium', c: '#ca8a04' };
+  return              { l: 'High',   c: '#dc2626' };
 }
 
-async function startScan(){
-  if(scanning)return;
-  scanning=true;
-  results=[];
-  document.getElementById('scan-btn').textContent='Scanning...';
-  document.getElementById('scan-btn').disabled=true;
-  document.getElementById('gf-body').innerHTML='';
+function scoreColor(pctRank) {
+  if (pctRank <= 0.25) return '#16a34a';
+  if (pctRank <= 0.75) return '#ca8a04';
+  return '#6b7280';
+}
 
-  // Check localStorage cache
-  var ckey='oe_gap_'+new Date().toDateString();
-  var cached=localStorage.getItem(ckey);
-  if(cached&&!window._forceRescan){
-    try{
-      var cd=JSON.parse(cached);
-      results=cd;
-      renderResults();
-      scanning=false;
-      document.getElementById('scan-btn').textContent='↻ New Scan';
-      document.getElementById('scan-btn').disabled=false;
-      document.getElementById('prog-bar').style.display='none';
-      return;
-    }catch(e){}
+function scoreGrad(pctRank) {
+  if (pctRank <= 0.25) return 'linear-gradient(90deg,#16a34a,#22c55e)';
+  if (pctRank <= 0.75) return 'linear-gradient(90deg,#ca8a04,#eab308)';
+  return 'linear-gradient(90deg,#6b7280,#9ca3af)';
+}
+
+// ── Verdict ────────────────────────────────────────────────────────────────
+function verdict(n, pctRank) {
+  var comp    = n.competition;
+  var cls     = n.classification;
+  var urgency = n.urgency;
+  var weeks   = n.weeks_to_peak;
+
+  // Seasonal urgency always takes priority over rank
+  if (cls === 'seasonal') {
+    if (urgency === 'peaking_now')
+      return "Seasonal — you're in the peak window right now. List immediately.";
+    if (urgency === 'list_now')
+      return "Seasonal — peak is weeks away. List now so your listing has time to rank.";
+    if (urgency === 'prepare') {
+      var wStr = (weeks !== null && weeks !== undefined) ? ' (' + weeks + ' weeks away)' : '';
+      return 'Seasonal — peak is approaching' + wStr + '. Time to design and get ready.';
+    }
+    if (urgency === 'dormant')
+      return 'Seasonal — quiet period right now. Peak is months away; watch and plan.';
   }
 
-  setProgress(2,'Step 1/2: Fetching Etsy market data for '+SCAN_SEEDS.length+' product categories...');
+  // No gap data yet
+  if (n.gap_score === null || n.gap_score === undefined) return null;
 
-  // Process seeds with Etsy data
-  for(var i=0;i<SCAN_SEEDS.length;i++){
-    var seed=SCAN_SEEDS[i];
-    var pct=Math.round((i/SCAN_SEEDS.length)*80)+2;
-    setProgress(pct,'Checking Etsy: "'+seed+'" ('+( i+1)+'/'+SCAN_SEEDS.length+')');
+  // Top ~25%: genuine opportunity
+  if (pctRank <= 0.25) {
+    if (comp !== null && comp <= 0.42)
+      return 'Strong opportunity — real buyer interest and the competition is beatable.';
+    return 'Beatable market — good demand and the current leaders are not strongly established.';
+  }
 
-    var etsy=await fetchEtsy(seed);
-    var score=gapScore(i<5?1:i<10?2:i<15?3:4,etsy?etsy.count:null,seed);
+  // Middle ~50%: worth testing
+  if (pctRank <= 0.75) {
+    if (comp !== null && comp <= 0.50)
+      return 'Worth testing — moderate demand with manageable competition.';
+    return 'Competitive but not locked — a well-differentiated listing could carve out a position.';
+  }
 
-    results.push({
-      kw:seed,
-      gapScore:score,
-      googlePos:i<5?1:i<10?2:i<15?3:4,
-      listingCount:etsy?etsy.count:null,
-      avgPrice:etsy?etsy.avgPrice:null,
-      topTags:etsy?etsy.topTags:[],
-      topFav:etsy?etsy.topFav:[]
+  // Bottom ~25%: crowded / low signal
+  return 'Crowded and competitive — difficult to break in without a strong point of difference.';
+}
+
+// ── Assign percentile ranks and tiers ──────────────────────────────────────
+function assignRanks(niches) {
+  var ranked = niches
+    .filter(function(n) { return n.gap_score !== null && n.gap_score !== undefined; })
+    .slice()
+    .sort(function(a, b) { return b.gap_score - a.gap_score; });
+
+  var total = ranked.length || 1;
+  ranked.forEach(function(n, i) { n._pctRank = i / total; });
+  niches.forEach(function(n) {
+    if (n.gap_score === null || n.gap_score === undefined) n._pctRank = 1.0;
+  });
+
+  niches.forEach(function(n) {
+    if (n.classification === 'seasonal') {
+      if (n.urgency === 'peaking_now' || n.urgency === 'list_now') n._tier = 1;
+      else if (n.urgency === 'prepare')                            n._tier = 2;
+      else                                                         n._tier = 3;
+    } else {
+      if      (n._pctRank <= 0.25) n._tier = 1;
+      else if (n._pctRank <= 0.75) n._tier = 2;
+      else                         n._tier = 3;
+    }
+  });
+}
+
+// ── Card ───────────────────────────────────────────────────────────────────
+function buildNicheCard(n, maxScore) {
+  var score      = n.gap_score;
+  var pct        = n._pctRank;
+  var col        = scoreColor(pct);
+  var grad       = scoreGrad(pct);
+  var vtext      = verdict(n, pct);
+  var ct         = compTier(n.competition);
+  var kenc       = encodeURIComponent(n.keyword);
+  var barPct     = (score !== null && maxScore > 0) ? Math.round(score / maxScore * 100) : 0;
+  var borderCol  = pct <= 0.25 ? '#16a34a' : pct <= 0.75 ? '#ca8a04' : '#9ca3af';
+
+  var h = '<div class="gcard" style="border-left:4px solid ' + borderCol + '">';
+
+  // Keyword + verdict
+  h += '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:12px">';
+  h += '<div style="flex:1">';
+  h += '<div style="font-weight:700;font-size:17px;margin-bottom:8px">' + n.keyword + '</div>';
+  if (vtext) {
+    h += '<div style="font-size:13px;line-height:1.55;color:var(--tx);padding:8px 12px;background:var(--p2);border-left:3px solid ' + col + ';border-radius:0 8px 8px 0">' + vtext + '</div>';
+  } else {
+    h += '<div style="font-size:13px;color:var(--mu);font-style:italic;padding:8px 12px;background:var(--p2);border-radius:8px">Gathering data…</div>';
+  }
+  h += '</div>';
+
+  // Gap score
+  h += '<div style="text-align:center;flex-shrink:0;min-width:72px">';
+  if (score !== null && score !== undefined) {
+    h += '<div class="gap-score" style="color:' + col + '">' + score + '</div>';
+    h += '<div style="font-size:9px;color:var(--mu2);margin-bottom:3px">gap score</div>';
+    h += '<div class="gap-bar" style="width:70px;margin:0 auto"><div class="gap-fill" style="width:' + barPct + '%;background:' + grad + '"></div></div>';
+  } else {
+    h += '<div style="font-size:26px;color:var(--mu)">—</div>';
+    h += '<div style="font-size:9px;color:var(--mu2)">gap score</div>';
+  }
+  h += '</div>';
+  h += '</div>';
+
+  // Supporting stats
+  h += '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;margin-bottom:14px">';
+
+  h += statBox('INTEREST',
+    n.demand_score !== null && n.demand_score !== undefined
+      ? Math.round(n.demand_score) + '<span style="font-size:11px;font-weight:400;color:var(--mu)">&thinsp;/&thinsp;100</span>'
+      : null);
+
+  h += statBox('LISTINGS ON ETSY',
+    n.total_listings !== null && n.total_listings !== undefined
+      ? Number(n.total_listings).toLocaleString()
+      : null);
+
+  h += statBox('TOP SELLERS AVG PRICE',
+    n.avg_price !== null && n.avg_price !== undefined
+      ? '£' + parseFloat(n.avg_price).toFixed(2)
+      : null);
+
+  h += '<div style="padding:8px 10px;background:var(--p2);border-radius:8px;border:1px solid var(--b1)">';
+  h += '<div style="font-size:10px;color:var(--mu);font-weight:600;margin-bottom:3px">COMPETITION</div>';
+  h += '<div style="font-weight:700;font-size:15px;color:' + ct.c + '">' + ct.l + '</div>';
+  h += '</div>';
+
+  h += '</div>';
+
+  // Verify links
+  h += '<div style="margin-bottom:12px">';
+  h += '<div style="font-size:11px;color:var(--mu);font-weight:600;margin-bottom:5px">Verify this opportunity:</div>';
+  h += '<a class="lnk" href="https://www.etsy.com/uk/search?q=' + kenc + '" target="_blank">Etsy UK</a>';
+  h += '<a class="lnk" href="https://www.etsy.com/search?q=' + kenc + '" target="_blank">Etsy USA</a>';
+  h += '<a class="lnk" href="https://trends.google.com/trends/explore?q=' + kenc + '&geo=GB" target="_blank">Google Trends</a>';
+  h += '<a class="lnk" href="https://www.pinterest.co.uk/search/pins/?q=' + kenc + '" target="_blank">Pinterest</a>';
+  h += '<a class="lnk" href="https://www.ebay.co.uk/sch/i.html?_nkw=' + kenc + '&LH_Sold=1&LH_Complete=1" target="_blank">eBay Sold</a>';
+  h += '</div>';
+
+  // Action buttons
+  h += '<div style="display:flex;gap:8px;flex-wrap:wrap">';
+  h += '<button onclick="window.location.href=\'search.html?kw=' + kenc + '\'" class="btn-olive" style="font-size:12px">Full Intelligence Brief →</button>';
+  h += '<button onclick="window.location.href=\'listing-generator.html?kw=' + kenc + '\'" class="btn-ghost" style="font-size:12px">Write Listing →</button>';
+  h += '</div>';
+
+  h += '</div>';
+  return h;
+}
+
+function statBox(label, value) {
+  var h = '<div style="padding:8px 10px;background:var(--p2);border-radius:8px;border:1px solid var(--b1)">';
+  h += '<div style="font-size:10px;color:var(--mu);font-weight:600;margin-bottom:3px">' + label + '</div>';
+  if (value !== null && value !== undefined) {
+    h += '<div style="font-weight:700;font-size:15px">' + value + '</div>';
+  } else {
+    h += '<div style="font-size:12px;color:var(--mu);font-style:italic">Gathering…</div>';
+  }
+  h += '</div>';
+  return h;
+}
+
+// ── Render ─────────────────────────────────────────────────────────────────
+function renderNiches(niches) {
+  assignRanks(niches);
+
+  var maxScore = 0;
+  niches.forEach(function(n) {
+    if (n.gap_score !== null && n.gap_score !== undefined && n.gap_score > maxScore) maxScore = n.gap_score;
+  });
+  if (maxScore === 0) maxScore = 1;
+
+  var tier1 = niches.filter(function(n) { return n._tier === 1; });
+  var tier2 = niches.filter(function(n) { return n._tier === 2; });
+  var tier3 = niches.filter(function(n) { return n._tier === 3; });
+
+  var sr = document.getElementById('stats-row');
+  sr.style.display = 'flex';
+  sr.innerHTML =
+    '<div class="stat"><div style="font-size:22px;font-weight:800;color:#16a34a">'  + tier1.length + '</div><div style="font-size:11px;color:var(--mu)">Top opportunities</div></div>' +
+    '<div class="stat"><div style="font-size:22px;font-weight:800;color:#ca8a04">'  + tier2.length + '</div><div style="font-size:11px;color:var(--mu)">Worth testing</div></div>'     +
+    '<div class="stat"><div style="font-size:22px;font-weight:800;color:var(--mu)">' + tier3.length + '</div><div style="font-size:11px;color:var(--mu)">Monitor</div></div>'           +
+    '<div class="stat"><div style="font-size:22px;font-weight:800;color:var(--tx)">' + niches.length + '</div><div style="font-size:11px;color:var(--mu)">Niches tracked</div></div>';
+
+  var h = '';
+
+  if (tier1.length) {
+    h += '<div class="tier-head"><h2 style="font-size:16px;font-weight:700;margin:0">Top Opportunities</h2>';
+    h += '<span style="padding:3px 10px;border-radius:20px;font-size:12px;font-weight:700;background:#dcfce7;color:#16a34a">' + tier1.length + ' niches</span></div>';
+    h += '<p style="font-size:13px;color:var(--mu);margin-bottom:14px">Best-ranked gaps in the current dataset — real demand with beatable or light competition.</p>';
+    tier1.forEach(function(n) { h += buildNicheCard(n, maxScore); });
+  }
+
+  if (tier2.length) {
+    h += '<div class="tier-head"><h2 style="font-size:16px;font-weight:700;margin:0">Worth Testing</h2>';
+    h += '<span style="padding:3px 10px;border-radius:20px;font-size:12px;font-weight:700;background:#fef9c3;color:#ca8a04">' + tier2.length + ' niches</span></div>';
+    h += '<p style="font-size:13px;color:var(--mu);margin-bottom:14px">Moderate gaps — a well-optimised listing can carve out a position.</p>';
+    tier2.forEach(function(n) { h += buildNicheCard(n, maxScore); });
+  }
+
+  if (tier3.length) {
+    h += '<div class="tier-head"><h2 style="font-size:16px;font-weight:700;margin:0">Monitor</h2>';
+    h += '<span style="padding:3px 10px;border-radius:20px;font-size:12px;font-weight:700;background:var(--p2);color:var(--mu)">' + tier3.length + ' niches</span></div>';
+    h += '<p style="font-size:13px;color:var(--mu);margin-bottom:14px">Lower-scoring niches in the current dataset — harder to break in, or early-stage seasonal.</p>';
+    tier3.forEach(function(n) { h += buildNicheCard(n, maxScore); });
+  }
+
+  if (!h) {
+    h = '<div style="text-align:center;padding:48px 24px;color:var(--mu)">'
+      + '<div style="font-size:36px;margin-bottom:12px">🌱</div>'
+      + '<div style="font-size:14px">No niche data yet — the weekly cron jobs will populate this over the coming days.</div>'
+      + '</div>';
+  }
+
+  document.getElementById('gf-body').innerHTML = h;
+}
+
+// ── Load ───────────────────────────────────────────────────────────────────
+async function loadNiches() {
+  var btn  = document.getElementById('scan-btn');
+  var ts   = document.getElementById('gf-ts');
+  var bar  = document.getElementById('prog-bar');
+  var fill = document.getElementById('prog-fill');
+
+  btn.disabled       = true;
+  btn.textContent    = 'Loading…';
+  ts.textContent     = 'Fetching latest data…';
+  bar.style.display  = 'block';
+  fill.style.width   = '20%';
+
+  try {
+    var scores = await sbGet(
+      'niche_scores?select=*,niches(keyword)&order=gap_score.desc.nullslast'
+    );
+
+    fill.style.width = '60%';
+
+    var supplyRows = await sbGet(
+      'niche_supply_snapshots?select=niche_id,total_listings,avg_price,avg_favorers' +
+      '&order=snapshot_date.desc&limit=500'
+    );
+
+    fill.style.width = '90%';
+
+    // First occurrence per niche_id = newest (rows ordered desc)
+    var supplyMap = {};
+    supplyRows.forEach(function(r) {
+      if (!supplyMap[r.niche_id]) supplyMap[r.niche_id] = r;
     });
 
-    // Show partial results as they come in
-    if(results.length%5===0||i===SCAN_SEEDS.length-1){
-      renderResults(true);
-    }
+    var niches = scores
+      .map(function(s) {
+        var sup = supplyMap[s.niche_id] || {};
+        return {
+          keyword:        s.niches && s.niches.keyword,
+          gap_score:      s.gap_score,
+          demand_score:   s.demand_score,
+          competition:    s.competition,
+          urgency:        s.urgency,
+          trajectory:     s.trajectory,
+          classification: s.classification,
+          weeks_to_peak:  s.weeks_to_peak,
+          niche_id:       s.niche_id,
+          total_listings: sup.total_listings != null ? sup.total_listings : null,
+          avg_price:      sup.avg_price      != null ? sup.avg_price      : null,
+          avg_favorers:   sup.avg_favorers   != null ? sup.avg_favorers   : null,
+        };
+      })
+      .filter(function(n) { return !!n.keyword; });
+
+    bar.style.display = 'none';
+    ts.textContent    = 'Updated ' + new Date().toLocaleTimeString();
+
+    renderNiches(niches);
+  } catch (e) {
+    bar.style.display = 'none';
+    ts.textContent    = 'Error loading data — ' + e.message;
+    document.getElementById('gf-body').innerHTML =
+      '<div style="padding:24px;color:var(--mu)">Could not load opportunities. Check your connection and try refreshing.</div>';
+  } finally {
+    btn.disabled    = false;
+    btn.textContent = '↻ Refresh';
   }
-
-  setProgress(100,'Scan complete — '+results.length+' opportunities analysed');
-  results.sort(function(a,b){return b.gapScore-a.gapScore;});
-  renderResults();
-
-  // Cache for today
-  try{localStorage.setItem(ckey,JSON.stringify(results));}catch(e){}
-
-  scanning=false;
-  document.getElementById('scan-btn').textContent='↻ New Scan';
-  document.getElementById('scan-btn').disabled=false;
-  window._forceRescan=false;
 }
 
-function renderResults(partial){
-  var sorted=[...results].sort(function(a,b){return b.gapScore-a.gapScore;});
-  var immediate=sorted.filter(function(p){return p.gapScore>=70;});
-  var thisWeek=sorted.filter(function(p){return p.gapScore>=50&&p.gapScore<70;});
-  var monitor=sorted.filter(function(p){return p.gapScore>=30&&p.gapScore<50;});
-
-  // Stats
-  var sr=document.getElementById('stats-row');
-  sr.style.display='flex';
-  sr.innerHTML='<div class="stat"><div style="font-size:22px;font-weight:800;color:#dc2626">'+immediate.length+'</div><div style="font-size:11px;color:var(--mu)">List TODAY</div></div>'
-    +'<div class="stat"><div style="font-size:22px;font-weight:800;color:#ea580c">'+thisWeek.length+'</div><div style="font-size:11px;color:var(--mu)">This Week</div></div>'
-    +'<div class="stat"><div style="font-size:22px;font-weight:800;color:var(--ol)">'+monitor.length+'</div><div style="font-size:11px;color:var(--mu)">Monitor</div></div>'
-    +'<div class="stat"><div style="font-size:22px;font-weight:800;color:var(--mu)">'+results.length+'</div><div style="font-size:11px;color:var(--mu)">Scanned</div></div>';
-
-  var body=document.getElementById('gf-body');
-  var h='';
-
-  if(immediate.length){
-    h+='<div class="tier-head"><h2 style="font-size:16px;font-weight:700;margin:0">🚨 List TODAY — Biggest Gap</h2><span style="padding:3px 10px;border-radius:20px;font-size:12px;font-weight:700;background:#fee2e2;color:#dc2626">'+immediate.length+' found</span></div>';
-    h+='<p style="font-size:13px;color:var(--mu);margin-bottom:14px">Real buyer searches + very few Etsy sellers. The window is open right now.</p>';
-    immediate.forEach(function(p){h+=buildCard(p);});
-  }
-
-  if(thisWeek.length){
-    h+='<div class="tier-head"><h2 style="font-size:16px;font-weight:700;margin:0">⚡ List This Week</h2><span style="padding:3px 10px;border-radius:20px;font-size:12px;font-weight:700;background:#fff7ed;color:#ea580c">'+thisWeek.length+' found</span></div>';
-    h+='<p style="font-size:13px;color:var(--mu);margin-bottom:14px">Good demand, manageable competition. A well-optimised listing can rank within weeks.</p>';
-    thisWeek.forEach(function(p){h+=buildCard(p);});
-  }
-
-  if(monitor.length){
-    h+='<div class="tier-head"><h2 style="font-size:16px;font-weight:700;margin:0">👀 Monitor</h2><span style="padding:3px 10px;border-radius:20px;font-size:12px;font-weight:700;background:var(--p2);color:var(--mu)">'+monitor.length+' found</span></div>';
-    monitor.forEach(function(p){h+=buildCard(p);});
-  }
-
-  if(partial&&!h)h='<div style="text-align:center;padding:20px;color:var(--mu)">Scanning... results will appear shortly</div>';
-  body.innerHTML=h;
-}
-
-document.addEventListener('DOMContentLoaded',function(){
-  // Try cache first
-  var ckey='oe_gap_'+new Date().toDateString();
-  var cached=localStorage.getItem(ckey);
-  if(cached){
-    try{
-      results=JSON.parse(cached);
-      if(results.length>0){renderResults();document.getElementById('gf-ts').textContent='Cached results — click New Scan to refresh';return;}
-    }catch(e){}
-  }
-  startScan();
-});
+// ── Boot ───────────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', function() { loadNiches(); });
 </script>
 </body>
 </html>
