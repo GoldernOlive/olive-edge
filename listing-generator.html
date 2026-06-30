@@ -245,8 +245,7 @@ async function researchAndWrite(product,keyword,audience,market,type,varNum){
     '"materials":"what to fill in materials field",\n'+
     '"attributes":{"occasion":"Birthday etc","style":"Minimalist etc","colour":"main colour"},\n'+
     '"pinterestCaption":"ready to post Pinterest caption with hashtags",\n'+
-    '"instagramCaption":"ready to post Instagram caption with hashtags",\n'+
-    '"estimatedMonthlyRevenue":"£X-£Y based on competition data"\n'+
+    '"instagramCaption":"ready to post Instagram caption with hashtags"\n'+
     '}'
   );
 
@@ -349,7 +348,6 @@ function renderListing(d,num){
   html+='<div class="sbox"><div class="lbl">SEO Score</div><div class="mono" style="font-size:22px;color:'+scColor+';font-weight:700">'+sc+'/10</div><div style="font-size:10px;color:var(--mu);margin-top:3px">'+d.seoScoreReason+'</div></div>';
   var priceKeys=Object.keys(d.price||{});
   for(var i=0;i<priceKeys.length;i++){html+='<div class="sbox"><div class="lbl">'+priceKeys[i]+' Price</div><div class="mono" style="font-size:16px;color:var(--gd);font-weight:700">'+(d.price[priceKeys[i]]||'—')+'</div></div>';}
-  if(d.estimatedMonthlyRevenue)html+='<div class="sbox"><div class="lbl">Est Monthly Revenue</div><div class="mono" style="font-size:15px;color:var(--ol);font-weight:700">'+d.estimatedMonthlyRevenue+'</div></div>';
   html+='</div></div>';
 
   html+='<div class="card d1">';

@@ -254,19 +254,19 @@ async function doSearch(){
   var aiResults=await Promise.allSettled([
 
     // 1. Verdict + Market Reality
-    callAI(dp+'You are an expert Etsy market analyst. Analyse "'+kw+'" for UK POD sellers using this REAL data: '+etsyCtx+'. Give a definitive verdict. Return JSON: {"verdict":"BUY IN","verdictColor":"green","score":8.2,"reason":"Specific reason based on real data above","insight":"The single most important thing a seller needs to know right now","demandLevel":"High","competitionLevel":"Medium","saturationLabel":"'+etsy.saturationLabel+'","trend":"Rising","monthlySearchVolume":"~8,000-12,000","monthlyEtsySales":"~2,000-4,000 across all sellers","newSellerViability":"High — a new shop can compete within 30 days","urgency":"List this week","ukSweetSpot":"'+( etsy.sweetSpot||'£14-18')+'","usaSweetSpot":"$18-24","topShopMonthlyRevenue":"£1,200-£3,500","marketShare":"Top 20 shops take ~60% of sales"}'),
+    callAI(dp+'You are an expert Etsy market analyst. Analyse "'+kw+'" for UK POD sellers using this REAL data: '+etsyCtx+'. Give a definitive verdict. Return JSON: {"verdict":"BUY IN","verdictColor":"green","score":8.2,"reason":"Specific reason based on real data above","insight":"The single most important thing a seller needs to know right now","demandLevel":"High","competitionLevel":"Medium","saturationLabel":"'+etsy.saturationLabel+'","newSellerViability":"High — a new shop can compete within 30 days","urgency":"List this week","ukSweetSpot":"'+(etsy.sweetSpot||'£14-18')+'","usaSweetSpot":"$18-24"}'),
 
     // 2. Design Intelligence — colours, fonts, phrases, styles
-    callAI(dp+'Design intelligence for Etsy "'+kw+'" UK bestsellers. Analyse what the actual top-selling products LOOK LIKE. Return JSON: {"topColours":[{"name":"Sage Green","hex":"#87AE87","popularity":78,"why":"Aligns with cottagecore trend, high Pinterest saves"},{"name":"Cream/Ivory","hex":"#F5F0E8","popularity":65,"why":"Clean background, makes text pop in thumbnails"}],"topFonts":[{"style":"Handwritten Script","examples":"Pacifico, Sacramento, Dancing Script","popularity":72,"bestFor":"Personalised and gift items","why":"Feels personal and handcrafted"},{"style":"Bold Sans-Serif","examples":"Montserrat Bold, Bebas Neue","popularity":58,"bestFor":"Funny slogans and statement pieces"}],"topPhrases":[{"phrase":"exact phrase on bestselling products","sales":"High","emotion":"why buyers love this phrase","printOn":["mug","tote"]},{"phrase":"second phrase","sales":"Medium","emotion":"emotion","printOn":["print"]}],"designStyles":[{"style":"Minimalist","popularity":68,"description":"Clean, lots of white space, single focal element"},{"style":"Maximalist Illustrated","popularity":45,"description":"Detailed illustrations, busy but charming"}],"illustrationStyles":[{"style":"Line Art","popularity":55},{"style":"Watercolour","popularity":48},{"style":"Bold Graphic","popularity":42}],"backgroundStyles":[{"style":"Plain White","popularity":75},{"style":"Textured Kraft","popularity":32}],"thumbnailStyle":"What the listing thumbnail looks like on bestsellers","mockupStyle":"Best mockup type for this product — lifestyle vs flat lay vs person holding","keyDesignDo":"The single most important design decision","keyDesignDont":"The most common design mistake for this niche"}'),
+    callAI(dp+'Design intelligence for Etsy "'+kw+'" UK bestsellers. Analyse what the actual top-selling products LOOK LIKE. Return JSON: {"topColours":[{"name":"Sage Green","hex":"#87AE87","why":"Aligns with cottagecore trend, high Pinterest saves"},{"name":"Cream/Ivory","hex":"#F5F0E8","why":"Clean background, makes text pop in thumbnails"}],"topFonts":[{"style":"Handwritten Script","examples":"Pacifico, Sacramento, Dancing Script","bestFor":"Personalised and gift items","why":"Feels personal and handcrafted"},{"style":"Bold Sans-Serif","examples":"Montserrat Bold, Bebas Neue","bestFor":"Funny slogans and statement pieces","why":"High contrast, legible at thumbnail size"}],"topPhrases":[{"phrase":"exact phrase on bestselling products","emotion":"why buyers love this phrase","printOn":["mug","tote"]},{"phrase":"second phrase","emotion":"emotion","printOn":["print"]}],"designStyles":[{"style":"Minimalist","description":"Clean, lots of white space, single focal element"},{"style":"Maximalist Illustrated","description":"Detailed illustrations, busy but charming"}],"illustrationStyles":[{"style":"Line Art"},{"style":"Watercolour"},{"style":"Bold Graphic"}],"backgroundStyles":[{"style":"Plain White"},{"style":"Textured Kraft"}],"thumbnailStyle":"What the listing thumbnail looks like on bestsellers","mockupStyle":"Best mockup type for this product — lifestyle vs flat lay vs person holding","keyDesignDo":"The single most important design decision","keyDesignDont":"The most common design mistake for this niche"}'),
 
     // 3. SEO Arsenal — tags, titles, descriptions, missing keywords
-    callAI(dp+'SEO intelligence for Etsy "'+kw+'" UK. Real tags competitors use: '+etsy.topTags.slice(0,15).map(function(t){return t.tag;}).join(', ')+'. Real titles: '+etsy.topTitles.slice(0,5).join(' | ')+'. Find what top sellers do AND what they miss. Return JSON: {"titleFormula":"[Adj] [Product] | [Keyword] Gift for [Audience] — exact formula pattern","titleExample":"exact example title using this formula","titleDont":"common title mistake","top13Tags":["tag1","tag2","tag3","tag4","tag5","tag6","tag7","tag8","tag9","tag10","tag11","tag12","tag13"],"tagStrategy":{"highVolume":["tags with most search volume"],"lowComp":["tags competitors underuse"],"longTail":["specific 3-4 word tags"],"emotional":["tags that trigger buying emotion"]},"missingKeywords":["keyword buyers search that competitors miss","keyword2","keyword3"],"descriptionHook":"Opening sentence that stops buyers scrolling — specific to this niche","descriptionStructure":["First: emotional hook","Second: what makes it special","Third: specs and personalisation","Fourth: gift context","Fifth: call to action"],"buyerSearchBehaviour":"How buyers actually search for this — by occasion, recipient, or product type","searchIntentSplit":{"giftBuyers":"60%","selfPurchase":"30%","businessBuyers":"10%"}}'),
+    callAI(dp+'SEO intelligence for Etsy "'+kw+'" UK. Real tags competitors use: '+etsy.topTags.slice(0,15).map(function(t){return t.tag;}).join(', ')+'. Real titles: '+etsy.topTitles.slice(0,5).join(' | ')+'. Find what top sellers do AND what they miss. Return JSON: {"titleFormula":"[Adj] [Product] | [Keyword] Gift for [Audience] — exact formula pattern","titleExample":"exact example title using this formula","titleDont":"common title mistake","top13Tags":["tag1","tag2","tag3","tag4","tag5","tag6","tag7","tag8","tag9","tag10","tag11","tag12","tag13"],"tagStrategy":{"broad":["tags with broad buyer reach"],"lowComp":["tags competitors underuse"],"longTail":["specific 3-4 word tags"],"emotional":["tags that trigger buying emotion"]},"missingKeywords":["keyword buyers search that competitors miss","keyword2","keyword3"],"descriptionHook":"Opening sentence that stops buyers scrolling — specific to this niche","descriptionStructure":["First: emotional hook","Second: what makes it special","Third: specs and personalisation","Fourth: gift context","Fifth: call to action"],"buyerSearchBehaviour":"How buyers actually search for this — by occasion, recipient, or product type"}'),
 
     // 4. Financial + Supplier Intelligence
-    callAI(dp+'Financial and supplier intelligence for "'+kw+'" UK Etsy POD seller. Real avg Etsy price: £'+( etsy.priceAvg||'unknown')+'. Return JSON: {"bestPlatform":"Printify","bestVariant":"11oz White Ceramic Mug — Item 1234","baseCostUK":"£3.50","baseCostReason":"Cheapest quality option on Printify UK network","productionDays":"2-4 days","shippingUK":"3-5 days","printifyBase":"£3.50","printfulBase":"£4.20","gelatoBase":"£3.80","recommendedPriceUK":"£14.99","recommendedPriceUSA":"$18.99","recommendedPriceDE":"€16.99","recommendedPriceAU":"AU$24.99","etsyFee":"£1.14","listingFee":"£0.18","netProfitUK":"£10.17","marginPct":"68%","breakEven":4,"monthlyRevenueEstP1":"£600-£1,200","monthlyRevenueEstP2":"£200-£400","shouldRunAds":true,"adsReason":"High margin justifies 15-20% ROAS spend","priceingTip":"Price at £14.99 not £15 — psychological pricing increases CTR by ~12%","repeatPurchasePotential":"Low — one-time gift purchase","bundleOpportunity":"Bundle with matching coaster or card for average order value increase"}'),
+    callAI(dp+'Financial and supplier intelligence for "'+kw+'" UK Etsy POD seller. Real avg Etsy price: £'+(etsy.priceAvg||'unknown')+'. Return JSON: {"bestPlatform":"Printify","bestVariant":"11oz White Ceramic Mug — Item 1234","baseCostUK":"£3.50","baseCostReason":"Cheapest quality option on Printify UK network","productionDays":"2-4 days","shippingUK":"3-5 days","printifyBase":"£3.50","printfulBase":"£4.20","gelatoBase":"£3.80","recommendedPriceUK":"£14.99","recommendedPriceUSA":"$18.99","recommendedPriceDE":"€16.99","recommendedPriceAU":"AU$24.99","etsyFee":"£1.14","listingFee":"£0.18","netProfitUK":"£10.17","marginPct":"68%","breakEven":4,"shouldRunAds":true,"adsReason":"High margin justifies 15-20% ROAS spend","pricingTip":"Qualitative pricing advice based on the real competitor price range","repeatPurchasePotential":"Low — one-time gift purchase","bundleOpportunity":"Bundle with matching coaster or card for average order value increase"}'),
 
     // 5. Buyer Psychology + Competitive Edge
-    callAI(dp+'Buyer psychology and competitive edge analysis for "'+kw+'" UK Etsy. Real listing count: '+etsy.count+'. Return JSON: {"buyerPersona":"Specific description — who exactly is buying this, their age, occasion, relationship to recipient","primaryBuyingTrigger":"The core emotional reason they click buy","giftVsSelf":"Gift — 70% buy as gifts for [specific occasion]","buyingJourney":"How they find and decide — do they search, browse, or discover via social","priceAnchoring":"How to position your price vs competitors","photoStrategy":[{"shotNum":1,"description":"Lifestyle hero shot — product in use in natural setting","why":"First image drives 80% of clicks","tips":"Natural light, lifestyle setting matching your audience"},{"shotNum":2,"description":"Close-up of personalisation/key design detail","why":"Builds confidence in quality"},{"shotNum":3,"description":"Size reference shot","why":"Removes purchase hesitation"},{"shotNum":4,"description":"Gift context — wrapped or in gift box","why":"Triggers gift-buying emotion"},{"shotNum":5,"description":"Multiple variants or colour options flat lay","why":"Increases perceived value and options"}],"topSellerWeaknesses":["Specific thing top sellers do wrong","weakness 2","weakness 3"],"untappedAngles":["Specific underserved buyer persona or design angle","angle 2","angle 3"],"crossSellOpportunity":"What else this buyer purchases — build a range","repeatCustomerStrategy":"How to get repeat orders from this buyer","reviewStrategy":"What to say in shipping message to get 5-star reviews","seasonalAngles":["Seasonal angle 1 for this product","angle 2"]}'  )
+    callAI(dp+'Buyer psychology and competitive edge analysis for "'+kw+'" UK Etsy. Real listing count: '+etsy.count+'. Return JSON: {"buyerPersona":"Specific description — who exactly is buying this, their age, occasion, relationship to recipient","primaryBuyingTrigger":"The core emotional reason they click buy","giftVsSelf":"Qualitative split only — e.g. mostly gift buyers for [occasion], self-purchase less common — no invented percentages","buyingJourney":"How they find and decide — do they search, browse, or discover via social","priceAnchoring":"How to position your price vs competitors","photoStrategy":[{"shotNum":1,"description":"Lifestyle hero shot — product in use in natural setting","why":"First image is the main scroll-stopper — set the scene for your buyer","tips":"Natural light, lifestyle setting matching your audience"},{"shotNum":2,"description":"Close-up of personalisation/key design detail","why":"Builds confidence in print quality and finish"},{"shotNum":3,"description":"Size reference shot","why":"Removes a common purchase hesitation"},{"shotNum":4,"description":"Gift context — wrapped or in gift box","why":"Triggers gift-buying intent"},{"shotNum":5,"description":"Multiple variants or colour options flat lay","why":"Shows range and increases perceived value"}],"topSellerWeaknesses":["Specific thing top sellers do wrong","weakness 2","weakness 3"],"untappedAngles":["Specific underserved buyer persona or design angle","angle 2","angle 3"],"crossSellOpportunity":"What else this buyer purchases — build a range","repeatCustomerStrategy":"How to get repeat orders from this buyer","reviewStrategy":"What to say in shipping message to get 5-star reviews","seasonalAngles":["Seasonal angle 1 for this product","angle 2"]}'  )
   ]);
 
   var market=aiResults[0].status==='fulfilled'?aiResults[0].value:{};
@@ -297,7 +297,6 @@ async function doSearch(){
     timing={
       event:de,
       bestMonths:matchEv==='Christmas'?['October','November','December']:matchEv&&matchEv.indexOf('Father')>=0?['May','June']:matchEv&&matchEv.indexOf('Mother')>=0?['February','March']:matchEv==='Halloween'?['September','October']:matchEv==="Valentine's Day"?['December','January']:['October','November','December'],
-      spike:matchEv==='Christmas'?'300-400%':matchEv&&matchEv.indexOf('Father')>=0?'180%':matchEv==='Halloween'?'250%':'100-200%',
       yearRound:!matchEv
     };
   }catch(e){}
@@ -319,7 +318,6 @@ async function doSearch(){
   s1+=sbox('Demand',market.demandLevel,market.demandLevel==='High'?'var(--ol)':'var(--gd)');
   s1+=sbox('Competition',market.competitionLevel,market.competitionLevel==='Low'?'var(--gn)':market.competitionLevel==='High'?'var(--rd)':'var(--or)');
   s1+=sbox('Market',market.saturationLabel||etsy.saturationLabel,'var(--bl)');
-  s1+=sbox('Trend',market.trend,market.trend==='Rising'?'var(--gn)':market.trend==='Declining'?'var(--rd)':'var(--gd)');
   s1+=sbox('New Seller',market.newSellerViability,'var(--ol)');
   s1+='</div>';
   s1+='<div style="padding:2px 0 14px"><div class="lbl">Urgency</div>';
@@ -347,14 +345,11 @@ async function doSearch(){
     s2+='</div>';
   }
   s2+='<div class="grid-auto" style="margin-bottom:16px">';
-  s2+=sbox('Monthly Searches',market.monthlySearchVolume,'var(--ol)');
-  s2+=sbox('Monthly Sales',market.monthlyEtsySales,'var(--gd)');
   s2+=sbox('Live Listings',etsy.count||'—','var(--mu)');
   s2+=sbox('Price Min',etsy.priceMin?'£'+etsy.priceMin:'—','var(--gn)');
   s2+=sbox('Price Avg',etsy.priceAvg?'£'+etsy.priceAvg:'—','var(--gd)');
   s2+=sbox('Price Max',etsy.priceMax?'£'+etsy.priceMax:'—','var(--rd)');
   s2+=sbox('Sweet Spot',etsy.sweetSpot||market.ukSweetSpot,'var(--ol)');
-  s2+=sbox('Top Shop Revenue',market.topShopMonthlyRevenue,'var(--ol)');
   s2+='</div>';
   if(etsy.topByFav&&etsy.topByFav.length){
     s2+='<div class="lbl">Top Listings by Favourites — Real Etsy Data</div>';
@@ -386,8 +381,7 @@ async function doSearch(){
     design.topColours.forEach(function(c){
       s3+='<div style="text-align:center"><div class="color-swatch" style="background:'+c.hex+'" title="'+c.name+' — '+c.hex+'" onclick="copyText(\''+c.hex+'\',this)"></div>';
       s3+='<div style="font-size:10px;color:var(--mu);margin-top:4px;max-width:50px">'+c.name+'</div>';
-      s3+='<div style="font-size:10px;font-family:DM Mono,monospace;color:var(--mu2)">'+c.hex+'</div>';
-      s3+='<div style="font-size:10px;font-weight:600;color:var(--ol)">'+c.popularity+'%</div></div>';
+      s3+='<div style="font-size:10px;font-family:DM Mono,monospace;color:var(--mu2)">'+c.hex+'</div></div>';
     });
     s3+='</div>';
     design.topColours.forEach(function(c){
@@ -399,7 +393,7 @@ async function doSearch(){
   if(design.topFonts&&design.topFonts.length){
     s3+='<div class="lbl" style="margin-top:16px">Top Font Styles</div>';
     design.topFonts.forEach(function(f){
-      s3+='<div class="edge-card"><div style="display:flex;justify-content:space-between;margin-bottom:4px"><strong>'+f.style+'</strong><span class="mono" style="color:var(--gd)">'+f.popularity+'%</span></div>';
+      s3+='<div class="edge-card"><div style="margin-bottom:4px"><strong>'+f.style+'</strong></div>';
       s3+='<div style="font-size:12px;color:var(--mu);margin-bottom:3px">Examples: '+f.examples+'</div>';
       s3+='<div style="font-size:12px;color:var(--ol)">Best for: '+f.bestFor+'</div>';
       s3+='<div style="font-size:12px;color:var(--mu);margin-top:3px">'+f.why+'</div></div>';
@@ -411,7 +405,7 @@ async function doSearch(){
     design.topPhrases.forEach(function(p){
       s3+='<div class="insight-row"><span class="insight-icon">💬</span>';
       s3+='<div><div style="font-size:16px;font-style:italic;font-weight:700;color:var(--gd);font-family:Cormorant Garamond,serif">"'+p.phrase+'"</div>';
-      s3+='<div style="font-size:12px;color:var(--mu)">'+p.emotion+' · Sales: '+p.sales+' · Print on: '+(p.printOn||[]).join(', ')+'</div>';
+      s3+='<div style="font-size:12px;color:var(--mu)">'+p.emotion+' · Print on: '+(p.printOn||[]).join(', ')+'</div>';
       s3+='<a href="https://www.etsy.com/uk/search?q='+kenc(p.phrase)+'" target="_blank" style="font-size:11px;color:var(--ol)">See on Etsy →</a></div></div>';
     });
   }
@@ -419,9 +413,7 @@ async function doSearch(){
   if(design.designStyles&&design.designStyles.length){
     s3+='<div class="lbl" style="margin-top:16px">Design Styles Winning Right Now</div>';
     design.designStyles.forEach(function(ds){
-      var w=(ds.popularity/100)*100;
-      s3+='<div style="margin-bottom:10px"><div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px"><strong>'+ds.style+'</strong><span class="mono">'+ds.popularity+'%</span></div>';
-      s3+='<div style="height:6px;background:var(--p3);border-radius:3px;overflow:hidden;margin-bottom:4px"><div style="height:100%;width:'+w+'%;background:var(--ol);border-radius:3px"></div></div>';
+      s3+='<div style="margin-bottom:10px"><div style="font-size:13px;margin-bottom:4px"><strong>'+ds.style+'</strong></div>';
       s3+='<div style="font-size:12px;color:var(--mu)">'+ds.description+'</div></div>';
     });
   }
@@ -489,16 +481,16 @@ async function doSearch(){
 
   // ── SECTION 5: FINANCIAL + SUPPLIER ──
   var s5='';
-  s5+='<div class="grid-auto" style="margin-bottom:16px">';
+  s5+='<div class="grid-auto" style="margin-bottom:8px">';
   s5+=sbox('Best Platform',finance.bestPlatform,'var(--bl)');
-  s5+=sbox('Base Cost',finance.baseCostUK,'var(--mu)');
+  s5+=sbox('Est. Base Cost',finance.baseCostUK,'var(--mu)');
   s5+=sbox('UK Sell Price',finance.recommendedPriceUK,'var(--gd)');
   s5+=sbox('USA Price',finance.recommendedPriceUSA,'var(--gd)');
-  s5+=sbox('Net Profit UK',finance.netProfitUK,'var(--ol)');
-  s5+=sbox('Margin',finance.marginPct,'var(--ol)');
+  s5+=sbox('Est. Net Profit',finance.netProfitUK,'var(--ol)');
+  s5+=sbox('Est. Margin',finance.marginPct,'var(--ol)');
   s5+=sbox('Break Even',finance.breakEven?(finance.breakEven+' sales'):'—','var(--mu)');
-  s5+=sbox('Est Revenue P1',finance.monthlyRevenueEstP1,'var(--ol)');
   s5+='</div>';
+  s5+='<p style="font-size:11px;color:var(--mu2);margin-bottom:14px;font-style:italic">Estimated from typical POD supplier pricing — verify with your own supplier.</p>';
   // Platform comparison
   s5+='<div class="grid-auto" style="margin-bottom:14px">';
   s5+=sbox('Printify Base',finance.printifyBase||'—','var(--gn)');
@@ -572,7 +564,6 @@ async function doSearch(){
     s8+='<div style="font-size:11px;color:var(--mu)">days away</div></div></div></div>';
   }
   s8+='<div class="grid-auto" style="margin-bottom:14px">';
-  s8+=sbox('Seasonal Spike',timing.spike||'—','var(--gn)');
   s8+=sbox('Year Round',timing.yearRound?'Yes':'Seasonal',timing.yearRound?'var(--gn)':'var(--or)');
   s8+='</div>';
   if(timing.bestMonths&&timing.bestMonths.length){
