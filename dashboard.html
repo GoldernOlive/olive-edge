@@ -596,94 +596,80 @@ function buildSeasonalRunway(niches) {
   return h;
 }
 
-// ── Gap Landscape scatter plot ────────────────────────────────────────────
+// ── Gap Landscape paired-bar chart ───────────────────────────────────────
 function buildGapLandscape(niches) {
-  // Fixed coordinate system — see axis-scaling notes
-  var svgW = 520, svgH = 300;
-  var padL = 44, padR = 16, padT = 16, padB = 40;
-  var plotW = svgW - padL - padR; // 460
-  var plotH = svgH - padT - padB; // 244
+  var rows = niches
+    .filter(function(n) { return n.demand_score != null && n.competition != null; })
+    .sort(function(a, b) { return (b.gap_score || 0) - (a.gap_score || 0); })
+    .slice(0, 8);
 
-  var plottable = niches.filter(function(n) {
-    return n.demand_score != null && n.competition != null;
-  });
-
-  if (plottable.length < 3) {
+  if (rows.length < 3) {
     return '<div class="block" style="margin-bottom:24px">'
-      + '<div class="section-head">📊 Gap Landscape'
-      + '<span style="font-size:11px;font-weight:400;color:var(--mu);margin-left:8px">'
-      + 'Every niche by demand vs competition — bottom-right is the sweet spot.</span></div>'
+      + '<div class="section-head">📊 Gap Landscape</div>'
       + '<div style="padding:24px;font-size:13px;color:var(--mu);font-style:italic;text-align:center">'
       + 'Not enough scored niches to map yet.</div></div>';
   }
 
-  // Coordinate mappers
-  function cx(d)  { return padL + (d / 100) * plotW; }
-  function cy(c)  { return padT + (1 - c) * plotH; }  // invert: high competition → top
-
-  // Sweet-spot rect: bottom-right quadrant (demand>50, competition<0.5)
-  var ssX = cx(50), ssY = cy(0.5);                     // top-left corner of rect
-  var ssW = cx(100) - ssX;                              // 230
-  var ssH = cy(0)   - ssY;                              // 122 (cy(0) = bottom of plot)
-
   var h = '<div class="block" style="margin-bottom:24px">';
   h += '<div class="section-head">📊 Gap Landscape'
      + '<span style="font-size:11px;font-weight:400;color:var(--mu);margin-left:8px">'
-     + 'Every niche by demand vs competition — bottom-right is the sweet spot.</span></div>';
-  h += '<div style="padding:12px 16px 16px;overflow-x:auto">';
+     + 'Top niches — green WANTED vs orange CROWDED. More green than orange = a real gap.</span></div>';
+  h += '<div style="padding:8px 16px 14px">';
 
-  h += '<svg viewBox="0 0 ' + svgW + ' ' + svgH + '" width="100%" style="max-width:' + svgW + 'px;display:block;font-family:Jost,sans-serif">';
+  // Bar-label header
+  h += '<div style="display:flex;align-items:center;gap:10px;padding:4px 0 6px;border-bottom:1px solid var(--b1);margin-bottom:2px">';
+  h += '<div style="width:140px;flex-shrink:0;font-size:10px;font-weight:700;color:var(--mu)">NICHE</div>';
+  h += '<div style="flex:1;font-size:10px;font-weight:700;color:var(--mu)">WANTED / CROWDED &nbsp;(0 – 100)</div>';
+  h += '</div>';
 
-  // Sweet-spot shading
-  h += '<rect x="' + ssX + '" y="' + ssY + '" width="' + ssW + '" height="' + ssH + '" fill="rgba(22,163,74,0.07)" rx="4"/>';
+  rows.forEach(function(n, i) {
+    var kenc       = encodeURIComponent(n.keyword);
+    var demandPct  = Math.round(n.demand_score);
+    var crowdPct   = Math.round(n.competition * 100);
+    var label      = n.keyword.length > 22 ? n.keyword.slice(0, 21) + '…' : n.keyword;
+    var isLast     = i === rows.length - 1;
 
-  // Grid lines (midpoints)
-  h += '<line x1="' + cx(50) + '" y1="' + padT + '" x2="' + cx(50) + '" y2="' + (padT+plotH) + '" stroke="var(--b1)" stroke-width="1" stroke-dasharray="4,3"/>';
-  h += '<line x1="' + padL + '" y1="' + cy(0.5) + '" x2="' + (padL+plotW) + '" y2="' + cy(0.5) + '" stroke="var(--b1)" stroke-width="1" stroke-dasharray="4,3"/>';
+    h += '<div onclick="window.location.href=\'gap-finder.html#card-' + kenc + '\'" '
+       + 'style="display:flex;align-items:center;gap:10px;padding:7px 0;cursor:pointer;'
+       + 'border-radius:6px;transition:background .15s" '
+       + 'onmouseover="this.style.background=\'var(--p2)\'" '
+       + 'onmouseout="this.style.background=\'\'"'
+       + (isLast ? '' : ' ') + '>';
 
-  // Plot border
-  h += '<rect x="' + padL + '" y="' + padT + '" width="' + plotW + '" height="' + plotH + '" fill="none" stroke="var(--b1)" stroke-width="1"/>';
+    // Keyword label
+    h += '<div style="width:140px;flex-shrink:0;font-size:12px;font-weight:600;'
+       + 'white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--tx)">'
+       + escapeHtml(label) + '</div>';
 
-  // Sweet-spot label (inside rect, bottom-right)
-  h += '<text x="' + (cx(100) - 6) + '" y="' + (cy(0) - 6) + '" text-anchor="end" font-size="9" fill="rgba(22,163,74,0.6)" font-weight="700">sweet spot</text>';
+    // Bars column
+    h += '<div style="flex:1;display:flex;flex-direction:column;gap:4px">';
 
-  // X axis labels
-  h += '<text x="' + cx(0)   + '" y="' + (padT+plotH+14) + '" text-anchor="middle" font-size="9" fill="var(--mu)">0</text>';
-  h += '<text x="' + cx(100) + '" y="' + (padT+plotH+14) + '" text-anchor="middle" font-size="9" fill="var(--mu)">100</text>';
-  h += '<text x="' + (padL + plotW/2) + '" y="' + (svgH-4) + '" text-anchor="middle" font-size="10" fill="var(--mu)" font-weight="600">WANTED →</text>';
+    // WANTED bar — demand_score is already 0–100
+    h += '<div style="display:flex;align-items:center;gap:6px">';
+    h += '<div style="flex:1;height:8px;background:var(--p3);border-radius:4px;overflow:hidden">';
+    h += '<div style="width:' + demandPct + '%;height:100%;background:#16a34a;border-radius:4px"></div>';
+    h += '</div>';
+    h += '<span style="font-size:10px;font-weight:700;color:#16a34a;width:30px;flex-shrink:0;text-align:right">'
+       + demandPct + '</span>';
+    h += '</div>';
 
-  // Y axis labels
-  h += '<text x="' + (padL-6) + '" y="' + (cy(0)+4)   + '" text-anchor="end" font-size="9" fill="var(--mu)">0</text>';
-  h += '<text x="' + (padL-6) + '" y="' + (cy(1)+4)   + '" text-anchor="end" font-size="9" fill="var(--mu)">100</text>';
-  h += '<text x="10" y="' + (padT + plotH/2) + '" text-anchor="middle" font-size="10" fill="var(--mu)" font-weight="600" transform="rotate(-90,10,' + (padT + plotH/2) + ')">CROWDED ↑</text>';
+    // CROWDED bar — competition × 100, same 0–100 track
+    h += '<div style="display:flex;align-items:center;gap:6px">';
+    h += '<div style="flex:1;height:8px;background:var(--p3);border-radius:4px;overflow:hidden">';
+    h += '<div style="width:' + crowdPct + '%;height:100%;background:#ea580c;border-radius:4px"></div>';
+    h += '</div>';
+    h += '<span style="font-size:10px;font-weight:700;color:#ea580c;width:30px;flex-shrink:0;text-align:right">'
+       + crowdPct + '%</span>';
+    h += '</div>';
 
-  // Dots
-  plottable.forEach(function(n) {
-    var bm   = BAND[tierOf(n)];
-    var dotX = cx(n.demand_score).toFixed(1);
-    var dotY = cy(n.competition).toFixed(1);
-    var kenc = encodeURIComponent(n.keyword);
-    var crowdPct = Math.round(n.competition * 100);
-    var tip  = n.keyword + ' · Wanted: ' + Math.round(n.demand_score) + ' · Crowded: ' + crowdPct + '%';
-
-    h += '<circle cx="' + dotX + '" cy="' + dotY + '" r="5" '
-       + 'fill="' + bm.col + '" opacity="0.85" '
-       + 'style="cursor:pointer" '
-       + 'onclick="window.location.href=\'gap-finder.html#card-' + kenc + '\'">'
-       + '<title>' + escapeHtml(tip) + '</title>'
-       + '</circle>';
+    h += '</div>'; // bars column
+    h += '</div>'; // row
   });
-
-  h += '</svg>';
 
   // Legend
-  h += '<div style="display:flex;gap:14px;flex-wrap:wrap;margin-top:8px;font-size:11px;color:var(--mu)">';
-  [1,2,3,4].forEach(function(band) {
-    var bm = BAND[band];
-    h += '<span><svg width="10" height="10" style="vertical-align:middle;margin-right:3px">'
-       + '<circle cx="5" cy="5" r="5" fill="' + bm.col + '" opacity="0.85"/></svg>'
-       + bm.label + '</span>';
-  });
+  h += '<div style="display:flex;gap:14px;margin-top:10px;padding-top:8px;border-top:1px solid var(--b1);font-size:11px;color:var(--mu)">';
+  h += '<span><span style="display:inline-block;width:10px;height:10px;background:#16a34a;border-radius:2px;vertical-align:middle;margin-right:4px"></span>WANTED (demand)</span>';
+  h += '<span><span style="display:inline-block;width:10px;height:10px;background:#ea580c;border-radius:2px;vertical-align:middle;margin-right:4px"></span>CROWDED (competition)</span>';
   h += '</div>';
 
   h += '</div></div>';
