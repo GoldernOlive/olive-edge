@@ -188,7 +188,7 @@ async function researchAndWrite(product,keyword,audience,market,type,varNum){
   setStep(1,false);
   var etsyListings=[],etsyTags=[],prices={};
   try{
-    var er=await callEtsy('listings/active?keywords='+encodeURIComponent(keyword)+'&limit=50&sort_on=score');
+    var er=await callEtsy('listings/active?keywords='+keyword+'&limit=50&sort_on=score');
     etsyListings=er.results||[];
     var tm={};
     etsyListings.forEach(function(l){(l.tags||[]).forEach(function(t){tm[t]=(tm[t]||0)+1;});});
