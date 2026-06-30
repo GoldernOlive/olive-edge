@@ -582,7 +582,7 @@ function buildSeasonalRunway(niches) {
 
     // Niche link if matched
     if (match) {
-      h += '<a href="gap-finder.html" class="lnk" style="font-size:10px;padding:3px 8px;flex-shrink:0">View niche →</a>';
+      h += '<a href="gap-finder.html#card-' + encodeURIComponent(match.keyword) + '" class="lnk" style="font-size:10px;padding:3px 8px;flex-shrink:0">View niche →</a>';
     }
 
     h += '</div>';

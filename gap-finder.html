@@ -719,6 +719,19 @@ function renderNiches(niches) {
   }
 
   document.getElementById('gf-body').innerHTML = h;
+
+  if (window.location.hash) {
+    var target = document.getElementById(window.location.hash.slice(1));
+    if (target) {
+      target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      target.style.outline = '2px solid var(--ol)';
+      target.style.background = 'var(--olbg)';
+      setTimeout(function() {
+        target.style.outline = '';
+        target.style.background = '';
+      }, 2000);
+    }
+  }
 }
 
 // ── Load ───────────────────────────────────────────────────────────────────
