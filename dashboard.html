@@ -173,56 +173,37 @@ function verdict(n) {
 // ── Winners panel (mirror gap-finder.html) ─────────────────────────────────
 function winnersPanel(n) {
   var SYM = { GBP: '£', USD: '$', EUR: '€' };
-
   var UNCLEAR = '<div style="padding:9px 12px;background:var(--p2);border-radius:8px;border:1px solid var(--b1);font-size:12px;color:var(--mu)">'
     + 'Winners are unclear for this search — the term spans several different products, '
     + 'so there\'s no single market to benchmark yet. Use the verify links to look manually.'
     + '</div>';
-
   var open = '<details style="margin-top:12px">'
     + '<summary style="font-size:11px;font-weight:700;color:var(--mu);cursor:pointer;'
     + 'list-style:none;display:block;padding:4px 0;user-select:none">'
     + '&#9658; What\'s winning right now</summary>'
     + '<div style="padding-top:8px">';
   var close = '</div></details>';
-
   var listings = n.top_listings;
   if (!listings || !listings.length)
     return open + '<div style="font-size:12px;color:var(--mu);font-style:italic">No listing data yet.</div>' + close;
-
   var currCount = {};
-  listings.forEach(function(l) {
-    var c = l.currency_code || 'USD';
-    currCount[c] = (currCount[c] || 0) + 1;
-  });
+  listings.forEach(function(l) { var c = l.currency_code || 'USD'; currCount[c] = (currCount[c] || 0) + 1; });
   var dominant = currCount['GBP']
     ? 'GBP'
     : Object.keys(currCount).reduce(function(a, b) { return currCount[b] > currCount[a] ? b : a; });
   var sym = SYM[dominant] || dominant;
-
   var survivors = listings
     .filter(function(l) { return (l.currency_code || 'USD') === dominant; })
-    .slice()
-    .sort(function(a, b) { return (b.num_favorers || 0) - (a.num_favorers || 0); });
-
+    .slice().sort(function(a, b) { return (b.num_favorers || 0) - (a.num_favorers || 0); });
   var trackedCount = survivors.filter(function(l) { return (l.num_favorers || 0) >= 5; }).length;
-  if (survivors.length < 3 || trackedCount < 3)
-    return open + UNCLEAR + close;
-
-  var validPrices = survivors
-    .map(function(l) { return l.price || 0; })
-    .filter(function(p) { return p > 0; })
-    .slice()
-    .sort(function(a, b) { return a - b; });
-
-  if (!validPrices.length)
-    return open + UNCLEAR + close;
-
+  if (survivors.length < 3 || trackedCount < 3) return open + UNCLEAR + close;
+  var validPrices = survivors.map(function(l) { return l.price || 0; })
+    .filter(function(p) { return p > 0; }).slice().sort(function(a, b) { return a - b; });
+  if (!validPrices.length) return open + UNCLEAR + close;
   var mid = Math.floor(validPrices.length / 2);
   var median = validPrices.length % 2 === 0
     ? Math.round((validPrices[mid - 1] + validPrices[mid]) / 2)
     : Math.round(validPrices[mid]);
-
   var tagCount = {};
   survivors.forEach(function(l) {
     if (Array.isArray(l.tags)) l.tags.forEach(function(t) {
@@ -230,41 +211,28 @@ function winnersPanel(n) {
       if (k) tagCount[k] = (tagCount[k] || 0) + 1;
     });
   });
-  var topTags = Object.keys(tagCount)
-    .sort(function(a, b) { return tagCount[b] - tagCount[a]; })
-    .slice(0, 6);
-
+  var topTags = Object.keys(tagCount).sort(function(a, b) { return tagCount[b] - tagCount[a]; }).slice(0, 6);
   var h = open;
-
   survivors.slice(0, 4).forEach(function(l) {
-    var raw   = l.title || '';
+    var raw = l.title || '';
     var title = escapeHtml(raw.length > 70 ? raw.slice(0, 69) + '…' : raw || '—');
     var price = l.price != null && l.price > 0 ? sym + parseFloat(l.price).toFixed(2) : '—';
     var favs  = l.num_favorers != null ? '♡ ' + Number(l.num_favorers).toLocaleString() : '';
-    h += '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;'
-       + 'padding:7px 0;border-bottom:1px solid var(--b1)">';
-    h += '<div style="flex:1;min-width:0">';
-    h += '<div style="font-size:12px;color:var(--tx);margin-bottom:2px">' + title + '</div>';
-    h += '<div style="font-size:11px;color:var(--mu)">' + favs + '</div>';
-    h += '</div>';
-    h += '<div style="text-align:right;flex-shrink:0">';
-    h += '<div style="font-size:13px;font-weight:700">' + price + '</div>';
+    h += '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;padding:7px 0;border-bottom:1px solid var(--b1)">';
+    h += '<div style="flex:1;min-width:0"><div style="font-size:12px;color:var(--tx);margin-bottom:2px">' + title + '</div>';
+    h += '<div style="font-size:11px;color:var(--mu)">' + favs + '</div></div>';
+    h += '<div style="text-align:right;flex-shrink:0"><div style="font-size:13px;font-weight:700">' + price + '</div>';
     if (l.url) h += '<a href="' + escapeHtml(l.url) + '" target="_blank" class="lnk" style="font-size:10px;padding:2px 7px;margin-top:2px">View →</a>';
     h += '</div></div>';
   });
-
   h += '<div style="margin-top:10px;padding:8px 12px;background:var(--p2);border-radius:8px;border:1px solid var(--b1)">';
   h += '<span style="font-size:11px;font-weight:700;color:var(--mu)">PRICE TO BEAT &nbsp;</span>';
-  h += '<span style="font-size:13px;color:var(--tx)">Most winners sit around <strong>' + sym + median + '</strong>.</span>';
-  h += '</div>';
-
+  h += '<span style="font-size:13px;color:var(--tx)">Most winners sit around <strong>' + sym + median + '</strong>.</span></div>';
   if (topTags.length) {
-    h += '<div style="margin-top:8px">';
-    h += '<div style="font-size:11px;font-weight:700;color:var(--mu);margin-bottom:5px">LOOK &amp; FEEL</div>';
+    h += '<div style="margin-top:8px"><div style="font-size:11px;font-weight:700;color:var(--mu);margin-bottom:5px">LOOK &amp; FEEL</div>';
     topTags.forEach(function(t) { h += '<span class="tag">' + escapeHtml(t) + '</span>'; });
     h += '</div>';
   }
-
   h += close;
   return h;
 }
@@ -273,11 +241,10 @@ function winnersPanel(n) {
 function statBox(label, value) {
   var h = '<div style="padding:8px 10px;background:var(--p2);border-radius:8px;border:1px solid var(--b1)">';
   h += '<div style="font-size:10px;color:var(--mu);font-weight:600;margin-bottom:3px">' + label + '</div>';
-  if (value !== null && value !== undefined) {
+  if (value !== null && value !== undefined)
     h += '<div style="font-weight:700;font-size:15px">' + value + '</div>';
-  } else {
+  else
     h += '<div style="font-size:12px;color:var(--mu);font-style:italic">Gathering…</div>';
-  }
   h += '</div>';
   return h;
 }
@@ -293,17 +260,14 @@ function buildNicheCard(n) {
   var barPct = (score !== null && score !== undefined) ? Math.min(100, Math.round(score / 35 * 100)) : 0;
 
   var h = '<div id="card-' + kenc + '" class="gcard" style="border-left:4px solid ' + col + '">';
-
   h += '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:14px">';
   h += '<div style="flex:1">';
   h += '<div style="font-weight:700;font-size:17px;margin-bottom:8px">' + escapeHtml(n.keyword) + '</div>';
-  if (vtext) {
+  if (vtext)
     h += '<div style="font-size:13px;line-height:1.55;color:var(--tx);padding:8px 12px;background:var(--p2);border-left:3px solid ' + col + ';border-radius:0 8px 8px 0">' + vtext + '</div>';
-  } else {
+  else
     h += '<div style="font-size:13px;color:var(--mu);font-style:italic;padding:8px 12px;background:var(--p2);border-radius:8px">Gathering data…</div>';
-  }
   h += '</div>';
-
   h += '<div style="text-align:center;flex-shrink:0;min-width:72px">';
   if (score !== null && score !== undefined) {
     h += '<div class="gap-score" style="color:' + col + '">' + score + '</div>';
@@ -313,14 +277,11 @@ function buildNicheCard(n) {
     h += '<div style="font-size:26px;color:var(--mu)">—</div>';
     h += '<div style="font-size:9px;color:var(--mu2)">gap score</div>';
   }
-  h += '</div>';
-  h += '</div>';
+  h += '</div></div>';
 
   var demandVal = (n.demand_score != null) ? Math.round(n.demand_score) : null;
   var compPct   = (n.competition  != null) ? Math.min(100, Math.round(n.competition * 100)) : null;
-
   h += '<div style="margin-bottom:14px">';
-
   h += '<div style="display:flex;align-items:center;gap:8px;margin-bottom:7px">';
   h += '<span style="font-size:10px;font-weight:700;color:var(--mu);width:54px;flex-shrink:0">WANTED</span>';
   h += '<div style="flex:1;height:9px;background:var(--p3);border-radius:5px;overflow:hidden">';
@@ -331,7 +292,6 @@ function buildNicheCard(n) {
   else
     h += '<span style="font-size:11px;color:var(--mu);font-style:italic;min-width:52px;text-align:right">Gathering…</span>';
   h += '</div>';
-
   h += '<div style="display:flex;align-items:center;gap:8px">';
   h += '<span style="font-size:10px;font-weight:700;color:var(--mu);width:54px;flex-shrink:0">CROWDED</span>';
   h += '<div style="flex:1;height:9px;background:var(--p3);border-radius:5px;overflow:hidden">';
@@ -339,9 +299,7 @@ function buildNicheCard(n) {
   h += '</div>';
   h += '<span style="font-size:11px;font-weight:700;color:' + ct.c + ';min-width:52px;text-align:right">'
      + (compPct !== null ? ct.l : '—') + '</span>';
-  h += '</div>';
-
-  h += '</div>';
+  h += '</div></div>';
 
   h += '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;margin-bottom:14px">';
   h += statBox('LISTINGS ON ETSY', n.total_listings != null ? Number(n.total_listings).toLocaleString() : null);
@@ -363,7 +321,277 @@ function buildNicheCard(n) {
   h += '<button onclick="window.location.href=\'search.html?kw=' + kenc + '\'" class="btn-olive" style="font-size:12px">Full Intelligence Brief →</button>';
   h += '<button onclick="window.location.href=\'listing-generator.html?kw=' + kenc + '\'" class="btn-ghost" style="font-size:12px">Write Listing →</button>';
   h += '</div>';
+  h += '</div>';
+  return h;
+}
 
+// ── Seasonal Runway — date engine ──────────────────────────────────────────
+
+var OCCASIONS = [
+  // Fixed dates
+  { name: "New Year's Day",       type:'fixed',    month:1,  day:1,  cat:'commercial', leadWeeks:4  },
+  { name: 'Burns Night',          type:'fixed',    month:1,  day:25, cat:'cultural',   leadWeeks:4  },
+  { name: "Valentine's Day",      type:'fixed',    month:2,  day:14, cat:'commercial', leadWeeks:6  },
+  { name: "St Patrick's Day",     type:'fixed',    month:3,  day:17, cat:'cultural',   leadWeeks:4  },
+  { name: "St George's Day",      type:'fixed',    month:4,  day:23, cat:'cultural',   leadWeeks:4  },
+  { name: 'Halloween',            type:'fixed',    month:10, day:31, cat:'commercial', leadWeeks:6  },
+  { name: 'Bonfire Night',        type:'fixed',    month:11, day:5,  cat:'cultural',   leadWeeks:4  },
+  { name: 'Remembrance Day',      type:'fixed',    month:11, day:11, cat:'cultural',   leadWeeks:4  },
+  { name: "St Andrew's Day",      type:'fixed',    month:11, day:30, cat:'cultural',   leadWeeks:4  },
+  { name: 'Christmas Day',        type:'fixed',    month:12, day:25, cat:'commercial', leadWeeks:10 },
+  { name: 'Boxing Day',           type:'fixed',    month:12, day:26, cat:'commercial', leadWeeks:10 },
+  // Month-long observances (day 1 = start of month)
+  { name: 'LGBTQ+ History Month', type:'fixed',    month:2,  day:1,  cat:'awareness',  leadWeeks:4  },
+  { name: 'Pride Month',          type:'fixed',    month:6,  day:1,  cat:'awareness',  leadWeeks:4  },
+  { name: 'Black History Month',  type:'fixed',    month:10, day:1,  cat:'awareness',  leadWeeks:4  },
+  { name: 'Movember',             type:'fixed',    month:11, day:1,  cat:'awareness',  leadWeeks:4  },
+  // Computed
+  { name: 'Pancake Day',          type:'computed', fn:'pancakeDay',        cat:'cultural',   leadWeeks:4 },
+  { name: 'Mothering Sunday',     type:'computed', fn:'motheringDay',      cat:'commercial', leadWeeks:5 },
+  { name: 'Good Friday',          type:'computed', fn:'goodFriday',        cat:'religious',  leadWeeks:5 },
+  { name: 'Easter Sunday',        type:'computed', fn:'easterSunday',      cat:'religious',  leadWeeks:5 },
+  { name: 'Easter Monday',        type:'computed', fn:'easterMonday',      cat:'commercial', leadWeeks:5 },
+  { name: "Father's Day UK",      type:'computed', fn:'fathersDay',        cat:'commercial', leadWeeks:5 },
+  { name: 'Remembrance Sunday',   type:'computed', fn:'remembranceSunday', cat:'cultural',   leadWeeks:4 },
+  { name: 'Black Friday',         type:'computed', fn:'blackFriday',       cat:'commercial', leadWeeks:8 },
+  // Lunar (verified; omit if year absent from table)
+  { name: 'Diwali',
+    type:'lunar', cat:'religious', leadWeeks:5,
+    dates:{2026:'2026-11-08',2027:'2027-10-29',2028:'2028-11-15'} },
+  { name: 'Hanukkah',
+    type:'lunar', cat:'religious', leadWeeks:5,
+    dates:{2026:'2026-12-04',2027:'2027-12-24',2028:'2028-12-12'} },
+  { name: 'Chinese New Year',
+    type:'lunar', cat:'cultural', leadWeeks:5,
+    dates:{2026:'2026-02-17',2027:'2027-02-06',2028:'2028-01-26'} },
+  { name: 'Eid al-Fitr †',
+    type:'lunar', cat:'religious', leadWeeks:5, isEidApprox:true,
+    dates:{2026:'2026-03-20',2027:'2027-03-10',2028:'2028-02-27'} },
+  { name: 'Eid al-Adha †',
+    type:'lunar', cat:'religious', leadWeeks:5, isEidApprox:true,
+    dates:{2026:'2026-05-27',2027:'2027-05-17',2028:'2028-05-05'} },
+];
+
+// ── Date helpers ──────────────────────────────────────────────────────────
+
+function addDays(date, n) {
+  return new Date(date.getTime() + n * 86400000);
+}
+
+// Anonymous Gregorian (Computus). Verified: 2025=Apr 20, 2026=Apr 5, 2027=Mar 28.
+function easterSunday(year) {
+  var a = year % 19;
+  var b = Math.floor(year / 100);
+  var c = year % 100;
+  var d = Math.floor(b / 4);
+  var e = b % 4;
+  var f = Math.floor((b + 8) / 25);
+  var g = Math.floor((b - f + 1) / 3);
+  var h = (19 * a + b - d - g + 15) % 30;
+  var i = Math.floor(c / 4);
+  var k = c % 4;
+  var l = (32 + 2 * e + 2 * i - h - k) % 7;
+  var m = Math.floor((a + 11 * h + 22 * l) / 451);
+  var mo = Math.floor((h + l - 7 * m + 114) / 31);
+  var dy = ((h + l - 7 * m + 114) % 31) + 1;
+  return new Date(Date.UTC(year, mo - 1, dy));
+}
+
+function goodFriday(year)    { return addDays(easterSunday(year), -2);  }
+function easterMonday(year)  { return addDays(easterSunday(year),  1);  }
+function motheringDay(year)  { return addDays(easterSunday(year), -21); }
+function pancakeDay(year)    { return addDays(easterSunday(year), -47); }
+
+// nth occurrence of weekday (0=Sun…6=Sat) in a given month
+function nthWeekday(year, month, n, dow) {
+  var first    = new Date(Date.UTC(year, month - 1, 1));
+  var firstDow = first.getUTCDay();
+  var offset   = (dow - firstDow + 7) % 7;
+  return new Date(Date.UTC(year, month - 1, 1 + offset + (n - 1) * 7));
+}
+
+// Father's Day UK = 3rd Sunday of June. Verified: 2026=Jun 21, 2027=Jun 20.
+function fathersDay(year)        { return nthWeekday(year, 6,  3, 0); }
+// Remembrance Sunday = 2nd Sunday of November. Verified: 2026=Nov 8.
+function remembranceSunday(year) { return nthWeekday(year, 11, 2, 0); }
+// Black Friday = day after 4th Thursday of November. Verified: 2026=Nov 27.
+function blackFriday(year)       { return addDays(nthWeekday(year, 11, 4, 4), 1); }
+
+var COMPUTED_FNS = {
+  easterSunday: easterSunday, goodFriday: goodFriday,
+  easterMonday: easterMonday, motheringDay: motheringDay,
+  pancakeDay: pancakeDay,     fathersDay: fathersDay,
+  remembranceSunday: remembranceSunday, blackFriday: blackFriday,
+};
+
+function resolveOccasions(todayMs, year) {
+  var results = [];
+
+  OCCASIONS.forEach(function(occ) {
+    var dateMs;
+
+    if (occ.type === 'fixed') {
+      dateMs = Date.UTC(year, occ.month - 1, occ.day);
+      if (dateMs < todayMs) dateMs = Date.UTC(year + 1, occ.month - 1, occ.day);
+
+    } else if (occ.type === 'computed') {
+      dateMs = COMPUTED_FNS[occ.fn](year).getTime();
+      if (dateMs < todayMs) dateMs = COMPUTED_FNS[occ.fn](year + 1).getTime();
+
+    } else { // lunar
+      var thisYr = occ.dates[year]     ? new Date(occ.dates[year]).getTime()     : null;
+      var nextYr = occ.dates[year + 1] ? new Date(occ.dates[year + 1]).getTime() : null;
+      dateMs = (thisYr !== null && thisYr >= todayMs) ? thisYr
+             : (nextYr !== null               ? nextYr  : null);
+      if (dateMs === null) return; // not in lookup table — omit
+    }
+
+    var weeksAway = Math.ceil((dateMs - todayMs) / (7 * 86400000));
+    results.push({
+      name:        occ.name,
+      cat:         occ.cat,
+      date:        dateMs,
+      weeksAway:   weeksAway,
+      leadWeeks:   occ.leadWeeks,
+      isEidApprox: !!occ.isEidApprox,
+    });
+  });
+
+  return results
+    .sort(function(a, b) { return a.date - b.date; })
+    .slice(0, 8);
+}
+
+// ── Niche-matching for runway rows ────────────────────────────────────────
+
+var OCCASION_TOKENS = {
+  "New Year's Day":        ['new year'],
+  'Burns Night':           ['burns night'],
+  "Valentine's Day":       ['valentine'],
+  'LGBTQ+ History Month':  ['lgbtq'],
+  "St Patrick's Day":      ['st patrick', 'paddy'],
+  "St George's Day":       ['st george'],
+  'Pancake Day':           ['pancake'],
+  'Mothering Sunday':      ['mother', 'mum', 'mummy'],
+  'Good Friday':           ['good friday'],
+  'Easter Sunday':         ['easter'],
+  'Easter Monday':         ['easter'],
+  "Father's Day UK":       ['father', 'dad'],
+  'Pride Month':           ['pride'],
+  'Halloween':             ['halloween'],
+  'Black History Month':   ['black history'],
+  'Diwali':                ['diwali'],
+  'Bonfire Night':         ['bonfire'],
+  'Remembrance Day':       ['remembrance', 'poppy'],
+  'Remembrance Sunday':    ['remembrance', 'poppy'],
+  'Movember':              ['movember'],
+  "St Andrew's Day":       ['st andrew'],
+  'Hanukkah':              ['hanukkah', 'chanukah'],
+  'Christmas Day':         ['christmas', 'xmas'],
+  'Boxing Day':            ['boxing day'],
+  'Black Friday':          ['black friday'],
+  'Chinese New Year':      ['chinese new year', 'lunar new year'],
+  'Eid al-Fitr †':   ['eid'],
+  'Eid al-Adha †':   ['eid'],
+};
+
+function matchOccasion(occName, niches) {
+  var tokens = OCCASION_TOKENS[occName];
+  if (!tokens || !tokens.length) return null;
+  var norm = function(s) {
+    return s.toLowerCase()
+      .replace(/['''’]/g, '')
+      .replace(/[^a-z0-9]+/g, ' ')
+      .trim();
+  };
+  for (var i = 0; i < niches.length; i++) {
+    var kw = norm(niches[i].keyword);
+    for (var j = 0; j < tokens.length; j++) {
+      if (kw.indexOf(tokens[j]) !== -1) return niches[i];
+    }
+  }
+  return null;
+}
+
+function weeksLabel(n) {
+  if (n <= 0) return 'this week';
+  if (n === 1) return '1 week away';
+  return n + ' weeks away';
+}
+
+// ── Block: Seasonal Runway ────────────────────────────────────────────────
+
+var MONTHS_SHORT = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+var CAT_STYLE = {
+  commercial: { bg:'#dbeafe', col:'#1d4ed8' },
+  cultural:   { bg:'#dcfce7', col:'#15803d' },
+  religious:  { bg:'#fef3c7', col:'#92400e' },
+  awareness:  { bg:'#f0fdf4', col:'#16a34a' },
+};
+
+function buildSeasonalRunway(niches) {
+  var now     = new Date();
+  var todayMs = Date.UTC(now.getFullYear(), now.getMonth(), now.getDate());
+  var year    = now.getFullYear();
+  var items   = resolveOccasions(todayMs, year);
+
+  var h = '<div class="block" style="margin-bottom:24px">';
+  h += '<div class="section-head">🗓 Seasonal Runway — next ' + items.length + ' occasions</div>';
+
+  items.forEach(function(item, i) {
+    var isLast = i === items.length - 1;
+    var d      = new Date(item.date);
+    var dateStr = d.getUTCDate() + ' ' + MONTHS_SHORT[d.getUTCMonth()] + ' ' + d.getUTCFullYear();
+    var cat    = CAT_STYLE[item.cat] || CAT_STYLE.cultural;
+
+    var status, statusBg, statusCol;
+    if (item.weeksAway <= item.leadWeeks) {
+      status = 'Design now'; statusBg = '#fee2e2'; statusCol = '#dc2626';
+    } else if (item.weeksAway <= item.leadWeeks + 4) {
+      status = 'Prepare soon'; statusBg = '#fef9c3'; statusCol = '#ca8a04';
+    } else {
+      status = 'Upcoming'; statusBg = 'var(--p3)'; statusCol = 'var(--mu)';
+    }
+
+    var match = matchOccasion(item.name, niches);
+
+    h += '<div style="display:flex;align-items:center;gap:10px;padding:10px 16px;flex-wrap:wrap'
+       + (isLast ? '' : ';border-bottom:1px solid var(--b1)') + '">';
+
+    // Status pill
+    h += '<span style="font-size:10px;font-weight:700;background:' + statusBg + ';color:' + statusCol
+       + ';padding:3px 8px;border-radius:20px;white-space:nowrap;min-width:86px;text-align:center">'
+       + status + '</span>';
+
+    // Name + category tag
+    h += '<div style="flex:1;min-width:0">';
+    h += '<span style="font-size:13px;font-weight:600">' + escapeHtml(item.name) + '</span>';
+    h += '<span style="margin-left:6px;font-size:9px;font-weight:700;background:' + cat.bg
+       + ';color:' + cat.col + ';padding:1px 6px;border-radius:20px">' + item.cat + '</span>';
+    if (item.isEidApprox) {
+      h += '<span style="margin-left:4px;font-size:9px;color:var(--mu2)">approx — moon-dependent</span>';
+    }
+    h += '</div>';
+
+    // Date + weeks away
+    h += '<div style="text-align:right;font-size:11px;color:var(--mu);white-space:nowrap;flex-shrink:0">';
+    h += '<div style="font-weight:600">' + dateStr + '</div>';
+    h += '<div>' + weeksLabel(item.weeksAway) + '</div>';
+    h += '</div>';
+
+    // Niche link if matched
+    if (match) {
+      h += '<a href="gap-finder.html" class="lnk" style="font-size:10px;padding:3px 8px;flex-shrink:0">View niche →</a>';
+    }
+
+    h += '</div>';
+  });
+
+  h += '<div style="padding:8px 16px;font-size:10px;color:var(--mu2);border-top:1px solid var(--b1)">'
+     + '† Islamic dates are approximate and subject to moon sighting. '
+     + 'Lead times are POD production and ranking guides, not guarantees.'
+     + '</div>';
   h += '</div>';
   return h;
 }
@@ -434,9 +662,9 @@ function buildActNowSeasonal(niches) {
   h += '<div class="section-head" style="background:#fff5f5;border-color:#fca5a5;color:#dc2626">⚡ Act Now — Seasonal</div>';
 
   seasonal.forEach(function(n, i) {
-    var isLast     = i === seasonal.length - 1;
-    var isUrgent   = n.urgency === 'peaking_now' || n.urgency === 'list_now';
-    var timingCol  = isUrgent ? '#dc2626' : '#ca8a04';
+    var isLast    = i === seasonal.length - 1;
+    var isUrgent  = n.urgency === 'peaking_now' || n.urgency === 'list_now';
+    var timingCol = isUrgent ? '#dc2626' : '#ca8a04';
     var timingLabel = n.urgency === 'peaking_now' ? 'In peak window — list immediately'
                     : n.urgency === 'list_now'    ? 'List now — peak is weeks away'
                     : 'Prepare — peak approaching' + (n.weeks_to_peak != null ? ' (' + n.weeks_to_peak + ' weeks)' : '');
@@ -463,8 +691,7 @@ function buildActNowSeasonal(niches) {
        + 'padding:7px 14px;border-radius:7px;display:inline-flex;align-items:center">Gap Finder →</a>';
     h += '<button onclick="window.location.href=\'listing-generator.html?kw=' + kenc + '\'" '
        + 'class="btn-ghost" style="font-size:11px">Write Listing →</button>';
-    h += '</div>';
-    h += '</div>';
+    h += '</div></div>';
   });
 
   h += '</div>';
@@ -537,6 +764,7 @@ function buildMarketGlance(niches) {
 function renderDashboard(niches) {
   var h = '';
   h += buildWhatsMoving(niches);
+  h += buildSeasonalRunway(niches);
   h += buildTopOpportunity(niches);
   h += buildActNowSeasonal(niches);
   h += buildNewestNiches(niches);
@@ -569,14 +797,12 @@ async function loadDashboard() {
     var scores = await sbGet(
       'niche_scores?select=*,niches(keyword,created_at,source)&order=gap_score.desc.nullslast'
     );
-
     fill.style.width = '60%';
 
     var supplyRows = await sbGet(
       'niche_supply_snapshots?select=niche_id,total_listings,avg_price,avg_favorers,top_listings_detail' +
       '&order=snapshot_date.desc&limit=500'
     );
-
     fill.style.width = '90%';
 
     var supplyMap = {};
@@ -607,8 +833,8 @@ async function loadDashboard() {
 
     bar.style.display = 'none';
     ts.textContent    = 'Updated ' + new Date().toLocaleTimeString();
-
     renderDashboard(niches);
+
   } catch (e) {
     bar.style.display = 'none';
     ts.textContent    = 'Error loading data — ' + e.message;
