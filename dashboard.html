@@ -166,7 +166,7 @@ function verdict(n) {
   if (n.gap_score === null || n.gap_score === undefined) return null;
   if (band === 1) { return (comp !== null && comp <= 0.42) ? "Strong opportunity — real buyer interest and the competition is beatable." : "Beatable market — good demand and the current leaders aren't strongly established."; }
   if (band === 2) { return (comp !== null && comp <= 0.50) ? "Worth testing — moderate demand with manageable competition." : "Competitive but not locked — a well-differentiated listing could carve out a position."; }
-  if (band === 3) return "Crowded — possible only with a genuinely strong point of difference.";
+  if (band === 3) return "Competitive — possible only with a genuinely strong point of difference.";
   return "Not worth it right now — heavy competition and the demand doesn't justify the fight.";
 }
 
@@ -283,7 +283,7 @@ function buildNicheCard(n) {
   var compPct   = (n.competition  != null) ? Math.min(100, Math.round(n.competition * 100)) : null;
   h += '<div style="margin-bottom:14px">';
   h += '<div style="display:flex;align-items:center;gap:8px;margin-bottom:7px">';
-  h += '<span style="font-size:10px;font-weight:700;color:var(--mu);width:54px;flex-shrink:0">WANTED</span>';
+  h += '<span style="font-size:10px;font-weight:700;color:var(--mu);width:54px;flex-shrink:0">DEMAND</span>';
   h += '<div style="flex:1;height:9px;background:var(--p3);border-radius:5px;overflow:hidden">';
   if (demandVal !== null) h += '<div style="width:' + demandVal + '%;height:100%;background:#16a34a;border-radius:5px"></div>';
   h += '</div>';
@@ -293,7 +293,7 @@ function buildNicheCard(n) {
     h += '<span style="font-size:11px;color:var(--mu);font-style:italic;min-width:52px;text-align:right">Gathering…</span>';
   h += '</div>';
   h += '<div style="display:flex;align-items:center;gap:8px">';
-  h += '<span style="font-size:10px;font-weight:700;color:var(--mu);width:54px;flex-shrink:0">CROWDED</span>';
+  h += '<span style="font-size:10px;font-weight:700;color:var(--mu);width:54px;flex-shrink:0">COMPETITION</span>';
   h += '<div style="flex:1;height:9px;background:var(--p3);border-radius:5px;overflow:hidden">';
   if (compPct !== null) h += '<div style="width:' + compPct + '%;height:100%;background:#ea580c;border-radius:5px"></div>';
   h += '</div>';
@@ -613,13 +613,13 @@ function buildGapLandscape(niches) {
   var h = '<div class="block" style="margin-bottom:24px">';
   h += '<div class="section-head">📊 Gap Landscape'
      + '<span style="font-size:11px;font-weight:400;color:var(--mu);margin-left:8px">'
-     + 'Top niches — green WANTED vs orange CROWDED. More green than orange = a real gap.</span></div>';
+     + 'Top niches — green DEMAND vs orange COMPETITION. More green than orange = a real gap.</span></div>';
   h += '<div style="padding:8px 16px 14px">';
 
   // Bar-label header
   h += '<div style="display:flex;align-items:center;gap:10px;padding:4px 0 6px;border-bottom:1px solid var(--b1);margin-bottom:2px">';
   h += '<div style="width:140px;flex-shrink:0;font-size:10px;font-weight:700;color:var(--mu)">NICHE</div>';
-  h += '<div style="flex:1;font-size:10px;font-weight:700;color:var(--mu)">WANTED / CROWDED &nbsp;(0 – 100)</div>';
+  h += '<div style="flex:1;font-size:10px;font-weight:700;color:var(--mu)">DEMAND / COMPETITION &nbsp;(0 – 100)</div>';
   h += '</div>';
 
   rows.forEach(function(n, i) {
@@ -668,8 +668,8 @@ function buildGapLandscape(niches) {
 
   // Legend
   h += '<div style="display:flex;gap:14px;margin-top:10px;padding-top:8px;border-top:1px solid var(--b1);font-size:11px;color:var(--mu)">';
-  h += '<span><span style="display:inline-block;width:10px;height:10px;background:#16a34a;border-radius:2px;vertical-align:middle;margin-right:4px"></span>WANTED (demand)</span>';
-  h += '<span><span style="display:inline-block;width:10px;height:10px;background:#ea580c;border-radius:2px;vertical-align:middle;margin-right:4px"></span>CROWDED (competition)</span>';
+  h += '<span><span style="display:inline-block;width:10px;height:10px;background:#16a34a;border-radius:2px;vertical-align:middle;margin-right:4px"></span>DEMAND</span>';
+  h += '<span><span style="display:inline-block;width:10px;height:10px;background:#ea580c;border-radius:2px;vertical-align:middle;margin-right:4px"></span>COMPETITION</span>';
   h += '</div>';
 
   h += '</div></div>';

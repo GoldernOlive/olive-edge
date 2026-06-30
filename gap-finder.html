@@ -78,7 +78,7 @@
   <div style="background:var(--p2);border:1px solid var(--b1);border-radius:10px;padding:12px 16px;margin-bottom:12px;font-size:12px;color:var(--mu)">
     <strong style="color:var(--tx)">How it works:</strong>
     Each niche is tracked weekly — blending Google autocomplete depth, Reddit buyer mentions, and Etsy favourite counts into a demand signal, then weighing that against listing volume and how strongly the top sellers are established.
-    Gap score = how much buyer interest is left once competition is accounted for. A niche can have high interest but a low gap if it's crowded — that's why the two numbers differ.
+    Gap score = how much buyer interest is left once competition is accounted for. A niche can have high interest but a low gap if competition is high — that's why the two numbers differ.
   </div>
 
   <div style="display:flex;gap:14px;flex-wrap:wrap;align-items:center;font-size:12px;padding:9px 14px;background:var(--p2);border:1px solid var(--b1);border-radius:9px;margin-bottom:20px">
@@ -345,7 +345,7 @@ function verdict(n) {
       : "Competitive but not locked — a well-differentiated listing could carve out a position.";
   }
   if (band === 3)
-    return "Crowded — possible only with a genuinely strong point of difference.";
+    return "Competitive — possible only with a genuinely strong point of difference.";
   return "Not worth it right now — heavy competition and the demand doesn't justify the fight.";
 }
 
@@ -575,7 +575,7 @@ function buildNicheCard(n) {
 
   // Wanted bar
   h += '<div style="display:flex;align-items:center;gap:8px;margin-bottom:7px">';
-  h += '<span style="font-size:10px;font-weight:700;color:var(--mu);width:54px;flex-shrink:0">WANTED</span>';
+  h += '<span style="font-size:10px;font-weight:700;color:var(--mu);width:54px;flex-shrink:0">DEMAND</span>';
   h += '<div style="flex:1;height:9px;background:var(--p3);border-radius:5px;overflow:hidden">';
   if (demandVal !== null) h += '<div style="width:' + demandVal + '%;height:100%;background:#16a34a;border-radius:5px"></div>';
   h += '</div>';
@@ -587,7 +587,7 @@ function buildNicheCard(n) {
 
   // Crowded bar
   h += '<div style="display:flex;align-items:center;gap:8px">';
-  h += '<span style="font-size:10px;font-weight:700;color:var(--mu);width:54px;flex-shrink:0">CROWDED</span>';
+  h += '<span style="font-size:10px;font-weight:700;color:var(--mu);width:54px;flex-shrink:0">COMPETITION</span>';
   h += '<div style="flex:1;height:9px;background:var(--p3);border-radius:5px;overflow:hidden">';
   if (compPct !== null) h += '<div style="width:' + compPct + '%;height:100%;background:#ea580c;border-radius:5px"></div>';
   h += '</div>';
@@ -697,7 +697,7 @@ function renderNiches(niches) {
     h += '<div id="sec-monitor">';
     h += '<div class="tier-head"><h2 style="font-size:16px;font-weight:700;margin:0">Monitor</h2>';
     h += '<span style="padding:3px 10px;border-radius:20px;font-size:12px;font-weight:700;background:var(--p2);color:var(--mu)">' + t3.length + ' niches</span></div>';
-    h += '<p style="font-size:13px;color:var(--mu);margin-bottom:14px">Gap score 8–14 — crowded right now, watch for the balance to shift.</p>';
+    h += '<p style="font-size:13px;color:var(--mu);margin-bottom:14px">Gap score 8–14 — competitive right now, watch for the balance to shift.</p>';
     t3.forEach(function(n) { h += buildNicheCard(n); });
     h += '</div>';
   }
