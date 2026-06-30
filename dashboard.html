@@ -6,41 +6,24 @@
 <title>Dashboard — Olive Edge</title>
 <link rel="stylesheet" href="css/style.css"/>
 <style>
-.feed-hero{padding:24px 0 16px;border-bottom:1px solid var(--b1);margin-bottom:20px}
+.gap-score{font-size:44px;font-weight:800;font-family:DM Mono,monospace;line-height:1}
+.gap-bar{height:7px;background:var(--p3);border-radius:4px;overflow:hidden;margin:3px 0}
+.gap-fill{height:100%;border-radius:4px}
+.gcard{border:1px solid var(--b1);border-radius:12px;padding:18px;margin-bottom:12px;background:var(--w);transition:all .2s}
+.gcard:hover{border-color:var(--ol);box-shadow:0 4px 16px rgba(107,142,35,.1)}
+.tag{display:inline-block;background:var(--olbg);border:1px solid var(--olbr);border-radius:20px;padding:2px 9px;font-size:11px;font-family:DM Mono,monospace;color:var(--ol);margin:2px}
+.lnk{display:inline-flex;align-items:center;gap:4px;padding:5px 10px;border-radius:7px;font-size:11px;font-weight:600;text-decoration:none;border:1.5px solid var(--b1);color:var(--tx);background:var(--w);margin:2px}
+.lnk:hover{border-color:var(--ol);color:var(--ol)}
+.stat-link{cursor:pointer}
+.stat-link:hover{border-color:var(--ol)}
+.progress-bar{height:6px;background:var(--p3);border-radius:3px;overflow:hidden;margin:8px 0}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--gd),var(--ol));border-radius:3px;transition:width .3s}
 .live-dot{width:8px;height:8px;border-radius:50%;background:var(--gn);display:inline-block;animation:pulse 2s infinite}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
-.feed-tabs{display:flex;border:1.5px solid var(--b1);border-radius:10px;overflow:hidden;margin-bottom:20px}
-.feed-tab{flex:1;padding:10px 6px;border:none;background:transparent;font-family:Jost,sans-serif;font-size:12px;font-weight:600;cursor:pointer;color:var(--mu);border-right:1px solid var(--b1);transition:all .15s}
-.feed-tab:last-child{border-right:none}
-.feed-tab.active{background:var(--ol);color:#fff}
-.feed-tab:hover:not(.active){background:var(--p2)}
-.pcard{border:1px solid var(--b1);border-radius:12px;padding:18px;margin-bottom:12px;background:var(--w);transition:all .2s;position:relative}
-.pcard:hover{border-color:var(--ol);box-shadow:0 4px 16px rgba(107,142,35,.1);transform:translateY(-1px);cursor:pointer}
-.pcard.urgent{border-left:4px solid var(--rd)}
-.pcard.lowcomp{border-left:4px solid #16a34a}
-.comp{display:inline-block;padding:2px 9px;border-radius:20px;font-size:11px;font-weight:700}
-.comp-low{background:#dcfce7;color:#16a34a}
-.comp-med{background:#fef9c3;color:#ca8a04}
-.comp-high{background:#fee2e2;color:#dc2626}
-.swatch{width:22px;height:22px;border-radius:50%;border:2px solid rgba(0,0,0,.08);display:inline-block;cursor:pointer;transition:transform .15s;vertical-align:middle}
-.swatch:hover{transform:scale(1.25)}
-.tag{display:inline-block;background:var(--p2);border:1px solid var(--b1);border-radius:20px;padding:3px 10px;font-size:10px;font-family:DM Mono,monospace;margin:2px}
-.tag.real{background:var(--olbg);border-color:var(--olbr);color:var(--ol)}
-.metric{display:inline-flex;align-items:center;gap:4px;background:var(--p2);border:1px solid var(--b1);border-radius:20px;padding:4px 10px;font-size:11px;margin:2px;white-space:nowrap}
-.urgent-bar{background:var(--rd);color:#fff;border-radius:10px;padding:14px 18px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px}
-.design-box{background:var(--p2);border-radius:8px;padding:12px 14px;margin:10px 0;border:1px solid var(--b1)}
-.source-badge{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:600;border:1px solid var(--b1);margin:2px}
-.src-google{background:#e8f0fe;color:#1967d2;border-color:#1967d244}
-.src-etsy{background:#fef0e8;color:#e06429;border-color:#e0642944}
-.src-reddit{background:#fff0e8;color:#ff4500;border-color:#ff450044}
-.src-core{background:var(--olbg);color:var(--ol);border-color:var(--olbr)}
-.skel{background:linear-gradient(90deg,var(--p2) 25%,var(--p3) 50%,var(--p2) 75%);background-size:200% 100%;animation:shimmer 1.2s infinite;border-radius:6px;display:block;margin-bottom:8px}
-@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
-.signal-bar{height:6px;background:var(--p3);border-radius:3px;overflow:hidden;margin-top:4px}
-.signal-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--gd),var(--ol))}
+.section-head{font-size:13px;font-weight:700;padding:12px 16px;background:var(--p2);border-bottom:1px solid var(--b1)}
+.block{border:1px solid var(--b1);border-radius:12px;overflow:hidden;margin-bottom:24px}
 </style>
 <style>
-/* ── MOBILE NAV ── */
 .nav-hamburger{display:none;background:none;border:none;cursor:pointer;padding:4px;color:var(--tx)}
 .nav-hamburger svg{display:block}
 @media(max-width:768px){
@@ -52,6 +35,8 @@
   .nav-inner{flex-wrap:nowrap}
   .page{padding:12px}
   .grid-2,.grid-auto{grid-template-columns:1fr!important}
+  .gcard{padding:14px}
+  .gap-score{font-size:36px}
 }
 </style>
 </head>
@@ -77,37 +62,25 @@
 </nav>
 
 <div class="page">
-  <div class="feed-hero">
-    <div class="serif" style="font-size:26px;font-weight:600;margin-bottom:4px">Olive Edge Intelligence</div>
-    <div style="font-size:13px;color:var(--mu)">Real opportunities discovered from Google searches + Etsy data + Reddit trends — updated daily</div>
-    <div style="display:flex;align-items:center;gap:10px;margin-top:8px;flex-wrap:wrap">
+  <div style="padding:24px 0 16px;border-bottom:1px solid var(--b1);margin-bottom:24px">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px">
+      <div>
+        <div class="serif" style="font-size:26px;font-weight:600;margin-bottom:4px">Olive Edge Intelligence</div>
+        <div style="font-size:13px;color:var(--mu)">Your market today — what's moved and what to act on</div>
+      </div>
+      <button class="btn-olive" onclick="loadDashboard()" id="refresh-btn">↻ Refresh</button>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;margin-top:10px;flex-wrap:wrap">
       <span style="font-size:12px;color:var(--mu)"><span class="live-dot"></span> Live</span>
-      <span style="font-size:12px;color:var(--mu)" id="feed-ts">Loading...</span>
-      <button class="btn-ghost btn-sm" onclick="runFeed(true)">↻ Refresh</button>
+      <span style="font-size:12px;color:var(--mu)" id="dash-ts">Loading…</span>
     </div>
-    <div id="sources-row" style="margin-top:8px;display:none">
-      <span class="source-badge src-google">🔍 Google Autocomplete</span>
-      <span class="source-badge src-etsy">🛍 Etsy Live Data</span>
-      <span class="source-badge src-reddit">💬 Reddit r/EtsySellers</span>
-      <span class="source-badge src-core">⭐ Velocity DB</span>
-    </div>
+    <div class="progress-bar" id="prog-bar" style="display:none"><div class="progress-fill" id="prog-fill" style="width:0%"></div></div>
   </div>
 
-  <div id="urgent-bar"></div>
-
-  <div class="feed-tabs">
-    <button class="feed-tab active" id="tab-hot" onclick="showTab('hot')">🔥 Hot Now</button>
-    <button class="feed-tab" id="tab-rising" onclick="showTab('rising')">📈 Rising</button>
-    <button class="feed-tab" id="tab-green" onclick="showTab('green')">🌿 Evergreen</button>
-    <button class="feed-tab" id="tab-low" onclick="showTab('low')">💎 Low Comp</button>
-    <button class="feed-tab" id="tab-season" onclick="showTab('season')">📅 This Week</button>
-  </div>
-
-  <div id="feed-body">
-    <div>
-      <div style="border:1px solid var(--b1);border-radius:12px;padding:18px;margin-bottom:12px"><span class="skel" style="height:20px;width:55%"></span><span class="skel" style="height:14px;width:80%"></span><span class="skel" style="height:14px;width:65%"></span><span class="skel" style="height:60px;width:100%"></span></div>
-      <div style="border:1px solid var(--b1);border-radius:12px;padding:18px;margin-bottom:12px"><span class="skel" style="height:20px;width:45%"></span><span class="skel" style="height:14px;width:75%"></span><span class="skel" style="height:14px;width:55%"></span><span class="skel" style="height:60px;width:100%"></span></div>
-      <div style="border:1px solid var(--b1);border-radius:12px;padding:18px"><span class="skel" style="height:20px;width:60%"></span><span class="skel" style="height:14px;width:70%"></span><span class="skel" style="height:14px;width:50%"></span><span class="skel" style="height:60px;width:100%"></span></div>
+  <div id="dash-body">
+    <div style="border:1px solid var(--b1);border-radius:12px;padding:32px;text-align:center;color:var(--mu)">
+      <div style="font-size:24px;margin-bottom:8px">⏳</div>
+      <div>Loading market data…</div>
     </div>
   </div>
 </div>
@@ -133,206 +106,526 @@ var S=getSession();
 if(!S.token){window.location.href='index.html';}
 else{var em=document.getElementById('nav-email');if(em)em.textContent=S.email;}
 
-var TABS={hot:[],rising:[],green:[],low:[],season:[]};
-var ACTIVE='hot';
+// ── Supabase ───────────────────────────────────────────────────────────────
+var SB_URL = 'https://oktpizrevqehfrkcqphq.supabase.co';
+var SB_KEY  = 'sb_publishable_r4lLwwInTT76wXjP-Cha4Q_T1yALqyt';
 
-function srcBadge(src){
-  var map={google:'<span class="source-badge src-google">🔍 Google</span>',etsy_auto:'<span class="source-badge src-etsy">🛍 Etsy Search</span>',reddit:'<span class="source-badge src-reddit">💬 Reddit</span>',core:'<span class="source-badge src-core">⭐ Core</span>'};
-  return map[src]||'';
+function sbGet(path) {
+  return fetch(SB_URL + '/rest/v1/' + path, {
+    headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY }
+  }).then(function(r) {
+    if (!r.ok) throw new Error('Supabase ' + r.status);
+    return r.json();
+  });
 }
 
-function card(p){
-  var isU=p.isUrgent;
-  var isL=p.competitionScore<=3;
-  var cc=p.competitionScore<=3?'comp-low':p.competitionScore<=6?'comp-med':'comp-high';
-  var scoreWidth=Math.min(100,Math.round((p.opportunityScore/40)*100));
+// ── Shared helpers (mirror gap-finder.html) ────────────────────────────────
+function escapeHtml(s) {
+  return String(s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
 
-  var h='<div class="pcard'+(isU?' urgent':isL?' lowcomp':'')+'" onclick="window.location.href=\'search.html?kw='+encodeURIComponent(p.kw)+'\'">';
+var BAND = {
+  1: { col: '#16a34a', label: 'Strong'  },
+  2: { col: '#ca8a04', label: 'Testing' },
+  3: { col: '#6b7280', label: 'Monitor' },
+  4: { col: '#b45309', label: 'Skip'    },
+};
 
-  // Header
-  h+='<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:8px">';
-  h+='<div style="flex:1">';
-  h+='<div style="font-weight:700;font-size:16px;margin-bottom:5px">'+p.kw+'</div>';
-  h+='<div style="display:flex;gap:5px;flex-wrap:wrap;align-items:center">';
-  h+='<span class="comp '+cc+'">'+p.competition+' Competition</span>';
-  h+='<span style="font-size:11px;background:var(--p2);padding:2px 8px;border-radius:10px;border:1px solid var(--b1);color:var(--mu)">'+p.category+'</span>';
-  h+='<span style="font-size:11px;color:'+(p.trend==='Rising'||p.trend==='Emerging'?'var(--gn)':p.trend==='Stable'?'var(--mu)':'var(--gd)')+';font-weight:600">'+p.trend+'</span>';
-  if(isU)h+='<span style="font-size:11px;color:var(--rd);font-weight:700;background:var(--rdbg);padding:2px 8px;border-radius:10px">⚡ URGENT</span>';
-  h+='</div>';
+function tierOf(n) {
+  if (n.classification === 'seasonal' &&
+      (n.urgency === 'peaking_now' || n.urgency === 'list_now')) return 1;
+  var s = n.gap_score;
+  if (s === null || s === undefined) return 4;
+  if (s >= 25) return 1;
+  if (s >= 15) return 2;
+  if (s >= 8)  return 3;
+  return 4;
+}
 
-  // Signal sources
-  h+='<div style="margin-top:5px">';
-  (p.sources||[]).forEach(function(s){h+=srcBadge(s);});
-  h+='</div>';
-  h+='</div>';
+function compTier(comp) {
+  if (comp === null || comp === undefined) return { l: '—', c: 'var(--mu)' };
+  if (comp < 0.35) return { l: 'Low',    c: '#16a34a' };
+  if (comp < 0.60) return { l: 'Medium', c: '#ca8a04' };
+  return              { l: 'High',   c: '#dc2626' };
+}
 
-  // Opportunity score + Research button
-  h+='<div style="text-align:center;flex-shrink:0">';
-  h+='<div style="font-size:22px;font-weight:800;font-family:DM Mono,monospace;color:var(--ol);line-height:1">'+p.opportunityScore+'</div>';
-  h+='<div style="font-size:9px;color:var(--mu2);margin-bottom:6px">score</div>';
-  h+='<button onclick="event.stopPropagation();window.location.href=\'search.html?kw='+encodeURIComponent(p.kw)+'\'" style="background:var(--ol);color:#fff;border:none;padding:7px 12px;border-radius:7px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap">Research →</button>';
-  h+='</div></div>';
-
-  // Why this product
-  if(p.reason)h+='<div style="font-size:13px;color:var(--mu);line-height:1.5;margin-bottom:10px">'+p.reason+'</div>';
-  // Signal strength bar
-  h+='<div style="margin-bottom:10px"><div style="font-size:10px;color:var(--mu2);margin-bottom:2px">Signal strength</div>';
-  h+='<div class="signal-bar"><div class="signal-fill" style="width:'+scoreWidth+'%"></div></div></div>';
-
-  // Seasonal event
-  if(p.seasonalEvent){
-    var ev=p.seasonalEvent;
-    h+='<div style="padding:8px 12px;background:var(--rdbg);border:1px solid var(--rdbr);border-radius:8px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center">';
-    h+='<div><div style="font-weight:700;font-size:13px;color:var(--rd)">🚨 '+ev.name+'</div><div style="font-size:12px;color:var(--mu)">'+ev.listBy+'</div></div>';
-    h+='<div style="font-size:24px;font-weight:800;font-family:DM Mono,monospace;color:var(--rd)">'+ev.daysUntil+'<div style="font-size:10px;font-weight:400">days</div></div></div>';
+function verdict(n) {
+  var cls = n.classification, urgency = n.urgency, weeks = n.weeks_to_peak;
+  var comp = n.competition, band = tierOf(n);
+  if (cls === 'seasonal') {
+    if (urgency === 'peaking_now') return "Seasonal — you're in the peak window right now. List immediately.";
+    if (urgency === 'list_now') return "Seasonal — peak is weeks away. List now so your listing has time to rank.";
+    if (urgency === 'prepare') { var w = (weeks != null) ? ' (' + weeks + ' weeks away)' : ''; return 'Seasonal — peak is approaching' + w + '. Time to design and get ready.'; }
+    if (urgency === 'dormant') return 'Seasonal — quiet period right now. Peak is months away; watch and plan.';
   }
+  if (n.gap_score === null || n.gap_score === undefined) return null;
+  if (band === 1) { return (comp !== null && comp <= 0.42) ? "Strong opportunity — real buyer interest and the competition is beatable." : "Beatable market — good demand and the current leaders aren't strongly established."; }
+  if (band === 2) { return (comp !== null && comp <= 0.50) ? "Worth testing — moderate demand with manageable competition." : "Competitive but not locked — a well-differentiated listing could carve out a position."; }
+  if (band === 3) return "Crowded — possible only with a genuinely strong point of difference.";
+  return "Not worth it right now — heavy competition and the demand doesn't justify the fight.";
+}
 
-  // Real market metrics
-  h+='<div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:10px">';
-  if(p.listingCount)h+='<span class="metric">📋 <strong>'+p.listingCount.toLocaleString()+'</strong> live listings</span>';
-  if(p.avgPrice)h+='<span class="metric">💷 Avg <strong>£'+p.avgPrice+'</strong></span>';
-  if(p.sweetSpot)h+='<span class="metric">🎯 Sweet spot <strong>'+p.sweetSpot+'</strong></span>';
-  if(p.searches)h+='<span class="metric">🔍 <strong>'+p.searches+'</strong></span>';
-  if(p.sales)h+='<span class="metric">💰 <strong>'+p.sales+'</strong></span>';
-  if(p.totalFavs&&p.totalFavs>0)h+='<span class="metric">♡ <strong>'+p.totalFavs.toLocaleString()+'</strong> favs</span>';
-  if(p.margin)h+='<span class="metric">📈 <strong>'+p.margin+'</strong> margin</span>';
-  if(p.supplier)h+='<span class="metric">🖨️ <strong>'+p.supplier+'</strong></span>';
-  h+='</div>';
+// ── Winners panel (mirror gap-finder.html) ─────────────────────────────────
+function winnersPanel(n) {
+  var SYM = { GBP: '£', USD: '$', EUR: '€' };
 
-  // Design intelligence box
-  h+='<div class="design-box">';
-  h+='<div style="font-size:10px;font-weight:700;color:var(--mu);letter-spacing:.07em;margin-bottom:8px">🎨 DESIGN INTELLIGENCE</div>';
+  var UNCLEAR = '<div style="padding:9px 12px;background:var(--p2);border-radius:8px;border:1px solid var(--b1);font-size:12px;color:var(--mu)">'
+    + 'Winners are unclear for this search — the term spans several different products, '
+    + 'so there\'s no single market to benchmark yet. Use the verify links to look manually.'
+    + '</div>';
 
-  // Colours with swatches
-  if(p.colours&&p.colours.length){
-    h+='<div style="display:flex;align-items:center;gap:5px;margin-bottom:7px;flex-wrap:wrap">';
-    h+='<span style="font-size:11px;color:var(--mu);min-width:90px">Top colours:</span>';
-    p.colours.forEach(function(c,i){
-      var name=(p.colourNames&&p.colourNames[i])||c;
-      h+='<span class="swatch" style="background:'+c+'" title="'+name+' '+c+'" onclick="event.stopPropagation();copyHex(\''+c+'\',\''+name+'\')"></span>';
+  var open = '<details style="margin-top:12px">'
+    + '<summary style="font-size:11px;font-weight:700;color:var(--mu);cursor:pointer;'
+    + 'list-style:none;display:block;padding:4px 0;user-select:none">'
+    + '&#9658; What\'s winning right now</summary>'
+    + '<div style="padding-top:8px">';
+  var close = '</div></details>';
+
+  var listings = n.top_listings;
+  if (!listings || !listings.length)
+    return open + '<div style="font-size:12px;color:var(--mu);font-style:italic">No listing data yet.</div>' + close;
+
+  var currCount = {};
+  listings.forEach(function(l) {
+    var c = l.currency_code || 'USD';
+    currCount[c] = (currCount[c] || 0) + 1;
+  });
+  var dominant = currCount['GBP']
+    ? 'GBP'
+    : Object.keys(currCount).reduce(function(a, b) { return currCount[b] > currCount[a] ? b : a; });
+  var sym = SYM[dominant] || dominant;
+
+  var survivors = listings
+    .filter(function(l) { return (l.currency_code || 'USD') === dominant; })
+    .slice()
+    .sort(function(a, b) { return (b.num_favorers || 0) - (a.num_favorers || 0); });
+
+  var trackedCount = survivors.filter(function(l) { return (l.num_favorers || 0) >= 5; }).length;
+  if (survivors.length < 3 || trackedCount < 3)
+    return open + UNCLEAR + close;
+
+  var validPrices = survivors
+    .map(function(l) { return l.price || 0; })
+    .filter(function(p) { return p > 0; })
+    .slice()
+    .sort(function(a, b) { return a - b; });
+
+  if (!validPrices.length)
+    return open + UNCLEAR + close;
+
+  var mid = Math.floor(validPrices.length / 2);
+  var median = validPrices.length % 2 === 0
+    ? Math.round((validPrices[mid - 1] + validPrices[mid]) / 2)
+    : Math.round(validPrices[mid]);
+
+  var tagCount = {};
+  survivors.forEach(function(l) {
+    if (Array.isArray(l.tags)) l.tags.forEach(function(t) {
+      var k = String(t).toLowerCase().trim();
+      if (k) tagCount[k] = (tagCount[k] || 0) + 1;
     });
-    if(p.colourNames)h+='<span style="font-size:11px;color:var(--mu2)">'+p.colourNames.join(' · ')+'</span>';
-    h+='</div>';
+  });
+  var topTags = Object.keys(tagCount)
+    .sort(function(a, b) { return tagCount[b] - tagCount[a]; })
+    .slice(0, 6);
+
+  var h = open;
+
+  survivors.slice(0, 4).forEach(function(l) {
+    var raw   = l.title || '';
+    var title = escapeHtml(raw.length > 70 ? raw.slice(0, 69) + '…' : raw || '—');
+    var price = l.price != null && l.price > 0 ? sym + parseFloat(l.price).toFixed(2) : '—';
+    var favs  = l.num_favorers != null ? '♡ ' + Number(l.num_favorers).toLocaleString() : '';
+    h += '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;'
+       + 'padding:7px 0;border-bottom:1px solid var(--b1)">';
+    h += '<div style="flex:1;min-width:0">';
+    h += '<div style="font-size:12px;color:var(--tx);margin-bottom:2px">' + title + '</div>';
+    h += '<div style="font-size:11px;color:var(--mu)">' + favs + '</div>';
+    h += '</div>';
+    h += '<div style="text-align:right;flex-shrink:0">';
+    h += '<div style="font-size:13px;font-weight:700">' + price + '</div>';
+    if (l.url) h += '<a href="' + escapeHtml(l.url) + '" target="_blank" class="lnk" style="font-size:10px;padding:2px 7px;margin-top:2px">View →</a>';
+    h += '</div></div>';
+  });
+
+  h += '<div style="margin-top:10px;padding:8px 12px;background:var(--p2);border-radius:8px;border:1px solid var(--b1)">';
+  h += '<span style="font-size:11px;font-weight:700;color:var(--mu)">PRICE TO BEAT &nbsp;</span>';
+  h += '<span style="font-size:13px;color:var(--tx)">Most winners sit around <strong>' + sym + median + '</strong>.</span>';
+  h += '</div>';
+
+  if (topTags.length) {
+    h += '<div style="margin-top:8px">';
+    h += '<div style="font-size:11px;font-weight:700;color:var(--mu);margin-bottom:5px">LOOK &amp; FEEL</div>';
+    topTags.forEach(function(t) { h += '<span class="tag">' + escapeHtml(t) + '</span>'; });
+    h += '</div>';
   }
 
-  // Font + style + size in one row
-  var designRow='';
-  if(p.font)designRow+='<span style="font-size:11px;background:var(--w);border:1px solid var(--b1);border-radius:20px;padding:3px 9px;margin:2px;display:inline-block">✏️ '+p.font+'</span>';
-  if(p.style)designRow+='<span style="font-size:11px;background:var(--w);border:1px solid var(--b1);border-radius:20px;padding:3px 9px;margin:2px;display:inline-block">🎨 '+p.style+'</span>';
-  if(p.size)designRow+='<span style="font-size:11px;background:var(--w);border:1px solid var(--b1);border-radius:20px;padding:3px 9px;margin:2px;display:inline-block">📐 '+p.size+'</span>';
-  if(designRow)h+='<div style="margin-bottom:7px">'+designRow+'</div>';
-
-  // Buyer + photo
-  if(p.buyer)h+='<div style="font-size:12px;color:var(--mu);margin-bottom:4px">👤 <strong>Who buys:</strong> '+p.buyer+'</div>';
-  if(p.photo)h+='<div style="font-size:12px;color:var(--mu)">📸 <strong>Photo tip:</strong> '+p.photo+'</div>';
-  // Top phrases
-  if(p.phrases&&p.phrases.length){
-    h+='<div style="margin-top:8px"><div style="font-size:11px;color:var(--mu);font-weight:600;margin-bottom:4px">💬 TOP PHRASES ON BESTSELLERS</div>';
-    p.phrases.slice(0,4).forEach(function(ph){h+='<span style="font-style:italic;color:var(--gd);font-size:13px;margin-right:10px;display:inline-block;margin-bottom:2px">\"'+ph+'\"</span>';});
-    h+='</div>';
-  }
-  h+='</div>';
-
-  // Real Etsy tags
-  if(p.topTags&&p.topTags.length){
-    h+='<div style="margin-top:8px">';
-    h+='<div style="font-size:10px;color:var(--mu);font-weight:600;margin-bottom:4px">✓ REAL ETSY TAGS — from live competitor listings</div>';
-    p.topTags.slice(0,8).forEach(function(t){h+='<span class="tag real">'+t+'</span>';});
-    h+='</div>';
-  }
-
-  // Top favourited listings
-  if(p.topFav&&p.topFav.length){
-    h+='<div style="margin-top:8px;padding:8px 10px;background:var(--p2);border-radius:8px">';
-    h+='<div style="font-size:10px;color:var(--mu);font-weight:600;margin-bottom:5px">🏆 TOP FAVOURITED RIGHT NOW</div>';
-    p.topFav.slice(0,2).forEach(function(l){
-      if(!l.title)return;
-      h+='<div style="font-size:12px;padding:3px 0;display:flex;justify-content:space-between;align-items:center">';
-      h+='<span style="color:var(--tx);flex:1;margin-right:8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+l.title+'</span>';
-      var favs=l.num_favorers||0;
-      h+='<span style="color:var(--gd);font-size:11px;flex-shrink:0">'+favs+' ♡</span>';
-      if(l.url)h+='<a href="'+l.url+'" target="_blank" onclick="event.stopPropagation()" style="font-size:10px;color:var(--ol);margin-left:6px;flex-shrink:0">View →</a>';
-      h+='</div>';
-    });
-    h+='</div>';
-  }
-
-  h+='</div>';
+  h += close;
   return h;
 }
 
-function copyHex(hex,name){
-  if(navigator.clipboard){
-    navigator.clipboard.writeText(hex).then(function(){
-      var n=document.createElement('div');
-      n.style.cssText='position:fixed;bottom:20px;right:20px;background:var(--ol);color:#fff;padding:8px 16px;border-radius:8px;font-size:13px;z-index:9999;font-family:Jost,sans-serif';
-      n.textContent='Copied '+name+' ('+hex+')';
-      document.body.appendChild(n);
-      setTimeout(function(){document.body.removeChild(n);},2000);
+// ── Card (mirror gap-finder.html) ──────────────────────────────────────────
+function statBox(label, value) {
+  var h = '<div style="padding:8px 10px;background:var(--p2);border-radius:8px;border:1px solid var(--b1)">';
+  h += '<div style="font-size:10px;color:var(--mu);font-weight:600;margin-bottom:3px">' + label + '</div>';
+  if (value !== null && value !== undefined) {
+    h += '<div style="font-weight:700;font-size:15px">' + value + '</div>';
+  } else {
+    h += '<div style="font-size:12px;color:var(--mu);font-style:italic">Gathering…</div>';
+  }
+  h += '</div>';
+  return h;
+}
+
+function buildNicheCard(n) {
+  var score  = n.gap_score;
+  var band   = tierOf(n);
+  var bm     = BAND[band];
+  var col    = bm.col;
+  var vtext  = verdict(n);
+  var ct     = compTier(n.competition);
+  var kenc   = encodeURIComponent(n.keyword);
+  var barPct = (score !== null && score !== undefined) ? Math.min(100, Math.round(score / 35 * 100)) : 0;
+
+  var h = '<div id="card-' + kenc + '" class="gcard" style="border-left:4px solid ' + col + '">';
+
+  h += '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:14px">';
+  h += '<div style="flex:1">';
+  h += '<div style="font-weight:700;font-size:17px;margin-bottom:8px">' + escapeHtml(n.keyword) + '</div>';
+  if (vtext) {
+    h += '<div style="font-size:13px;line-height:1.55;color:var(--tx);padding:8px 12px;background:var(--p2);border-left:3px solid ' + col + ';border-radius:0 8px 8px 0">' + vtext + '</div>';
+  } else {
+    h += '<div style="font-size:13px;color:var(--mu);font-style:italic;padding:8px 12px;background:var(--p2);border-radius:8px">Gathering data…</div>';
+  }
+  h += '</div>';
+
+  h += '<div style="text-align:center;flex-shrink:0;min-width:72px">';
+  if (score !== null && score !== undefined) {
+    h += '<div class="gap-score" style="color:' + col + '">' + score + '</div>';
+    h += '<div style="font-size:9px;font-weight:700;color:' + col + ';letter-spacing:.04em;white-space:nowrap;margin-bottom:3px">' + bm.label + '</div>';
+    h += '<div class="gap-bar" style="width:70px;margin:0 auto"><div class="gap-fill" style="width:' + barPct + '%;background:' + col + '"></div></div>';
+  } else {
+    h += '<div style="font-size:26px;color:var(--mu)">—</div>';
+    h += '<div style="font-size:9px;color:var(--mu2)">gap score</div>';
+  }
+  h += '</div>';
+  h += '</div>';
+
+  var demandVal = (n.demand_score != null) ? Math.round(n.demand_score) : null;
+  var compPct   = (n.competition  != null) ? Math.min(100, Math.round(n.competition * 100)) : null;
+
+  h += '<div style="margin-bottom:14px">';
+
+  h += '<div style="display:flex;align-items:center;gap:8px;margin-bottom:7px">';
+  h += '<span style="font-size:10px;font-weight:700;color:var(--mu);width:54px;flex-shrink:0">WANTED</span>';
+  h += '<div style="flex:1;height:9px;background:var(--p3);border-radius:5px;overflow:hidden">';
+  if (demandVal !== null) h += '<div style="width:' + demandVal + '%;height:100%;background:#16a34a;border-radius:5px"></div>';
+  h += '</div>';
+  if (demandVal !== null)
+    h += '<span style="font-size:11px;font-weight:700;min-width:52px;text-align:right">' + demandVal + '/100</span>';
+  else
+    h += '<span style="font-size:11px;color:var(--mu);font-style:italic;min-width:52px;text-align:right">Gathering…</span>';
+  h += '</div>';
+
+  h += '<div style="display:flex;align-items:center;gap:8px">';
+  h += '<span style="font-size:10px;font-weight:700;color:var(--mu);width:54px;flex-shrink:0">CROWDED</span>';
+  h += '<div style="flex:1;height:9px;background:var(--p3);border-radius:5px;overflow:hidden">';
+  if (compPct !== null) h += '<div style="width:' + compPct + '%;height:100%;background:#ea580c;border-radius:5px"></div>';
+  h += '</div>';
+  h += '<span style="font-size:11px;font-weight:700;color:' + ct.c + ';min-width:52px;text-align:right">'
+     + (compPct !== null ? ct.l : '—') + '</span>';
+  h += '</div>';
+
+  h += '</div>';
+
+  h += '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;margin-bottom:14px">';
+  h += statBox('LISTINGS ON ETSY', n.total_listings != null ? Number(n.total_listings).toLocaleString() : null);
+  h += statBox('TOP SELLERS AVG PRICE', n.avg_price != null ? '£' + parseFloat(n.avg_price).toFixed(2) : null);
+  h += '</div>';
+
+  h += '<div style="margin-bottom:12px">';
+  h += '<div style="font-size:11px;color:var(--mu);font-weight:600;margin-bottom:5px">Verify this opportunity:</div>';
+  h += '<a class="lnk" href="https://www.etsy.com/uk/search?q=' + kenc + '" target="_blank">Etsy UK</a>';
+  h += '<a class="lnk" href="https://www.etsy.com/search?q=' + kenc + '" target="_blank">Etsy USA</a>';
+  h += '<a class="lnk" href="https://trends.google.com/trends/explore?q=' + kenc + '&geo=GB" target="_blank">Google Trends</a>';
+  h += '<a class="lnk" href="https://www.pinterest.co.uk/search/pins/?q=' + kenc + '" target="_blank">Pinterest</a>';
+  h += '<a class="lnk" href="https://www.ebay.co.uk/sch/i.html?_nkw=' + kenc + '&LH_Sold=1&LH_Complete=1" target="_blank">eBay Sold</a>';
+  h += '</div>';
+
+  h += winnersPanel(n);
+
+  h += '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">';
+  h += '<button onclick="window.location.href=\'search.html?kw=' + kenc + '\'" class="btn-olive" style="font-size:12px">Full Intelligence Brief →</button>';
+  h += '<button onclick="window.location.href=\'listing-generator.html?kw=' + kenc + '\'" class="btn-ghost" style="font-size:12px">Write Listing →</button>';
+  h += '</div>';
+
+  h += '</div>';
+  return h;
+}
+
+// ── Block 1: What's Moving ─────────────────────────────────────────────────
+function buildWhatsMoving(niches) {
+  var moving = niches.filter(function(n) {
+    return n.trajectory === 'heating' || n.trajectory === 'saturating';
+  });
+
+  var h = '<div class="block" style="margin-bottom:24px">';
+  h += '<div class="section-head">📈 What\'s Moving</div>';
+  h += '<div style="padding:4px 0">';
+
+  if (!moving.length) {
+    h += '<div style="padding:12px 16px;font-size:13px;color:var(--mu);font-style:italic">'
+       + 'No major shifts this week — movement tracking sharpens as weekly history builds.'
+       + '</div>';
+  } else {
+    moving.forEach(function(n, i) {
+      var isLast = i === moving.length - 1;
+      var label  = n.trajectory === 'heating' ? 'trending up' : 'supply rising fast';
+      var col    = n.trajectory === 'heating' ? '#16a34a' : '#ca8a04';
+      h += '<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 16px'
+         + (isLast ? '' : ';border-bottom:1px solid var(--b1)') + '">';
+      h += '<div>';
+      h += '<span style="font-size:13px;font-weight:600">' + escapeHtml(n.keyword) + '</span>';
+      h += '<span style="font-size:12px;color:' + col + ';margin-left:8px">— ' + label + '</span>';
+      h += '</div>';
+      h += '<a href="gap-finder.html" class="lnk" style="font-size:10px;padding:3px 8px;flex-shrink:0">View →</a>';
+      h += '</div>';
     });
   }
+
+  h += '</div></div>';
+  return h;
 }
 
-function showTab(t){
-  ACTIVE=t;
-  ['hot','rising','green','low','season'].forEach(function(x){
-    var el=document.getElementById('tab-'+x);
-    if(el)el.className='feed-tab'+(x===t?' active':'');
+// ── Block 2: Today's Top Opportunity ──────────────────────────────────────
+function buildTopOpportunity(niches) {
+  var top = niches.find(function(n) {
+    return n.gap_score !== null && n.gap_score !== undefined;
   });
-  renderTab(t);
+  if (!top) return '';
+
+  var h = '<div style="margin-bottom:24px">';
+  h += '<div style="font-size:13px;font-weight:700;margin-bottom:10px">🥇 Today\'s Top Opportunity</div>';
+  h += buildNicheCard(top);
+  h += '<div style="margin-top:-4px;margin-bottom:16px">';
+  h += '<a href="gap-finder.html" class="btn-olive" style="font-size:12px;text-decoration:none;'
+     + 'padding:8px 16px;border-radius:8px;display:inline-flex;align-items:center">'
+     + 'Open in Gap Finder →</a>';
+  h += '</div></div>';
+  return h;
 }
 
-function renderTab(t){
-  var items=TABS[t]||[];
-  var body=document.getElementById('feed-body');
-  if(!items.length){
-    body.innerHTML='<div class="card" style="text-align:center;padding:32px;color:var(--mu)">No data yet — try refreshing</div>';
-    return;
-  }
-  var labels={
-    hot:'Highest opportunity score — triangulated from Google searches, Etsy live data and Reddit trends',
-    rising:'Trending upward now — early mover advantage before competition catches up',
-    green:'Consistent high sellers every month — proven demand, reliable income',
-    low:'Good real demand but low competition — easiest to rank and win right now',
-    season:'List these urgently — seasonal events approaching in the next few weeks'
-  };
-  var h='<p style="font-size:13px;color:var(--mu);line-height:1.6;margin-bottom:6px">'+labels[t]+'</p>';
-  h+='<p style="font-size:11px;color:var(--mu2);margin-bottom:14px">Click any card for the full 10-section intelligence brief → colours, SEO, financials, competitive analysis</p>';
-  items.forEach(function(p){h+=card(p);});
-  body.innerHTML=h;
-}
+// ── Block 3: Act Now — Seasonal ────────────────────────────────────────────
+function buildActNowSeasonal(niches) {
+  var urgencyOrder = ['peaking_now', 'list_now', 'prepare'];
+  var seasonal = niches.filter(function(n) {
+    return n.classification === 'seasonal' && urgencyOrder.indexOf(n.urgency) !== -1;
+  }).sort(function(a, b) {
+    return urgencyOrder.indexOf(a.urgency) - urgencyOrder.indexOf(b.urgency);
+  });
+  if (!seasonal.length) return '';
 
-async function runFeed(force){
-  var body=document.getElementById('feed-body');
-  document.getElementById('feed-ts').textContent='Discovering opportunities from real market data...';
+  var h = '<div class="block" style="margin-bottom:24px;border-color:#fca5a5">';
+  h += '<div class="section-head" style="background:#fff5f5;border-color:#fca5a5;color:#dc2626">⚡ Act Now — Seasonal</div>';
 
-  try{
-    var url='/api/intelligence'+(force?'?refresh=true':'');
-    var r=await fetch(url);
-    if(!r.ok)throw new Error('API error '+r.status);
-    var data=await r.json();
+  seasonal.forEach(function(n, i) {
+    var isLast     = i === seasonal.length - 1;
+    var isUrgent   = n.urgency === 'peaking_now' || n.urgency === 'list_now';
+    var timingCol  = isUrgent ? '#dc2626' : '#ca8a04';
+    var timingLabel = n.urgency === 'peaking_now' ? 'In peak window — list immediately'
+                    : n.urgency === 'list_now'    ? 'List now — peak is weeks away'
+                    : 'Prepare — peak approaching' + (n.weeks_to_peak != null ? ' (' + n.weeks_to_peak + ' weeks)' : '');
+    var vtext = verdict(n);
+    var bm    = BAND[tierOf(n)];
+    var kenc  = encodeURIComponent(n.keyword);
 
-    TABS=data.tabs||{hot:[],rising:[],green:[],low:[],season:[]};
-
-    // Urgent banner
-    var uev=(data.upcomingEvents||[]).find(function(e){return e.daysUntil<=21;});
-    if(uev){
-      document.getElementById('urgent-bar').innerHTML='<div class="urgent-bar"><div><div style="font-weight:700;font-size:15px">🚨 '+uev.name+' — '+uev.daysUntil+' Days Away</div><div style="font-size:12px;opacity:.9;margin-top:2px">'+uev.listBy+'</div></div><button onclick="showTab(\'season\')" style="background:#fff;color:var(--rd);border:none;padding:6px 14px;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer">See Seasonal →</button></div>';
+    h += '<div style="padding:14px 16px' + (isLast ? '' : ';border-bottom:1px solid var(--b1)') + '">';
+    h += '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px">';
+    h += '<div style="flex:1;min-width:0">';
+    h += '<div style="font-weight:700;font-size:15px;margin-bottom:3px">' + escapeHtml(n.keyword) + '</div>';
+    h += '<div style="font-size:11px;color:' + timingCol + ';font-weight:600;margin-bottom:5px">' + timingLabel + '</div>';
+    if (vtext) h += '<div style="font-size:12px;color:var(--mu);line-height:1.5">' + vtext + '</div>';
+    h += '</div>';
+    if (n.gap_score !== null && n.gap_score !== undefined) {
+      h += '<div style="text-align:center;flex-shrink:0;min-width:52px">';
+      h += '<div style="font-size:28px;font-weight:800;font-family:DM Mono,monospace;color:' + bm.col + ';line-height:1">' + n.gap_score + '</div>';
+      h += '<div style="font-size:9px;color:' + bm.col + ';font-weight:700">' + bm.label + '</div>';
+      h += '</div>';
     }
+    h += '</div>';
+    h += '<div style="margin-top:10px;display:flex;gap:6px;flex-wrap:wrap">';
+    h += '<a href="gap-finder.html" class="btn-olive" style="font-size:11px;text-decoration:none;'
+       + 'padding:7px 14px;border-radius:7px;display:inline-flex;align-items:center">Gap Finder →</a>';
+    h += '<button onclick="window.location.href=\'listing-generator.html?kw=' + kenc + '\'" '
+       + 'class="btn-ghost" style="font-size:11px">Write Listing →</button>';
+    h += '</div>';
+    h += '</div>';
+  });
 
-    var cacheLabel=data.fromCache?' · Cached (refreshes daily)':' · Live';
-    document.getElementById('feed-ts').textContent='Updated: '+(data.generatedAt||'Now')+cacheLabel;
-    document.getElementById('sources-row').style.display='block';
-    renderTab(ACTIVE);
+  h += '</div>';
+  return h;
+}
 
-  }catch(e){
-    console.error('Feed error:',e);
-    document.getElementById('feed-ts').textContent='Error loading — '+e.message;
-    body.innerHTML='<div class="card" style="text-align:center;padding:32px"><div style="font-size:28px;margin-bottom:12px">⚠️</div><div style="color:var(--rd);margin-bottom:8px">Could not load intelligence feed</div><p style="color:var(--mu);font-size:13px">'+e.message+'</p><button class="btn-olive" onclick="runFeed(true)" style="margin-top:12px">Try Again</button></div>';
+// ── Block 4: Newest Tracked Niches ─────────────────────────────────────────
+function buildNewestNiches(niches) {
+  var newest = niches.slice()
+    .filter(function(n) { return !!n.created_at; })
+    .sort(function(a, b) {
+      return a.created_at < b.created_at ? 1 : a.created_at > b.created_at ? -1 : 0;
+    })
+    .slice(0, 5);
+  if (!newest.length) return '';
+
+  var h = '<div class="block" style="margin-bottom:24px">';
+  h += '<div class="section-head">🌱 Newest Tracked Niches</div>';
+
+  newest.forEach(function(n, i) {
+    var isLast = i === newest.length - 1;
+    var bm     = BAND[tierOf(n)];
+    h += '<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 16px'
+       + (isLast ? '' : ';border-bottom:1px solid var(--b1)') + '">';
+    h += '<div style="display:flex;align-items:center;gap:6px;min-width:0;flex:1">';
+    h += '<span style="font-size:13px;font-weight:600">' + escapeHtml(n.keyword) + '</span>';
+    if (n.source === 'discovered') {
+      h += '<span style="font-size:9px;color:var(--mu2);background:var(--p3);padding:1px 6px;border-radius:20px;flex-shrink:0">discovered</span>';
+    }
+    h += '<span style="font-size:10px;font-weight:700;color:' + bm.col + ';background:' + bm.col + '18;'
+       + 'padding:2px 8px;border-radius:20px;flex-shrink:0">' + bm.label + '</span>';
+    h += '</div>';
+    h += '<a href="gap-finder.html" class="lnk" style="font-size:10px;padding:3px 8px;flex-shrink:0;margin-left:8px">View →</a>';
+    h += '</div>';
+  });
+
+  h += '</div>';
+  return h;
+}
+
+// ── Block 5: Your Market at a Glance ──────────────────────────────────────
+function buildMarketGlance(niches) {
+  var t1 = niches.filter(function(n) { return tierOf(n) === 1; }).length;
+  var t2 = niches.filter(function(n) { return tierOf(n) === 2; }).length;
+  var t3 = niches.filter(function(n) { return tierOf(n) === 3; }).length;
+  var t4 = niches.filter(function(n) { return tierOf(n) === 4; }).length;
+
+  function glanceBox(count, col, label) {
+    return '<div onclick="window.location.href=\'gap-finder.html\'" class="stat-link" '
+         + 'style="padding:14px 10px;background:var(--p2);border:1px solid var(--b1);'
+         + 'border-radius:10px;text-align:center">'
+         + '<div style="font-size:24px;font-weight:800;color:' + col + '">' + count + '</div>'
+         + '<div style="font-size:11px;color:var(--mu);margin-top:2px">' + label + '</div>'
+         + '</div>';
+  }
+
+  var h = '<div style="margin-bottom:24px">';
+  h += '<div style="font-size:13px;font-weight:700;margin-bottom:10px">📊 Your Market at a Glance</div>';
+  h += '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px">';
+  h += glanceBox(niches.length, 'var(--tx)', 'Niches tracked');
+  h += glanceBox(t1, '#16a34a', 'Strong');
+  h += glanceBox(t2, '#ca8a04', 'Worth testing');
+  h += glanceBox(t3, '#6b7280', 'Monitor');
+  h += glanceBox(t4, '#b45309', 'Skip');
+  h += '</div></div>';
+  return h;
+}
+
+// ── Render ─────────────────────────────────────────────────────────────────
+function renderDashboard(niches) {
+  var h = '';
+  h += buildWhatsMoving(niches);
+  h += buildTopOpportunity(niches);
+  h += buildActNowSeasonal(niches);
+  h += buildNewestNiches(niches);
+  h += buildMarketGlance(niches);
+
+  if (!h) {
+    h = '<div style="text-align:center;padding:48px 24px;color:var(--mu)">'
+      + '<div style="font-size:36px;margin-bottom:12px">🌱</div>'
+      + '<div style="font-size:14px">No niche data yet — the weekly cron jobs will populate this over the coming days.</div>'
+      + '</div>';
+  }
+
+  document.getElementById('dash-body').innerHTML = h;
+}
+
+// ── Load ───────────────────────────────────────────────────────────────────
+async function loadDashboard() {
+  var btn  = document.getElementById('refresh-btn');
+  var ts   = document.getElementById('dash-ts');
+  var bar  = document.getElementById('prog-bar');
+  var fill = document.getElementById('prog-fill');
+
+  btn.disabled    = true;
+  btn.textContent = 'Loading…';
+  ts.textContent  = 'Fetching latest data…';
+  bar.style.display = 'block';
+  fill.style.width  = '20%';
+
+  try {
+    var scores = await sbGet(
+      'niche_scores?select=*,niches(keyword,created_at,source)&order=gap_score.desc.nullslast'
+    );
+
+    fill.style.width = '60%';
+
+    var supplyRows = await sbGet(
+      'niche_supply_snapshots?select=niche_id,total_listings,avg_price,avg_favorers,top_listings_detail' +
+      '&order=snapshot_date.desc&limit=500'
+    );
+
+    fill.style.width = '90%';
+
+    var supplyMap = {};
+    supplyRows.forEach(function(r) {
+      if (!supplyMap[r.niche_id]) supplyMap[r.niche_id] = r;
+    });
+
+    var niches = scores.map(function(s) {
+      var sup = supplyMap[s.niche_id] || {};
+      return {
+        keyword:        s.niches && s.niches.keyword,
+        created_at:     s.niches && s.niches.created_at,
+        source:         s.niches && s.niches.source,
+        gap_score:      s.gap_score,
+        demand_score:   s.demand_score,
+        competition:    s.competition,
+        urgency:        s.urgency,
+        trajectory:     s.trajectory,
+        classification: s.classification,
+        weeks_to_peak:  s.weeks_to_peak,
+        niche_id:       s.niche_id,
+        total_listings: sup.total_listings != null ? sup.total_listings : null,
+        avg_price:      sup.avg_price      != null ? sup.avg_price      : null,
+        avg_favorers:   sup.avg_favorers   != null ? sup.avg_favorers   : null,
+        top_listings:   Array.isArray(sup.top_listings_detail) ? sup.top_listings_detail : null,
+      };
+    }).filter(function(n) { return !!n.keyword; });
+
+    bar.style.display = 'none';
+    ts.textContent    = 'Updated ' + new Date().toLocaleTimeString();
+
+    renderDashboard(niches);
+  } catch (e) {
+    bar.style.display = 'none';
+    ts.textContent    = 'Error loading data — ' + e.message;
+    document.getElementById('dash-body').innerHTML =
+      '<div style="padding:24px;text-align:center;border:1px solid var(--b1);border-radius:12px;color:var(--mu)">'
+      + '<div style="font-size:28px;margin-bottom:12px">⚠️</div>'
+      + '<div style="color:var(--rd);margin-bottom:8px">Could not load dashboard data</div>'
+      + '<p style="font-size:13px">' + escapeHtml(e.message) + '</p>'
+      + '<button class="btn-olive" onclick="loadDashboard()" style="margin-top:12px">Try Again</button>'
+      + '</div>';
+  } finally {
+    btn.disabled    = false;
+    btn.textContent = '↻ Refresh';
   }
 }
 
-document.addEventListener('DOMContentLoaded',function(){runFeed(false);});
+document.addEventListener('DOMContentLoaded', function() { loadDashboard(); });
 </script>
 </body>
 </html>
