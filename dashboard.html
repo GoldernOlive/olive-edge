@@ -283,7 +283,7 @@ function buildNicheCard(n) {
   var compPct   = (n.competition  != null) ? Math.min(100, Math.round(n.competition * 100)) : null;
   h += '<div style="margin-bottom:14px">';
   h += '<div style="display:flex;align-items:center;gap:8px;margin-bottom:7px">';
-  h += '<span style="font-size:10px;font-weight:700;color:var(--mu);width:54px;flex-shrink:0">DEMAND</span>';
+  h += '<span style="font-size:10px;font-weight:700;color:var(--mu);white-space:nowrap;flex-shrink:0">DEMAND</span>';
   h += '<div style="flex:1;height:9px;background:var(--p3);border-radius:5px;overflow:hidden">';
   if (demandVal !== null) h += '<div style="width:' + demandVal + '%;height:100%;background:#16a34a;border-radius:5px"></div>';
   h += '</div>';
@@ -293,7 +293,7 @@ function buildNicheCard(n) {
     h += '<span style="font-size:11px;color:var(--mu);font-style:italic;min-width:52px;text-align:right">Gathering…</span>';
   h += '</div>';
   h += '<div style="display:flex;align-items:center;gap:8px">';
-  h += '<span style="font-size:10px;font-weight:700;color:var(--mu);width:54px;flex-shrink:0">COMPETITION</span>';
+  h += '<span style="font-size:10px;font-weight:700;color:var(--mu);white-space:nowrap;flex-shrink:0">COMPETITION</span>';
   h += '<div style="flex:1;height:9px;background:var(--p3);border-radius:5px;overflow:hidden">';
   if (compPct !== null) h += '<div style="width:' + compPct + '%;height:100%;background:#ea580c;border-radius:5px"></div>';
   h += '</div>';
